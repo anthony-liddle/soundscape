@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature or enhancement
+about: Suggest an idea for this project
 title: '[FEATURE] '
 labels: enhancement
 assignees: ''
@@ -8,30 +8,46 @@ assignees: ''
 
 ## Feature Description
 
-A clear and concise description of the feature you'd like.
+<!-- A clear and concise description of the feature you'd like to see -->
 
-## Use Case
+## Problem Statement
 
-Describe the problem this feature would solve or the use case it enables.
-
-**Example**: "As a game developer, I want to... so that..."
+<!-- Is your feature request related to a problem? Please describe. -->
+<!-- Example: I'm always frustrated when [...] -->
 
 ## Proposed Solution
 
-Describe how you envision this feature working.
+<!-- Describe the solution you'd like -->
 
 ## Alternatives Considered
 
-Describe any alternative solutions or features you've considered.
+<!-- Describe any alternative solutions or features you've considered -->
+
+## Use Cases
+
+<!-- Describe who would benefit from this feature and how -->
+
+## Civic Engagement Impact
+
+<!-- How would this feature help citizens engage with their representatives? -->
+
+## Accessibility Considerations
+
+<!-- How should this feature work for users with disabilities? -->
+<!-- Consider: keyboard navigation, screen readers, color contrast, etc. -->
+
+## Mockups/Examples
+
+<!-- Optional: Add any mockups, wireframes, or examples -->
 
 ## Additional Context
 
-- Screenshots or mockups
-- Links to similar features in other tools
-- Any other relevant information
+<!-- Add any other context about the feature request here -->
 
-## Would you be willing to contribute this feature?
+## Priority
 
-- [ ] Yes, I'd like to implement this
-- [ ] I could help with testing
-- [ ] No, just suggesting
+<!-- How important is this feature to you? -->
+
+- [ ] High - Would significantly improve the user experience
+- [ ] Medium - Nice to have
+- [ ] Low - Just an idea
