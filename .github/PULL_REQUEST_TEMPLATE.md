@@ -1,43 +1,43 @@
 ## Description
 
-Brief description of the changes in this PR.
+<!-- Provide a brief description of the changes in this PR -->
 
 ## Type of Change
 
-- [ ] Bug fix (non-breaking change that fixes an issue)
-- [ ] New feature (non-breaking change that adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to change)
+<!-- Mark the relevant option with an "x" -->
+
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] Documentation update
 - [ ] Refactoring (no functional changes)
+- [ ] Performance improvement
+- [ ] Test updates
+- [ ] Chore (dependency updates, config changes, etc.)
 
 ## Related Issues
 
-Closes #(issue number)
-
-## Changes Made
-
-- Change 1
-- Change 2
-- Change 3
+<!-- Link any related issues. Use "Fixes #123" to automatically close issues when PR is merged -->
 
 ## Testing
 
-Describe how you tested your changes:
+<!-- Describe the testing you've done -->
 
-- [ ] `npm run build` completes without errors
-- [ ] Tested in Chrome
-- [ ] Tested in Firefox
-- [ ] Tested in Safari
+- [ ] Tested locally in browser
+- [ ] Added/updated unit tests
+- [ ] Tested accessibility (keyboard navigation, screen reader)
+- [ ] Tested responsive design (mobile/tablet/desktop)
 
-## Screenshots (if applicable)
+## Screenshots
 
-Add screenshots to help explain your changes.
+<!-- If this PR includes visual changes, please add before/after screenshots -->
 
 ## Checklist
 
-- [ ] My code follows the project's coding standards
+- [ ] My code follows the project's code style
 - [ ] I have performed a self-review of my code
-- [ ] I have commented my code where necessary
+- [ ] My commits follow the [semantic commit convention](https://www.conventionalcommits.org/)
+- [ ] All tests pass (`pnpm test`)
+- [ ] The build succeeds (`pnpm build`)
 - [ ] I have updated documentation if needed
-- [ ] My changes generate no new warnings
-- [ ] I have tested the audio functionality works correctly
+- [ ] My changes maintain WCAG 2.1 AA accessibility compliance

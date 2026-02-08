@@ -6,11 +6,13 @@ labels: bug
 assignees: ''
 ---
 
-## Description
+## Bug Description
 
-A clear and concise description of the bug.
+<!-- A clear and concise description of what the bug is -->
 
-## Steps to Reproduce
+## To Reproduce
+
+Steps to reproduce the behavior:
 
 1. Go to '...'
 2. Click on '...'
@@ -18,28 +20,49 @@ A clear and concise description of the bug.
 
 ## Expected Behavior
 
-What you expected to happen.
+<!-- What you expected to happen -->
 
 ## Actual Behavior
 
-What actually happened.
+<!-- What actually happened -->
 
 ## Screenshots
 
-If applicable, add screenshots to help explain your problem.
+<!-- If applicable, add screenshots to help explain the problem -->
 
 ## Environment
 
-- **Browser**: [e.g., Chrome 120, Firefox 121]
-- **OS**: [e.g., macOS 14, Windows 11]
-- **Device**: [e.g., Desktop, Mobile]
+**Browser:**
+- [ ] Chrome
+- [ ] Firefox
+- [ ] Safari
+- [ ] Edge
+- [ ] Other:
 
-## Audio Details (if applicable)
+**Browser Version:**
 
-- Does audio play at all?
-- Are there any console errors?
-- Does the issue occur with specific presets?
+**Operating System:**
+- [ ] Windows
+- [ ] macOS
+- [ ] Linux
+- [ ] iOS (mobile browser)
+- [ ] Android (mobile browser)
+
+## Accessibility Impact
+
+<!-- If this bug affects accessibility, please describe how -->
+
+- [ ] This bug affects keyboard navigation
+- [ ] This bug affects screen reader users
+- [ ] This bug affects users with visual impairments
+- [ ] Not an accessibility issue
+
+## Console Errors
+
+```
+<!-- Paste any browser console errors here -->
+```
 
 ## Additional Context
 
-Add any other context about the problem here.
+<!-- Add any other context about the problem here -->
