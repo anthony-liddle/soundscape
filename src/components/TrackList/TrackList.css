@@ -1,0 +1,100 @@
+.track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #1f2937;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.track-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.track-list-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #9ca3af;
+}
+
+.track-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.track-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: #374151;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.track-item:hover {
+  background: #4b5563;
+}
+
+.track-item-selected {
+  background: #3b82f6;
+}
+
+.track-item-selected:hover {
+  background: #2563eb;
+}
+
+.track-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.track-item-name {
+  font-weight: 500;
+}
+
+.track-item-name-input {
+  font-weight: 500;
+  font-size: inherit;
+  font-family: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  color: inherit;
+  padding: 0.125rem 0.25rem;
+  outline: none;
+  width: 100%;
+  max-width: 120px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.track-item-name-input:hover {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: #4b5563;
+}
+
+.track-item-name-input:focus {
+  background: rgba(0, 0, 0, 0.3);
+  border-color: #3b82f6;
+}
+
+.track-item-notes {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  padding-left: 0.25rem;
+}
+
+.track-item-selected .track-item-notes {
+  color: #bfdbfe;
+}
+
+.track-item-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

@@ -1,0 +1,140 @@
+.note-editor {
+  background: #1f2937;
+  border-radius: 8px;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.note-editor-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #6b7280;
+}
+
+.note-editor-header {
+  margin-bottom: 1rem;
+}
+
+.note-editor-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #9ca3af;
+}
+
+.note-editor-grid-container {
+  display: flex;
+  overflow-x: auto;
+}
+
+.note-editor-labels {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.note-editor-label-spacer {
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.note-editor-label {
+  height: 20px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.5rem;
+  font-size: 0.625rem;
+  color: #9ca3af;
+  background: #111827;
+  border-bottom: 1px solid #374151;
+}
+
+.note-editor-label.black-key {
+  background: #0f172a;
+  color: #6b7280;
+}
+
+.note-editor-grid {
+  flex: 1;
+  min-width: 0;
+}
+
+.note-editor-beat-markers {
+  display: flex;
+  height: 20px;
+  background: #111827;
+  border-bottom: 2px solid #3b82f6;
+}
+
+.note-editor-beat-marker {
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  color: #6b7280;
+}
+
+.note-editor-beat-marker.playing {
+  background: rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+  font-weight: bold;
+}
+
+.note-editor-row {
+  display: flex;
+  height: 20px;
+}
+
+.note-editor-row.black-key-row {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.note-editor-cell {
+  width: 30px;
+  height: 20px;
+  border: 1px solid #374151;
+  border-right: none;
+  border-bottom: none;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.note-editor-cell:last-child {
+  border-right: 1px solid #374151;
+}
+
+.note-editor-row:last-child .note-editor-cell {
+  border-bottom: 1px solid #374151;
+}
+
+.note-editor-cell:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.note-editor-cell.bar-start {
+  border-left: 2px solid #4b5563;
+}
+
+.note-editor-cell.has-note {
+  background: #3b82f6;
+}
+
+.note-editor-cell.has-note:hover {
+  background: #2563eb;
+}
+
+.note-editor-cell.note-start {
+  border-radius: 2px 0 0 2px;
+}
+
+.note-editor-cell.playing {
+  background: rgba(251, 191, 36, 0.15);
+}
+
+.note-editor-cell.playing.has-note {
+  background: #f59e0b;
+}

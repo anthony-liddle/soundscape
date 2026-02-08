@@ -1,0 +1,37 @@
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1rem;
+  background: #1f2937;
+  border-radius: 8px;
+}
+
+.transport-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.transport-display {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-family: monospace;
+}
+
+.transport-beat {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #3b82f6;
+  min-width: 60px;
+}
+
+.transport-info {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.transport-tempo {
+  flex: 1;
+  max-width: 200px;
+}

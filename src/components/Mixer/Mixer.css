@@ -1,0 +1,64 @@
+.mixer {
+  background: #1f2937;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.mixer h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: #9ca3af;
+}
+
+.mixer-channels {
+  display: flex;
+  gap: 1rem;
+}
+
+.mixer-channel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #374151;
+  border-radius: 4px;
+  min-width: 60px;
+  border: 1px solid transparent;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.mixer-channel-selected {
+  border-color: #3b82f6;
+  background: #3b4f6b;
+}
+
+.mixer-master {
+  border-left: 2px solid #3b82f6;
+  margin-left: 0.5rem;
+}
+
+.mixer-channel-name {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60px;
+  text-align: center;
+}
+
+.mixer-fader {
+  height: 100px;
+}
+
+.mixer-channel-value {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-family: monospace;
+}
+
+.mixer-channel-buttons {
+  display: flex;
+  gap: 0.25rem;
+}

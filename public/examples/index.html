@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Soundscape Examples</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #111827;
+      color: #f3f4f6;
+      margin: 0;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    h1 {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: #9ca3af;
+      margin-bottom: 2rem;
+    }
+
+    .section {
+      background: #1f2937;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #e5e7eb;
+      font-size: 1.25rem;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.15s ease;
+    }
+
+    button.primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    button.primary:hover {
+      background: #2563eb;
+    }
+
+    button.secondary {
+      background: #374151;
+      color: #e5e7eb;
+    }
+
+    button.secondary:hover {
+      background: #4b5563;
+    }
+
+    button.danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    button.danger:hover {
+      background: #dc2626;
+    }
+
+    .status {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: #111827;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.875rem;
+      color: #9ca3af;
+    }
+
+    .beat-indicator {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background: #374151;
+      border-radius: 50%;
+      transition: background 0.1s ease;
+    }
+
+    .beat-indicator.active {
+      background: #3b82f6;
+    }
+
+    .instructions {
+      color: #9ca3af;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+
+    #beat-display {
+      display: flex;
+      gap: 4px;
+      margin-top: 1rem;
+    }
+
+    a {
+      color: #3b82f6;
+    }
+
+    a:hover {
+      color: #60a5fa;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+
+    code {
+      background: #374151;
+      padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <a href="/" class="back-link">&larr; Back to Soundscape Editor</a>
+
+  <h1>Soundscape Demo</h1>
+  <p class="subtitle">Interactive examples demonstrating the Soundscape audio engine</p>
+
+  <div class="section">
+    <h2>Playback Demo</h2>
+    <p class="instructions">Play a sample composition with bass, melody, and pad tracks.</p>
+    <div class="buttons">
+      <button class="primary" id="play-btn">Play</button>
+      <button class="danger" id="stop-btn">Stop</button>
+    </div>
+    <div id="beat-display"></div>
+    <div class="status" id="status">Loading...</div>
+  </div>
+
+  <div class="section">
+    <h2>Tempo Control</h2>
+    <p class="instructions">Change the playback speed to simulate different game states.</p>
+    <div class="buttons">
+      <button class="secondary" data-tempo="80">Slow (80 BPM)</button>
+      <button class="secondary" data-tempo="120">Normal (120 BPM)</button>
+      <button class="secondary" data-tempo="150">Fast (150 BPM)</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Sound Effects</h2>
+    <p class="instructions">Trigger one-shot sounds for game events.</p>
+    <div class="buttons">
+      <button class="secondary" data-sfx="collect">Collect</button>
+      <button class="secondary" data-sfx="jump">Jump</button>
+      <button class="secondary" data-sfx="hit">Hit</button>
+      <button class="secondary" data-sfx="powerup">Powerup</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Code Examples</h2>
+    <p class="instructions">
+      For integration code examples, see the
+      <a href="https://github.com/anthony-liddle/soundscape/tree/main/examples" target="_blank">examples directory</a>
+      on GitHub, including:
+    </p>
+    <ul style="color: #9ca3af; font-size: 0.875rem;">
+      <li><code>basic-playback.ts</code> - Load and play exported soundscapes</li>
+      <li><code>programmatic-composition.ts</code> - Generate music in code</li>
+      <li><code>adaptive-game-music.ts</code> - Respond to game events</li>
+    </ul>
+  </div>
+
+  <script>
+    // Minimal standalone audio engine for demo purposes
+    class DemoAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.isPlaying = false;
+        this.currentBeat = 0;
+        this.tempo = 120;
+        this.soundscape = null;
+        this.scheduledNotes = new Set();
+        this.beatCallback = null;
+        this.intervalId = null;
+        this.startTime = 0;
+        this.loopCount = 0;
+      }
+
+      async init() {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        console.log('Audio context created:', this.ctx.state);
+      }
+
+      async loadSoundscape(url) {
+        console.log('Loading soundscape from:', url);
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to load: ${response.status}`);
+        }
+        this.soundscape = await response.json();
+        this.tempo = this.soundscape.metadata.tempo;
+        console.log('Loaded soundscape:', this.soundscape.metadata.name);
+      }
+
+      midiToFreq(midi) {
+        return 440 * Math.pow(2, (midi - 69) / 12);
+      }
+
+      createOscillator(type, freq, time, duration, velocity = 0.5) {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const filter = this.ctx.createBiquadFilter();
+
+        osc.type = type;
+        osc.frequency.value = freq;
+
+        filter.type = 'lowpass';
+        filter.frequency.value = 2000 + (velocity * 2000);
+        filter.Q.value = 1;
+
+        const vol = Math.min(velocity * 0.4, 0.5);
+        gain.gain.setValueAtTime(0.001, time);
+        gain.gain.exponentialRampToValueAtTime(vol, time + 0.01);
+        gain.gain.exponentialRampToValueAtTime(vol * 0.7, time + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(time);
+        osc.stop(time + duration + 0.1);
+      }
+
+      getPresetType(presetId) {
+        const types = {
+          bass: 'sawtooth',
+          lead: 'square',
+          pad: 'sine',
+          keys: 'triangle',
+          pluck: 'sawtooth',
+          percussion: 'square'
+        };
+        return types[presetId] || 'sine';
+      }
+
+      scheduleNotes() {
+        if (!this.soundscape || !this.isPlaying) return;
+
+        const currentTime = this.ctx.currentTime;
+        const beatDuration = 60 / this.tempo;
+        const totalBeats = this.soundscape.metadata.lengthBeats;
+        const loopDuration = totalBeats * beatDuration;
+        const lookAhead = 0.15;
+
+        // Calculate current position
+        const elapsed = currentTime - this.startTime;
+        const currentLoop = Math.floor(elapsed / loopDuration);
+        const positionInLoop = elapsed % loopDuration;
+        const currentBeat = positionInLoop / beatDuration;
+
+        // Update beat display
+        if (this.beatCallback) {
+          this.beatCallback(Math.floor(currentBeat));
+        }
+
+        // Schedule notes for current and next loop
+        for (let loopOffset = 0; loopOffset <= 1; loopOffset++) {
+          const loop = currentLoop + loopOffset;
+          const loopStartTime = this.startTime + (loop * loopDuration);
+
+          for (const track of this.soundscape.tracks) {
+            const oscType = this.getPresetType(track.presetId);
+            const mixerState = this.soundscape.mixer.tracks[track.id];
+            if (mixerState && mixerState.mute) continue;
+
+            const volume = mixerState ? mixerState.volume : 0.8;
+
+            for (const note of track.notes) {
+              const noteTime = loopStartTime + (note.startTime * beatDuration);
+              const noteKey = `${loop}-${track.id}-${note.id}`;
+
+              // Schedule if within look-ahead window and not already scheduled
+              if (noteTime >= currentTime && noteTime < currentTime + lookAhead) {
+                if (!this.scheduledNotes.has(noteKey)) {
+                  this.scheduledNotes.add(noteKey);
+                  const freq = this.midiToFreq(note.pitch);
+                  const duration = note.duration * beatDuration;
+                  const velocity = (note.velocity / 127) * volume;
+                  this.createOscillator(oscType, freq, noteTime, duration, velocity);
+                }
+              }
+            }
+          }
+        }
+
+        // Clean up old scheduled notes periodically
+        if (this.scheduledNotes.size > 500) {
+          const oldLoops = currentLoop - 2;
+          for (const key of this.scheduledNotes) {
+            if (parseInt(key.split('-')[0]) < oldLoops) {
+              this.scheduledNotes.delete(key);
+            }
+          }
+        }
+      }
+
+      async play() {
+        if (!this.ctx) {
+          await this.init();
+        }
+
+        if (this.ctx.state === 'suspended') {
+          await this.ctx.resume();
+          console.log('Audio context resumed');
+        }
+
+        this.isPlaying = true;
+        this.startTime = this.ctx.currentTime;
+        this.scheduledNotes.clear();
+        this.loopCount = 0;
+
+        console.log('Starting playback at time:', this.startTime);
+
+        // Use setInterval for more reliable scheduling
+        this.intervalId = setInterval(() => this.scheduleNotes(), 25);
+      }
+
+      stop() {
+        this.isPlaying = false;
+        if (this.intervalId) {
+          clearInterval(this.intervalId);
+          this.intervalId = null;
+        }
+        this.currentBeat = 0;
+        if (this.beatCallback) this.beatCallback(0);
+        console.log('Playback stopped');
+      }
+
+      setTempo(bpm) {
+        // Adjust start time to maintain position when tempo changes
+        if (this.isPlaying) {
+          const currentTime = this.ctx.currentTime;
+          const oldBeatDuration = 60 / this.tempo;
+          const newBeatDuration = 60 / bpm;
+          const elapsed = currentTime - this.startTime;
+          const currentBeat = elapsed / oldBeatDuration;
+          this.startTime = currentTime - (currentBeat * newBeatDuration);
+        }
+        this.tempo = bpm;
+        console.log('Tempo set to:', bpm);
+      }
+
+      playSFX(type) {
+        if (!this.ctx) return;
+
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+
+        const effects = {
+          collect: { pitch: 84, type: 'triangle', duration: 0.15 },
+          jump: { pitch: 72, type: 'square', duration: 0.1 },
+          hit: { pitch: 40, type: 'sawtooth', duration: 0.2 },
+          powerup: { pitch: 60, type: 'sine', duration: 0.3 }
+        };
+
+        const effect = effects[type];
+        if (effect) {
+          const freq = this.midiToFreq(effect.pitch);
+          this.createOscillator(effect.type, freq, this.ctx.currentTime, effect.duration, 0.8);
+        }
+      }
+
+      onBeat(callback) {
+        this.beatCallback = callback;
+      }
+    }
+
+    // Initialize demo
+    const engine = new DemoAudioEngine();
+    let lastBeat = -1;
+
+    // Create beat indicators
+    const beatDisplay = document.getElementById('beat-display');
+    for (let i = 0; i < 16; i++) {
+      const indicator = document.createElement('div');
+      indicator.className = 'beat-indicator';
+      indicator.id = `beat-${i}`;
+      beatDisplay.appendChild(indicator);
+    }
+
+    function updateBeatDisplay(beat) {
+      if (beat === lastBeat) return;
+      lastBeat = beat;
+      for (let i = 0; i < 16; i++) {
+        const el = document.getElementById(`beat-${i}`);
+        el.className = 'beat-indicator' + (i === beat ? ' active' : '');
+      }
+    }
+
+    async function init() {
+      try {
+        await engine.init();
+        await engine.loadSoundscape('/examples/sample-soundscape.json');
+        engine.onBeat(updateBeatDisplay);
+        document.getElementById('status').textContent = 'Ready - click Play to start';
+      } catch (err) {
+        console.error('Init error:', err);
+        document.getElementById('status').textContent = 'Error: ' + err.message;
+      }
+    }
+
+    // Event listeners
+    document.getElementById('play-btn').addEventListener('click', async () => {
+      try {
+        await engine.play();
+        document.getElementById('status').textContent = 'Playing...';
+      } catch (err) {
+        console.error('Play error:', err);
+        document.getElementById('status').textContent = 'Error: ' + err.message;
+      }
+    });
+
+    document.getElementById('stop-btn').addEventListener('click', () => {
+      engine.stop();
+      document.getElementById('status').textContent = 'Stopped';
+      updateBeatDisplay(-1);
+    });
+
+    document.querySelectorAll('[data-tempo]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tempo = parseInt(btn.dataset.tempo);
+        engine.setTempo(tempo);
+        document.getElementById('status').textContent = `Tempo: ${tempo} BPM`;
+      });
+    });
+
+    document.querySelectorAll('[data-sfx]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!engine.ctx) {
+          await engine.init();
+        }
+        engine.playSFX(btn.dataset.sfx);
+      });
+    });
+
+    // Initialize
+    init();
+  </script>
+</body>
+</html>

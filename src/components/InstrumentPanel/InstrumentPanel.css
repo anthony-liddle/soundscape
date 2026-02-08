@@ -1,0 +1,74 @@
+.instrument-panel {
+  background: #1f2937;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.instrument-panel-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #6b7280;
+}
+
+.instrument-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.instrument-panel-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #9ca3af;
+}
+
+.preview-btn {
+  padding: 0.25rem 0.75rem;
+  background: #3b82f6;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.preview-btn:hover {
+  background: #2563eb;
+}
+
+.instrument-params {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.param-section {
+  background: #374151;
+  border-radius: 4px;
+  padding: 0.75rem;
+  overflow: hidden;
+}
+
+.param-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.param-section .slider-container {
+  margin-bottom: 0.5rem;
+}
+
+.param-section .slider-container:last-child {
+  margin-bottom: 0;
+}
+
+.param-section .select-container {
+  margin-bottom: 0.5rem;
+}
