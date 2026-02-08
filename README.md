@@ -2,6 +2,8 @@
 
 A browser-based music sequencer and synthesizer built with React, TypeScript, and the Web Audio API.
 
+**[Try it live](https://anthony-liddle.github.io/soundscape/)**
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
@@ -75,7 +77,7 @@ Want to use Soundscape in your web game or application? See the **[Integration I
 - Using the audio engine programmatically
 - Responding to game events with adaptive music
 
-**Live Demo**: Visit `/examples/` when running the dev server to try an interactive demo.
+**Live Demo**: Try the [interactive examples](https://anthony-liddle.github.io/soundscape/examples/) or run locally with `pnpm dev`.
 
 Check out the **[examples](examples/)** directory for working code samples:
 - `basic-playback.ts` - Load and play exported soundscapes
