@@ -2,6 +2,10 @@
 
 This guide explains how to integrate Soundscape into your web game project to create dynamic, interactive music.
 
+## Live Demo
+
+Visit `/examples/` when running the dev server to see the audio engine in action with playback, tempo control, and sound effects.
+
 ## Use Cases
 
 - **Background Music**: Create adaptive soundtracks that respond to game state
