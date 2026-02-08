@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
   <title>Soundscape Examples</title>
   <style>
     * {
@@ -145,7 +145,7 @@
   </style>
 </head>
 <body>
-  <a href="/" class="back-link">&larr; Back to Soundscape Editor</a>
+  <a href="../" class="back-link">&larr; Back to Soundscape Editor</a>
 
   <h1>Soundscape Demo</h1>
   <p class="subtitle">Interactive examples demonstrating the Soundscape audio engine</p>
@@ -428,7 +428,7 @@
     async function init() {
       try {
         await engine.init();
-        await engine.loadSoundscape('/examples/sample-soundscape.json');
+        await engine.loadSoundscape('./sample-soundscape.json');
         engine.onBeat(updateBeatDisplay);
         document.getElementById('status').textContent = 'Ready - click Play to start';
       } catch (err) {
