@@ -229,6 +229,7 @@ document.addEventListener('DOMContentLoaded', main);
 export {
   createNote,
   createTrack,
+  scaleDegreeToMidi,
   generateBassLine,
   generateMelody,
   generateChords,

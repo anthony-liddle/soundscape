@@ -1,23 +1,10 @@
-import { createContext, useContext, useReducer, useEffect, useRef, useCallback, useState } from 'react';
-import type { ReactNode, Dispatch } from 'react';
-import type { SoundscapeState, PlaybackState, InstrumentParams } from '../types';
-import type { SoundscapeAction } from './reducer';
+import { useReducer, useEffect, useRef, useCallback, useState } from 'react';
+import type { ReactNode } from 'react';
+import type { PlaybackState, InstrumentParams } from '../types';
 import { soundscapeReducer, createInitialState } from './reducer';
 import { AudioEngine } from '../audio';
-
-interface SoundscapeContextValue {
-  state: SoundscapeState;
-  dispatch: Dispatch<SoundscapeAction>;
-  playback: PlaybackState;
-  play: (startBeat?: number) => void;
-  stop: () => void;
-  setTempo: (bpm: number) => void;
-  setLoop: (enabled: boolean) => void;
-  previewNote: (pitch: number, velocity: number, presetId: string, paramOverrides?: Partial<InstrumentParams>) => void;
-  audioEngine: AudioEngine | null;
-}
-
-const SoundscapeContext = createContext<SoundscapeContextValue | null>(null);
+import { SoundscapeContext } from './context';
+import type { SoundscapeContextValue } from './context';
 
 export function SoundscapeProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(soundscapeReducer, null, createInitialState);
@@ -113,7 +100,6 @@ export function SoundscapeProvider({ children }: { children: ReactNode }) {
     setTempo,
     setLoop,
     previewNote,
-    audioEngine: audioEngineRef.current,
   };
 
   return (
@@ -121,12 +107,4 @@ export function SoundscapeProvider({ children }: { children: ReactNode }) {
       {children}
     </SoundscapeContext.Provider>
   );
-}
-
-export function useSoundscape(): SoundscapeContextValue {
-  const context = useContext(SoundscapeContext);
-  if (!context) {
-    throw new Error('useSoundscape must be used within a SoundscapeProvider');
-  }
-  return context;
 }

@@ -278,7 +278,7 @@ export class AudioEngine {
 
       // Schedule note start
       if (!scheduled.startScheduled && noteStartTime < lookaheadTime && noteStartTime >= currentTime - 0.1) {
-        const voice = this.getAvailableVoice(channel, note.id);
+        const voice = this.getAvailableVoice(channel);
         if (voice) {
           const voiceParams: VoiceParams = {
             pitch: note.pitch,
@@ -303,7 +303,7 @@ export class AudioEngine {
     }
   }
 
-  private getAvailableVoice(channel: TrackChannel, _noteId: string): VoiceSynthesizer | null {
+  private getAvailableVoice(channel: TrackChannel): VoiceSynthesizer | null {
     // First, try to find a non-playing voice
     for (const voice of channel.voices) {
       if (!voice.getIsPlaying()) {

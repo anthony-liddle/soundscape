@@ -79,8 +79,8 @@ export function soundscapeReducer(state: SoundscapeState, action: SoundscapeActi
 
     case 'REMOVE_TRACK': {
       const { trackId } = action.payload;
-      const newTracks = state.mixer.tracks;
-      const { [trackId]: _, ...remainingTracks } = newTracks;
+      const { [trackId]: _removed, ...remainingTracks } = state.mixer.tracks;
+      void _removed; // Intentionally unused - destructuring to exclude trackId
       return {
         ...state,
         tracks: state.tracks.filter((t) => t.id !== trackId),
