@@ -3,7 +3,11 @@ import { Button, Slider } from '../common';
 import './Transport.css';
 
 export function Transport() {
-  const { state, playback, play, stop, setTempo, setLoop } = useSoundscape();
+  const { state, dispatch, playback, play, stop, setTempo, setLoop } = useSoundscape();
+
+  const handleMasterVolumeChange = (volume: number) => {
+    dispatch({ type: 'SET_MASTER_VOLUME', payload: volume });
+  };
 
   const handlePlayStop = () => {
     if (playback.isPlaying) {
@@ -51,6 +55,18 @@ export function Transport() {
           label="BPM"
           formatValue={(v) => v.toFixed(0)}
           onChange={setTempo}
+        />
+      </div>
+
+      <div className="transport-master-volume">
+        <Slider
+          value={state.mixer.masterVolume}
+          min={0}
+          max={1}
+          step={0.01}
+          label="Master"
+          formatValue={(v) => `${Math.round(v * 100)}%`}
+          onChange={handleMasterVolumeChange}
         />
       </div>
     </div>

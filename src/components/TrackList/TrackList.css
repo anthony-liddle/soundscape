@@ -27,8 +27,8 @@
 
 .track-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
   padding: 0.75rem;
   background: #374151;
   border-radius: 4px;
@@ -48,14 +48,10 @@
   background: #2563eb;
 }
 
-.track-item-info {
+.track-item-header {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.track-item-name {
-  font-weight: 500;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .track-item-name-input {
@@ -64,12 +60,11 @@
   font-family: inherit;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 2px;
+  border-radius: 4px;
   color: inherit;
   padding: 0.125rem 0.25rem;
   outline: none;
   width: 100%;
-  max-width: 120px;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
@@ -83,18 +78,95 @@
   border-color: #3b82f6;
 }
 
+.track-item-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .track-item-notes {
   font-size: 0.75rem;
   color: #9ca3af;
-  padding-left: 0.25rem;
+  white-space: nowrap;
 }
 
 .track-item-selected .track-item-notes {
   color: #bfdbfe;
 }
 
-.track-item-controls {
+.track-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.track-item-actions .btn {
+  font-size: 0.75rem;
+  border: 1px solid transparent;
+  line-height: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.track-item-selected .btn-primary {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transition: none;
+}
+
+.track-item-selected .btn-primary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.track-item-selected .btn-danger {
+  transition: none;
+}
+
+.track-item-volume {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.track-item-volume-buttons {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.track-item-volume-slider {
+  flex: 1;
+  min-width: 0;
+}
+
+.track-item-volume-value {
+  font-size: 0.625rem;
+  color: #9ca3af;
+  font-family: monospace;
+  min-width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.track-item-selected .track-item-volume-value {
+  color: #bfdbfe;
+}
+
+.track-item-selected .slider-input::-webkit-slider-thumb {
+  background: white;
+}
+
+.track-item-selected .slider-input::-webkit-slider-thumb:hover {
+  background: #e2e8f0;
+}
+
+.track-item-selected .slider-input::-moz-range-thumb {
+  background: white;
+}
+
+.track-item-selected .slider-input::-moz-range-thumb:hover {
+  background: #e2e8f0;
 }

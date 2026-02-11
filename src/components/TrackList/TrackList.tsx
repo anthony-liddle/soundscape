@@ -1,5 +1,6 @@
 import { useSoundscape } from '../../state';
-import { Button, Select } from '../common';
+import { Button, Select, Slider } from '../common';
+import { defaultTrackMixerState } from '../../types';
 import './TrackList.css';
 
 interface TrackListProps {
@@ -27,6 +28,33 @@ export function TrackList({ selectedTrackId, onSelectTrack }: TrackListProps) {
         onSelectTrack(remaining[0].id);
       }
     }
+  };
+
+  const handleDuplicateTrack = (trackId: string) => {
+    dispatch({ type: 'DUPLICATE_TRACK', payload: { trackId } });
+  };
+
+  const handleVolumeChange = (trackId: string, volume: number) => {
+    dispatch({
+      type: 'SET_MIXER_TRACK',
+      payload: { trackId, state: { volume } },
+    });
+  };
+
+  const handleMuteToggle = (trackId: string) => {
+    const current = state.mixer.tracks[trackId] || defaultTrackMixerState;
+    dispatch({
+      type: 'SET_MIXER_TRACK',
+      payload: { trackId, state: { mute: !current.mute } },
+    });
+  };
+
+  const handleSoloToggle = (trackId: string) => {
+    const current = state.mixer.tracks[trackId] || defaultTrackMixerState;
+    dispatch({
+      type: 'SET_MIXER_TRACK',
+      payload: { trackId, state: { solo: !current.solo } },
+    });
   };
 
   const handlePresetChange = (trackId: string, presetId: string) => {
@@ -58,7 +86,7 @@ export function TrackList({ selectedTrackId, onSelectTrack }: TrackListProps) {
             className={`track-item ${selectedTrackId === track.id ? 'track-item-selected' : ''}`}
             onClick={() => onSelectTrack(track.id)}
           >
-            <div className="track-item-info">
+            <div className="track-item-header">
               <input
                 type="text"
                 className="track-item-name-input"
@@ -66,23 +94,70 @@ export function TrackList({ selectedTrackId, onSelectTrack }: TrackListProps) {
                 onChange={(e) => handleTrackNameChange(track.id, e.target.value)}
                 onClick={(e) => e.stopPropagation()}
               />
-              <span className="track-item-notes">{track.notes.length} notes</span>
+              <div className="track-item-actions">
+                <Button
+                  size="small"
+                  onClick={() => handleDuplicateTrack(track.id)}
+                >
+                  Copy
+                </Button>
+                <Button
+                  variant="danger"
+                  size="small"
+                  onClick={() => handleRemoveTrack(track.id)}
+                  disabled={state.tracks.length <= 1}
+                >
+                  ×
+                </Button>
+              </div>              
             </div>
 
-            <div className="track-item-controls" onClick={(e) => e.stopPropagation()}>
+            <div className="track-item-body">
+              <span className="track-item-notes">{track.notes.length} notes</span>
               <Select
                 value={track.presetId}
                 options={presetOptions}
                 onChange={(presetId) => handlePresetChange(track.id, presetId)}
               />
-              <Button
-                variant="danger"
-                size="small"
-                onClick={() => handleRemoveTrack(track.id)}
-                disabled={state.tracks.length <= 1}
-              >
-                ×
-              </Button>
+            </div>
+
+            <div className="track-item-volume">
+              {(() => {
+                const mixerState = state.mixer.tracks[track.id] || defaultTrackMixerState;
+                return (
+                  <>
+                    <div className="track-item-volume-buttons">
+                      <Button
+                        size="small"
+                        variant={mixerState.mute ? 'danger' : 'secondary'}
+                        onClick={() => handleMuteToggle(track.id)}
+                      >
+                        M
+                      </Button>
+                      <Button
+                        size="small"
+                        variant={mixerState.solo ? 'primary' : 'secondary'}
+                        onClick={() => handleSoloToggle(track.id)}
+                      >
+                        S
+                      </Button>
+                    </div>
+                    <div className="track-item-volume-slider">
+                      <Slider
+                        value={mixerState.volume}
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        showValue={false}
+                        onChange={(v) => handleVolumeChange(track.id, v)}
+                      />
+                    </div>
+                    <span className="track-item-volume-value">
+                      {Math.round(mixerState.volume * 100)}%
+                    </span>
+                  </>
+                );
+              })()}
             </div>
           </div>
         ))}

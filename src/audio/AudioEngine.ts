@@ -92,6 +92,58 @@ export class AudioEngine {
         this.removeTrackChannel(id, channel);
       }
     }
+
+    // Sync scheduled notes with current state during playback
+    if (this.isPlaying) {
+      this.syncScheduledNotes(state);
+    }
+  }
+
+  private syncScheduledNotes(state: SoundscapeState): void {
+    // Index existing scheduled notes by noteId for fast lookup
+    const existingByNoteId = new Map<string, ScheduledNote>();
+    for (const sn of this.scheduledNotes) {
+      existingByNoteId.set(sn.note.id, sn);
+    }
+
+    // Build set of all current note IDs
+    const currentNoteIds = new Set<string>();
+    const newScheduledNotes: ScheduledNote[] = [];
+
+    for (const track of state.tracks) {
+      for (const note of track.notes) {
+        currentNoteIds.add(note.id);
+        const existing = existingByNoteId.get(note.id);
+        if (existing) {
+          // Keep existing scheduling state
+          newScheduledNotes.push({ ...existing, trackId: track.id, note });
+        } else {
+          // New note — add as unscheduled
+          newScheduledNotes.push({
+            note,
+            trackId: track.id,
+            startScheduled: false,
+            endScheduled: false,
+          });
+        }
+      }
+    }
+
+    // Stop voices for removed notes
+    for (const sn of this.scheduledNotes) {
+      if (!currentNoteIds.has(sn.note.id)) {
+        const channel = this.trackChannels.get(sn.trackId);
+        if (channel) {
+          const voice = channel.activeVoices.get(sn.note.id);
+          if (voice) {
+            voice.stop();
+            channel.activeVoices.delete(sn.note.id);
+          }
+        }
+      }
+    }
+
+    this.scheduledNotes = newScheduledNotes;
   }
 
   private ensureTrackChannel(track: Track, state: SoundscapeState): TrackChannel {

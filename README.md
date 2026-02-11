@@ -12,9 +12,11 @@ A browser-based music sequencer and synthesizer built with React, TypeScript, an
 
 ### Sequencer
 - **Piano Roll Editor**: 2-octave grid (C3-C5) for composing melodies
-- **16-Beat Timeline**: Click cells to add/remove notes
+- **16-Beat Timeline**: Click cells to add/remove notes, or click and drag to create multi-beat notes
+- **Randomize Notes**: Generate random note patterns with one click
 - **Playback Indicator**: Visual column highlight shows current beat during playback
-- **Multiple Tracks**: Create and manage multiple instrument tracks
+- **Live Editing**: Add and remove notes during playback with immediate effect
+- **Multiple Tracks**: Create, duplicate, and manage multiple instrument tracks
 
 ### Synthesizer
 - **Oscillator**: Choose from sine, square, sawtooth, and triangle waveforms with pitch offset control
@@ -23,15 +25,18 @@ A browser-based music sequencer and synthesizer built with React, TypeScript, an
 - **Delay Effect**: Configurable time, feedback, and mix
 - **Distortion**: Add grit and harmonic content
 - **Velocity Response**: Control how note velocity affects sound
+- **Preview**: Audition current instrument settings with one click
+- **Randomize Sound**: Generate random instrument parameters for sound exploration
 
-### Mixer
-- **Per-Track Volume**: Individual volume faders for each track
-- **Mute/Solo**: M and S buttons for each track
-- **Master Volume**: Global output level control
+### Mixing
+- **Per-Track Volume**: Inline horizontal volume slider for each track
+- **Mute/Solo**: M and S buttons on each track
+- **Master Volume**: Global output level in the transport bar
 - **Track Selection**: Visual indication of selected track
 
 ### Project Management
 - **Custom Naming**: Edit soundscape and track names inline
+- **Track Duplication**: Copy a track with all its notes, settings, and volume
 - **Import/Export**: Save and load projects as JSON files
 - **Preset System**: Built-in instrument presets (Bass, Lead, Pad, Keys, Pluck, Percussion)
 
@@ -62,9 +67,9 @@ pnpm build
 
 1. **Create a track**: Click "+ Add Track" in the Tracks panel
 2. **Select a preset**: Use the dropdown to choose an instrument sound
-3. **Add notes**: Click cells in the piano roll to place notes
+3. **Add notes**: Click cells in the piano roll to place notes, or click and drag for multi-beat notes
 4. **Adjust sound**: Modify parameters in the Instrument panel (hover labels for tooltips)
-5. **Mix**: Use the Mixer to balance track volumes
+5. **Mix**: Adjust per-track volume and mute/solo in the Tracks panel, and master volume in the transport bar
 6. **Play**: Hit the Play button to hear your composition
 7. **Export**: Save your work with the Export button
 
@@ -102,7 +107,6 @@ src/
 │   ├── TrackList/       # Track management sidebar
 │   ├── NoteEditor/      # Piano roll grid
 │   ├── InstrumentPanel/ # Synth parameter controls
-│   ├── Mixer/           # Volume and mute/solo controls
 │   └── ImportExport/    # Save/load functionality
 ├── audio/               # Web Audio engine and synthesis
 ├── state/               # React context and reducer
