@@ -122,6 +122,93 @@ describe('soundscape reducer', () => {
     })
   })
 
+  describe('DUPLICATE_TRACK', () => {
+    it('duplicates a track with a new id and name', () => {
+      const state = createInitialState()
+      const sourceId = state.tracks[0].id
+
+      const result = soundscapeReducer(state, {
+        type: 'DUPLICATE_TRACK',
+        payload: { trackId: sourceId },
+      })
+      expect(result.tracks).toHaveLength(2)
+      expect(result.tracks[1].name).toBe('Track 1 - copy')
+      expect(result.tracks[1].id).not.toBe(sourceId)
+      expect(result.tracks[1].presetId).toBe(state.tracks[0].presetId)
+    })
+
+    it('copies notes with new ids', () => {
+      let state = createInitialState()
+      const sourceId = state.tracks[0].id
+      state = soundscapeReducer(state, {
+        type: 'ADD_NOTE',
+        payload: { trackId: sourceId, pitch: 60, startTime: 0, duration: 2, velocity: 90 },
+      })
+      state = soundscapeReducer(state, {
+        type: 'ADD_NOTE',
+        payload: { trackId: sourceId, pitch: 64, startTime: 2, duration: 1, velocity: 100 },
+      })
+
+      const result = soundscapeReducer(state, {
+        type: 'DUPLICATE_TRACK',
+        payload: { trackId: sourceId },
+      })
+      const copied = result.tracks[1]
+      expect(copied.notes).toHaveLength(2)
+      expect(copied.notes[0].pitch).toBe(60)
+      expect(copied.notes[0].duration).toBe(2)
+      expect(copied.notes[0].velocity).toBe(90)
+      expect(copied.notes[1].pitch).toBe(64)
+      // All note ids should be new
+      expect(copied.notes[0].id).not.toBe(state.tracks[0].notes[0].id)
+      expect(copied.notes[1].id).not.toBe(state.tracks[0].notes[1].id)
+    })
+
+    it('copies paramOverrides', () => {
+      let state = createInitialState()
+      const sourceId = state.tracks[0].id
+      state = soundscapeReducer(state, {
+        type: 'SET_TRACK_PARAM_OVERRIDES',
+        payload: { trackId: sourceId, overrides: { attack: 0.5, decay: 0.3 } },
+      })
+
+      const result = soundscapeReducer(state, {
+        type: 'DUPLICATE_TRACK',
+        payload: { trackId: sourceId },
+      })
+      expect(result.tracks[1].paramOverrides).toEqual({ attack: 0.5, decay: 0.3 })
+      // Should be a separate object, not the same reference
+      expect(result.tracks[1].paramOverrides).not.toBe(state.tracks[0].paramOverrides)
+    })
+
+    it('copies mixer state', () => {
+      let state = createInitialState()
+      const sourceId = state.tracks[0].id
+      state = soundscapeReducer(state, {
+        type: 'SET_MIXER_TRACK',
+        payload: { trackId: sourceId, state: { volume: 0.6, mute: true } },
+      })
+
+      const result = soundscapeReducer(state, {
+        type: 'DUPLICATE_TRACK',
+        payload: { trackId: sourceId },
+      })
+      const newId = result.tracks[1].id
+      expect(result.mixer.tracks[newId]).toBeDefined()
+      expect(result.mixer.tracks[newId].volume).toBe(0.6)
+      expect(result.mixer.tracks[newId].mute).toBe(true)
+    })
+
+    it('returns unchanged state for non-existent track', () => {
+      const state = createInitialState()
+      const result = soundscapeReducer(state, {
+        type: 'DUPLICATE_TRACK',
+        payload: { trackId: 'non-existent' },
+      })
+      expect(result).toBe(state)
+    })
+  })
+
   describe('ADD_NOTE', () => {
     it('adds a note to a track', () => {
       const initialState = createInitialState()
