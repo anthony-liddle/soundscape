@@ -20,6 +20,7 @@ export type SoundscapeAction =
   | { type: 'SET_STATE'; payload: SoundscapeState }
   | { type: 'SET_METADATA'; payload: Partial<SoundscapeState['metadata']> }
   | { type: 'ADD_TRACK'; payload: { name: string; presetId: string } }
+  | { type: 'DUPLICATE_TRACK'; payload: { trackId: string } }
   | { type: 'REMOVE_TRACK'; payload: { trackId: string } }
   | { type: 'UPDATE_TRACK'; payload: { trackId: string; updates: Partial<Omit<Track, 'id' | 'notes'>> } }
   | { type: 'SET_TRACK_PRESET'; payload: { trackId: string; presetId: string } }
@@ -72,6 +73,33 @@ export function soundscapeReducer(state: SoundscapeState, action: SoundscapeActi
           tracks: {
             ...state.mixer.tracks,
             [newTrack.id]: { ...defaultTrackMixerState },
+          },
+        },
+      };
+    }
+
+    case 'DUPLICATE_TRACK': {
+      const sourceTrk = state.tracks.find((t) => t.id === action.payload.trackId);
+      if (!sourceTrk) return state;
+      const newId = crypto.randomUUID();
+      const duplicatedTrack: Track = {
+        id: newId,
+        name: `${sourceTrk.name} - copy`,
+        presetId: sourceTrk.presetId,
+        notes: sourceTrk.notes.map((n) => ({ ...n, id: crypto.randomUUID() })),
+        paramOverrides: sourceTrk.paramOverrides
+          ? { ...sourceTrk.paramOverrides }
+          : undefined,
+      };
+      const sourceMixer = state.mixer.tracks[sourceTrk.id] || defaultTrackMixerState;
+      return {
+        ...state,
+        tracks: [...state.tracks, duplicatedTrack],
+        mixer: {
+          ...state.mixer,
+          tracks: {
+            ...state.mixer.tracks,
+            [newId]: { ...sourceMixer },
           },
         },
       };

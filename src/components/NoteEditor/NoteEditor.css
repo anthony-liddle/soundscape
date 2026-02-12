@@ -14,6 +14,9 @@
 }
 
 .note-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1rem;
 }
 
@@ -21,6 +24,21 @@
   margin: 0;
   font-size: 1rem;
   color: #9ca3af;
+}
+
+.randomize-notes-btn {
+  padding: 0.25rem 0.75rem;
+  background: #8b5cf6;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.randomize-notes-btn:hover {
+  background: #7c3aed;
 }
 
 .note-editor-grid-container {
@@ -121,14 +139,40 @@
 
 .note-editor-cell.has-note {
   background: #3b82f6;
+  position: relative;
 }
 
 .note-editor-cell.has-note:hover {
   background: #2563eb;
 }
 
-.note-editor-cell.note-start {
-  border-radius: 2px 0 0 2px;
+/* Single-beat note (is both start and end) */
+.note-editor-cell.note-start.note-end {
+  border-radius: 3px;
+}
+
+/* Multi-beat note start */
+.note-editor-cell.note-start:not(.note-end) {
+  border-radius: 3px 0 0 3px;
+  border-right: none;
+}
+
+/* Multi-beat note middle */
+.note-editor-cell.note-middle {
+  border-left-color: transparent;
+  border-right: none;
+  border-radius: 0;
+}
+
+/* Multi-beat note end */
+.note-editor-cell.note-end:not(.note-start) {
+  border-radius: 0 3px 3px 0;
+  border-left-color: transparent;
+}
+
+/* Drag preview */
+.note-editor-cell.drag-preview {
+  background: rgba(59, 130, 246, 0.5);
 }
 
 .note-editor-cell.playing {

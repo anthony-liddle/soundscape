@@ -4,7 +4,6 @@ import { Transport } from './components/Transport';
 import { TrackList } from './components/TrackList';
 import { NoteEditor } from './components/NoteEditor';
 import { InstrumentPanel } from './components/InstrumentPanel';
-import { Mixer } from './components/Mixer';
 import { ImportExport } from './components/ImportExport';
 import './App.css';
 
@@ -49,7 +48,6 @@ function SoundscapeApp() {
             selectedTrackId={selectedTrackId}
             onSelectTrack={setSelectedTrackId}
           />
-          <Mixer selectedTrackId={selectedTrackId} />
         </aside>
 
         <main className="app-main">

@@ -94,7 +94,7 @@ engine.updateState({
   }],
   presets: builtInPresets,
   mixer: {
-    tracks: { track1: { volume: 0.8, mute: false, solo: false, pan: 0 } },
+    tracks: { track1: { volume: 0.8, mute: false, solo: false } },
     masterVolume: 0.8
   }
 });
@@ -200,7 +200,7 @@ class GameMusicManager {
         ...this.baseState.mixer,
         tracks: {
           ...this.baseState.mixer.tracks,
-          tensionTrack: { volume: 1, mute: false, solo: false, pan: 0 }
+          tensionTrack: { volume: 1, mute: false, solo: false }
         }
       }
     });

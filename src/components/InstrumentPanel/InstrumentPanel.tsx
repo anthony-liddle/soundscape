@@ -49,13 +49,50 @@ export function InstrumentPanel({ track }: InstrumentPanelProps) {
     previewNote(60, 100, track.presetId, track.paramOverrides);
   };
 
+  const handleRandomize = () => {
+    const waveforms: Waveform[] = ['sine', 'square', 'sawtooth', 'triangle'];
+    const randomFloat = (min: number, max: number) => Math.random() * (max - min) + min;
+    const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+    const overrides: Partial<InstrumentParams> = {
+      waveform: waveforms[randomInt(0, waveforms.length - 1)],
+      pitchOffset: randomInt(-24, 24),
+      attack: randomFloat(0, 1),
+      decay: randomFloat(0, 1),
+      sustain: randomFloat(0, 1),
+      release: randomFloat(0, 1),
+      filterCutoff: randomFloat(0, 1),
+      filterResonance: randomFloat(0, 1),
+      delayTime: randomFloat(0, 1),
+      delayFeedback: randomFloat(0, 0.8),
+      delayMix: randomFloat(0, 1),
+      distortion: randomFloat(0, 1),
+      velocityResponse: randomFloat(0, 1),
+    };
+
+    dispatch({
+      type: 'SET_TRACK_PARAM_OVERRIDES',
+      payload: { trackId: track.id, overrides },
+    });
+  };
+
   return (
     <div className="instrument-panel">
       <div className="instrument-panel-header">
-        <h3>Instrument - {preset.name}</h3>
-        <button className="preview-btn" onClick={handlePreview}>
-          Preview
-        </button>
+        <h3>
+          Instrument - {track.name}
+          {!track.paramOverrides || Object.keys(track.paramOverrides).length === 0
+            ? ` - ${preset.name}`
+            : ''}
+        </h3>
+        <div className="instrument-panel-actions">
+        <button className="randomize-btn" onClick={handleRandomize}>
+            Randomize
+          </button>          
+          <button className="preview-btn" onClick={handlePreview}>
+            Preview
+          </button>
+        </div>
       </div>
 
       <div className="instrument-params">
