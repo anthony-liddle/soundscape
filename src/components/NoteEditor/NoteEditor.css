@@ -43,7 +43,8 @@
 
 .note-editor-grid-container {
   display: flex;
-  overflow-x: auto;
+  overflow: auto;
+  max-height: 520px;
 }
 
 .note-editor-labels {
@@ -68,6 +69,7 @@
   color: #9ca3af;
   background: #111827;
   border-bottom: 1px solid #374151;
+  flex-shrink: 0;
 }
 
 .note-editor-label.black-key {
