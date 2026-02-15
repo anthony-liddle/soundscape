@@ -8,9 +8,9 @@ interface NoteEditorProps {
   track: Track | null;
 }
 
-// Define piano roll range (2 octaves from C3 to B4)
-const MIN_PITCH = 48; // C3
-const MAX_PITCH = 72; // C5
+// Define piano roll range (4 octaves from C2 to C6)
+const MIN_PITCH = 36; // C2
+const MAX_PITCH = 84; // C6
 const PITCHES = Array.from(
   { length: MAX_PITCH - MIN_PITCH + 1 },
   (_, i) => MAX_PITCH - i
