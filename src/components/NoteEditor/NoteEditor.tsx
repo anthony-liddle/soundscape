@@ -8,78 +8,86 @@ interface NoteEditorProps {
   track: Track | null;
 }
 
-// Define piano roll range (4 octaves from C2 to C6)
-const MIN_PITCH = 36; // C2
-const MAX_PITCH = 84; // C6
+// Define piano roll range (6 octaves from C1 to C7)
+const MIN_PITCH = 24; // C1
+const MAX_PITCH = 96; // C7
 const PITCHES = Array.from(
   { length: MAX_PITCH - MIN_PITCH + 1 },
   (_, i) => MAX_PITCH - i
 );
 
+type Subdivision = 1 | 0.5 | 0.25;
+
 interface DragState {
   pitch: number;
-  startBeat: number;
-  currentBeat: number;
+  startStep: number;
+  currentStep: number;
 }
 
 export function NoteEditor({ track }: NoteEditorProps) {
   const { state, dispatch, previewNote, playback } = useSoundscape();
   const beats = state.metadata.lengthBeats;
-  const currentBeat = Math.floor(playback.currentBeat);
+  const [subdivision, setSubdivision] = useState<Subdivision>(1);
+  const totalSteps = beats / subdivision;
+  const currentStep = Math.floor(playback.currentBeat / subdivision);
   const [drag, setDrag] = useState<DragState | null>(null);
   const didDrag = useRef(false);
 
   const isNoteAt = useCallback(
-    (pitch: number, beat: number): Note | null => {
+    (pitch: number, step: number): Note | null => {
       if (!track) return null;
+      const time = step * subdivision;
       return (
         track.notes.find(
           (n) =>
             n.pitch === pitch &&
-            beat >= n.startTime &&
-            beat < n.startTime + n.duration
+            time >= n.startTime &&
+            time < n.startTime + n.duration
         ) || null
       );
     },
-    [track]
+    [track, subdivision]
   );
 
   const isNoteEnd = useCallback(
-    (pitch: number, beat: number): boolean => {
+    (pitch: number, step: number): boolean => {
       if (!track) return false;
+      const time = step * subdivision;
       return track.notes.some(
-        (n) => n.pitch === pitch && beat === n.startTime + n.duration - 1
+        (n) => n.pitch === pitch && time === n.startTime + n.duration - subdivision
       );
     },
-    [track]
+    [track, subdivision]
   );
 
   const isNoteStart = useCallback(
-    (pitch: number, beat: number): boolean => {
+    (pitch: number, step: number): boolean => {
       if (!track) return false;
-      return track.notes.some((n) => n.pitch === pitch && n.startTime === beat);
+      const time = step * subdivision;
+      return track.notes.some((n) => n.pitch === pitch && n.startTime === time);
     },
-    [track]
+    [track, subdivision]
   );
 
   const isNoteMiddle = useCallback(
-    (pitch: number, beat: number): boolean => {
+    (pitch: number, step: number): boolean => {
       if (!track) return false;
+      const time = step * subdivision;
       return track.notes.some(
         (n) =>
           n.pitch === pitch &&
-          beat > n.startTime &&
-          beat < n.startTime + n.duration - 1
+          time > n.startTime &&
+          time < n.startTime + n.duration - subdivision
       );
     },
-    [track]
+    [track, subdivision]
   );
 
   const handleMouseDown = useCallback(
-    (pitch: number, beat: number) => {
+    (pitch: number, step: number) => {
       if (!track) return;
 
-      const existingNote = isNoteAt(pitch, beat);
+      const existingNote = isNoteAt(pitch, step);
       if (existingNote) {
         // Remove note immediately on mousedown on existing note
         dispatch({
@@ -91,19 +99,19 @@ export function NoteEditor({ track }: NoteEditorProps) {
 
       // Start drag for new note
       didDrag.current = false;
-      setDrag({ pitch, startBeat: beat, currentBeat: beat });
+      setDrag({ pitch, startStep: step, currentStep: step });
     },
     [track, dispatch, isNoteAt]
   );
 
   const handleMouseEnter = useCallback(
-    (pitch: number, beat: number) => {
+    (pitch: number, step: number) => {
       if (!drag) return;
       // Only allow horizontal dragging on same pitch
       if (pitch !== drag.pitch) return;
-      if (beat !== drag.currentBeat) {
+      if (step !== drag.currentStep) {
         didDrag.current = true;
-        setDrag((prev) => (prev ? { ...prev, currentBeat: beat } : null));
+        setDrag((prev) => (prev ? { ...prev, currentStep: step } : null));
       }
     },
     [drag]
@@ -115,24 +123,25 @@ export function NoteEditor({ track }: NoteEditorProps) {
       return;
     }
 
-    const fromBeat = Math.min(drag.startBeat, drag.currentBeat);
-    const toBeat = Math.max(drag.startBeat, drag.currentBeat);
-    const duration = toBeat - fromBeat + 1;
+    const fromStep = Math.min(drag.startStep, drag.currentStep);
+    const toStep = Math.max(drag.startStep, drag.currentStep);
+    const startTime = fromStep * subdivision;
+    const duration = (toStep - fromStep + 1) * subdivision;
 
     dispatch({
       type: 'ADD_NOTE',
-      payload: { trackId: track.id, pitch: drag.pitch, startTime: fromBeat, duration, velocity: 100 },
+      payload: { trackId: track.id, pitch: drag.pitch, startTime, duration, velocity: 100 },
     });
     previewNote(drag.pitch, 100, track.presetId, track.paramOverrides);
 
     setDrag(null);
-  }, [drag, track, dispatch, previewNote]);
+  }, [drag, track, dispatch, previewNote, subdivision]);
 
-  const getDragRange = (pitch: number, beat: number): boolean => {
+  const getDragRange = (pitch: number, step: number): boolean => {
     if (!drag || pitch !== drag.pitch) return false;
-    const fromBeat = Math.min(drag.startBeat, drag.currentBeat);
-    const toBeat = Math.max(drag.startBeat, drag.currentBeat);
-    return beat >= fromBeat && beat <= toBeat;
+    const fromStep = Math.min(drag.startStep, drag.currentStep);
+    const toStep = Math.max(drag.startStep, drag.currentStep);
+    return step >= fromStep && step <= toStep;
   };
 
   const handleRandomizeNotes = () => {
@@ -145,13 +154,15 @@ export function NoteEditor({ track }: NoteEditorProps) {
 
     for (let i = 0; i < noteCount; i++) {
       const pitch = Math.floor(Math.random() * (MAX_PITCH - MIN_PITCH + 1)) + MIN_PITCH;
-      const startTime = Math.floor(Math.random() * beats);
+      const startStep = Math.floor(Math.random() * totalSteps);
+      const startTime = startStep * subdivision;
       const key = `${pitch}:${startTime}`;
       if (occupied.has(key)) continue;
       occupied.add(key);
 
-      const maxDuration = Math.min(beats - startTime, 3);
-      const duration = Math.floor(Math.random() * maxDuration) + 1;
+      const maxSteps = Math.min(totalSteps - startStep, Math.round(3 / subdivision));
+      const durationSteps = Math.floor(Math.random() * maxSteps) + 1;
+      const duration = durationSteps * subdivision;
       const velocity = Math.floor(Math.random() * 68) + 60; // 60-127
 
       dispatch({
@@ -177,9 +188,22 @@ export function NoteEditor({ track }: NoteEditorProps) {
     >
       <div className="note-editor-header">
         <h3>Note Editor - {track.name}</h3>
-        <button className="randomize-notes-btn" onClick={handleRandomizeNotes}>
-          Randomize
-        </button>
+        <div className="note-editor-controls">
+          <div className="resolution-toggle">
+            {([1, 0.5, 0.25] as Subdivision[]).map((sub) => (
+              <button
+                key={sub}
+                className={`resolution-btn ${subdivision === sub ? 'active' : ''}`}
+                onClick={() => setSubdivision(sub)}
+              >
+                {sub === 1 ? '1/4' : sub === 0.5 ? '1/8' : '1/16'}
+              </button>
+            ))}
+          </div>
+          <button className="randomize-notes-btn" onClick={handleRandomizeNotes}>
+            Randomize
+          </button>
+        </div>
       </div>
 
       <div className="note-editor-grid-container">
@@ -205,14 +229,18 @@ export function NoteEditor({ track }: NoteEditorProps) {
         <div className="note-editor-grid">
           {/* Beat markers */}
           <div className="note-editor-beat-markers">
-            {Array.from({ length: beats }, (_, i) => (
-              <div
-                key={i}
-                className={`note-editor-beat-marker ${playback.isPlaying && currentBeat === i ? 'playing' : ''}`}
-              >
-                {i + 1}
-              </div>
-            ))}
+            {Array.from({ length: totalSteps }, (_, stepIndex) => {
+              const time = stepIndex * subdivision;
+              const isQuarterBeat = time % 1 === 0;
+              return (
+                <div
+                  key={stepIndex}
+                  className={`note-editor-beat-marker${subdivision !== 1 ? ' sub' : ''} ${playback.isPlaying && currentStep === stepIndex ? 'playing' : ''}`}
+                >
+                  {isQuarterBeat ? time + 1 : ''}
+                </div>
+              );
+            })}
           </div>
 
           {/* Note rows */}
@@ -224,28 +252,33 @@ export function NoteEditor({ track }: NoteEditorProps) {
                 key={pitch}
                 className={`note-editor-row ${isBlackKey ? 'black-key-row' : ''}`}
               >
-                {Array.from({ length: beats }, (_, beat) => {
-                  const note = isNoteAt(pitch, beat);
-                  const start = isNoteStart(pitch, beat);
-                  const end = isNoteEnd(pitch, beat);
-                  const middle = isNoteMiddle(pitch, beat);
-                  const isCurrentBeat = playback.isPlaying && currentBeat === beat;
-                  const isDragPreview = getDragRange(pitch, beat);
+                {Array.from({ length: totalSteps }, (_, stepIndex) => {
+                  const time = stepIndex * subdivision;
+                  const note = isNoteAt(pitch, stepIndex);
+                  const start = isNoteStart(pitch, stepIndex);
+                  const end = isNoteEnd(pitch, stepIndex);
+                  const middle = isNoteMiddle(pitch, stepIndex);
+                  const isCurrentStep = playback.isPlaying && currentStep === stepIndex;
+                  const isDragPreview = getDragRange(pitch, stepIndex);
+                  const isBarStart = time % 4 === 0;
+                  const isBeatStart = !isBarStart && time % 1 === 0;
                   return (
                     <div
-                      key={beat}
+                      key={stepIndex}
                       className={[
                         'note-editor-cell',
                         note ? 'has-note' : '',
                         start ? 'note-start' : '',
                         end ? 'note-end' : '',
                         middle ? 'note-middle' : '',
-                        beat % 4 === 0 ? 'bar-start' : '',
-                        isCurrentBeat ? 'playing' : '',
+                        isBarStart ? 'bar-start' : '',
+                        isBeatStart ? 'beat-start' : '',
+                        isCurrentStep ? 'playing' : '',
                         isDragPreview ? 'drag-preview' : '',
+                        subdivision === 0.25 ? 'cell-sm' : '',
                       ].filter(Boolean).join(' ')}
-                      onMouseDown={(e) => { e.preventDefault(); handleMouseDown(pitch, beat); }}
-                      onMouseEnter={() => handleMouseEnter(pitch, beat)}
+                      onMouseDown={(e) => { e.preventDefault(); handleMouseDown(pitch, stepIndex); }}
+                      onMouseEnter={() => handleMouseEnter(pitch, stepIndex)}
                     />
                   );
                 })}
