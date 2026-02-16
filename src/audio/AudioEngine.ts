@@ -77,9 +77,6 @@ export class AudioEngine {
     this.tempo = state.metadata.tempo;
     this.loopLengthBeats = state.metadata.lengthBeats;
 
-    // Update mixer
-    this.updateMixer(state.mixer);
-
     // Ensure track channels exist
     for (const track of state.tracks) {
       this.ensureTrackChannel(track, state);
@@ -92,6 +89,9 @@ export class AudioEngine {
         this.removeTrackChannel(id, channel);
       }
     }
+
+    // Update mixer
+    this.updateMixer(state.mixer);        
 
     // Sync scheduled notes with current state during playback
     if (this.isPlaying) {
