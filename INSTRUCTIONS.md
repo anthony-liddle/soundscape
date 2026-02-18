@@ -17,16 +17,19 @@ Visit `/examples/` when running the dev server to see the audio engine in action
 
 ### Option 1: Standalone Composer Tool
 
-Use Soundscape as a standalone tool to compose music, then export JSON files to load in your game.
+Use the [Soundscape Editor](https://anthony-liddle.github.io/soundscape/) to compose music visually, then export JSON files to load in your game.
 
-1. Run Soundscape locally or deploy it
+1. Open the [Soundscape Editor](https://anthony-liddle.github.io/soundscape/)
 2. Compose your tracks
 3. Export as JSON
-4. Load the JSON in your game and use the audio engine
+4. Install the engine and load the JSON in your game
+
+```bash
+npm install soundscape-engine
+```
 
 ```typescript
-import { AudioEngine } from './audio/AudioEngine';
-import { builtInPresets } from './presets';
+import { AudioEngine, builtInPresets } from 'soundscape-engine';
 
 // Load your exported soundscape
 const soundscapeData = await fetch('/music/level1.json').then(r => r.json());
@@ -73,8 +76,7 @@ function GameMusicEditor() {
 Use just the audio engine for programmatic music generation.
 
 ```typescript
-import { AudioEngine } from './audio/AudioEngine';
-import { builtInPresets } from './presets';
+import { AudioEngine, builtInPresets } from 'soundscape-engine';
 
 const engine = new AudioEngine();
 await engine.initialize();
@@ -173,6 +175,9 @@ interface Note {
 ### Adaptive Music Example
 
 ```typescript
+import { AudioEngine, builtInPresets } from 'soundscape-engine';
+import type { SoundscapeState } from 'soundscape-engine';
+
 class GameMusicManager {
   private engine: AudioEngine;
   private baseState: SoundscapeState;

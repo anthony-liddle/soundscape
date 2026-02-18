@@ -40,10 +40,12 @@ These examples are written in TypeScript and designed to be integrated into a pr
 
 ### Quick Start
 
+```bash
+npm install soundscape-engine
+```
+
 ```typescript
-// Import from your Soundscape installation
-import { AudioEngine } from 'soundscape/audio/AudioEngine';
-import { builtInPresets } from 'soundscape/presets';
+import { AudioEngine, builtInPresets } from 'soundscape-engine';
 
 // Initialize
 const engine = new AudioEngine();
@@ -60,11 +62,13 @@ document.addEventListener('click', async () => {
 }, { once: true });
 ```
 
+You can compose music visually using the [Soundscape Editor](https://anthony-liddle.github.io/soundscape/) and export JSON files to use with the engine.
+
 ### Copying Examples to Your Project
 
 1. Copy the relevant `.ts` file into your project
-2. Adjust import paths to match your project structure
-3. Ensure you have the Soundscape `src/audio` and `src/presets` directories available
+2. Install the `soundscape-engine` package
+3. Adjust import paths if needed
 
 ## File Structure
 
@@ -76,7 +80,7 @@ examples/
 ├── adaptive-game-music.ts       # Game music manager
 └── sample-soundscape.json       # Sample composition
 
-public/examples/
+apps/editor/public/examples/
 ├── index.html                   # Live interactive demo
 └── sample-soundscape.json       # Sample composition for demo
 ```

@@ -42,24 +42,26 @@ A browser-based music sequencer and synthesizer built with React, TypeScript, an
 
 ## Getting Started
 
-### Install dependencies
+### Using the engine in your project
+
+Install the standalone audio engine from npm:
+
 ```bash
-npm install
-# or
+npm install soundscape-engine
+```
+
+See the [engine package documentation](packages/engine/README.md) for API details.
+
+### Developing the editor
+
+```bash
+# Install dependencies
 pnpm install
-```
 
-### Run development server
-```bash
-npm run dev
-# or
+# Run development server
 pnpm dev
-```
 
-### Build for production
-```bash
-npm run build
-# or
+# Build all packages
 pnpm build
 ```
 
@@ -99,20 +101,27 @@ Check out the **[examples](examples/)** directory for working code samples:
 
 ## Project Structure
 
+This is a pnpm monorepo:
+
 ```
-src/
-├── components/
-│   ├── common/          # Reusable UI components (Button, Slider, Select)
-│   ├── Transport/       # Play/Stop controls and tempo
-│   ├── TrackList/       # Track management sidebar
-│   ├── NoteEditor/      # Piano roll grid
-│   ├── InstrumentPanel/ # Synth parameter controls
-│   └── ImportExport/    # Save/load functionality
-├── audio/               # Web Audio engine and synthesis
-├── state/               # React context and reducer
-├── types/               # TypeScript type definitions
-├── presets/             # Built-in instrument presets
-└── utils/               # Helper functions
+apps/
+└── editor/              # React-based sequencer UI
+    ├── src/
+    │   ├── components/  # UI components (Transport, TrackList, NoteEditor, etc.)
+    │   ├── state/       # React context and reducer
+    │   ├── api/         # Runtime API for external integration
+    │   └── hooks/       # Custom React hooks
+    └── public/          # Static assets and examples demo
+
+packages/
+└── engine/              # Standalone audio engine (published as soundscape-engine on npm)
+    └── src/
+        ├── audio/       # AudioEngine, VoiceSynthesizer, EffectsChain
+        ├── types/       # TypeScript type definitions
+        ├── presets/     # Built-in instrument presets
+        └── utils/       # Pitch, time, and validation helpers
+
+examples/                # Integration code samples
 ```
 
 ## Contributing
