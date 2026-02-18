@@ -1,0 +1,44 @@
+name: Publish Engine
+
+on:
+  push:
+    tags:
+      - 'engine-v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run engine tests
+        run: pnpm --filter soundscape-engine test run
+
+      - name: Build engine
+        run: pnpm --filter soundscape-engine build
+
+      - name: Copy LICENSE into package
+        run: cp LICENSE packages/engine/LICENSE
+
+      - name: Publish to npm
+        run: npm publish --access public
+        working-directory: packages/engine
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

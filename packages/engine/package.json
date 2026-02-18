@@ -1,7 +1,28 @@
 {
   "name": "soundscape-engine",
   "version": "0.1.0",
+  "description": "Browser-based music sequencer and synthesizer engine powered by the Web Audio API",
   "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "audio",
+    "web-audio",
+    "synthesizer",
+    "sequencer",
+    "music",
+    "daw",
+    "synth"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anthony-liddle/soundscape.git",
+    "directory": "packages/engine"
+  },
+  "homepage": "https://github.com/anthony-liddle/soundscape/tree/main/packages/engine#readme",
+  "bugs": {
+    "url": "https://github.com/anthony-liddle/soundscape/issues"
+  },
+  "sideEffects": false,
   "exports": {
     ".": {
       "import": "./dist/soundscape-engine.js",
@@ -11,7 +32,8 @@
   "main": "./dist/soundscape-engine.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -b && vite build",
