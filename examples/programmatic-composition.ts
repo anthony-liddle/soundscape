@@ -5,9 +5,8 @@
  * Useful for procedurally generated music or dynamic compositions.
  */
 
-import { AudioEngine } from '../src/audio/AudioEngine';
-import { builtInPresets } from '../src/presets';
-import type { SoundscapeState, Track, Note } from '../src/types';
+import { AudioEngine, builtInPresets } from 'soundscape-engine';
+import type { SoundscapeState, Track, Note } from 'soundscape-engine';
 
 // ============================================
 // Helper Functions

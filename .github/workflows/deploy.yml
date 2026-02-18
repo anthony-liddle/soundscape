@@ -36,10 +36,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run tests
-        run: pnpm test run
+        run: pnpm -r test run
 
       - name: Build
-        run: pnpm build
+        run: pnpm -r build
         env:
           BASE_URL: /soundscape/
 
@@ -49,7 +49,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: dist
+          path: apps/editor/dist
 
   deploy:
     environment:

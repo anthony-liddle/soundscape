@@ -1,0 +1,55 @@
+{
+  "name": "soundscape-engine",
+  "version": "0.1.0",
+  "description": "Browser-based music sequencer and synthesizer engine powered by the Web Audio API",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "audio",
+    "web-audio",
+    "synthesizer",
+    "sequencer",
+    "music",
+    "daw",
+    "synth"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anthony-liddle/soundscape.git",
+    "directory": "packages/engine"
+  },
+  "homepage": "https://github.com/anthony-liddle/soundscape/tree/main/packages/engine#readme",
+  "bugs": {
+    "url": "https://github.com/anthony-liddle/soundscape/issues"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": "./dist/soundscape-engine.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "main": "./dist/soundscape-engine.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "eslint": "^9.39.1",
+    "globals": "^17.3.0",
+    "jsdom": "^28.0.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vite": "^7.2.4",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^4.0.18"
+  }
+}

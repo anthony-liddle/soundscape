@@ -5,9 +5,8 @@
  * Demonstrates tempo changes, track muting, and sound effects.
  */
 
-import { AudioEngine } from '../src/audio/AudioEngine';
-import { builtInPresets } from '../src/presets';
-import type { SoundscapeState, TrackMixerState } from '../src/types';
+import { AudioEngine, builtInPresets } from 'soundscape-engine';
+import type { SoundscapeState, TrackMixerState } from 'soundscape-engine';
 
 // ============================================
 // Types
