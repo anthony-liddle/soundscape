@@ -26,8 +26,50 @@
   color: #9ca3af;
 }
 
+.note-editor-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.resolution-toggle {
+  display: flex;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.resolution-btn {
+  padding: 0.25rem 0.5rem;
+  background: #374151;
+  border: 1px solid #4b5563;
+  border-right: none;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.resolution-btn:last-child {
+  border-right: 1px solid #4b5563;
+}
+
+.resolution-btn:hover {
+  background: #4b5563;
+  color: #e5e7eb;
+}
+
+.resolution-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.resolution-btn.active + .resolution-btn {
+  border-left-color: #3b82f6;
+}
+
 .randomize-notes-btn {
-  padding: 0.25rem 0.75rem;
+  padding: 0.35rem 0.75rem;
   background: #8b5cf6;
   border: none;
   border-radius: 4px;
@@ -98,6 +140,10 @@
   color: #6b7280;
 }
 
+.note-editor-beat-marker.sub {
+  width: 20px;
+}
+
 .note-editor-beat-marker.playing {
   background: rgba(251, 191, 36, 0.3);
   color: #fbbf24;
@@ -123,6 +169,10 @@
   transition: background 0.1s ease;
 }
 
+.note-editor-cell.cell-sm {
+  width: 20px;
+}
+
 .note-editor-cell:last-child {
   border-right: 1px solid #374151;
 }
@@ -137,6 +187,10 @@
 
 .note-editor-cell.bar-start {
   border-left: 2px solid #4b5563;
+}
+
+.note-editor-cell.beat-start {
+  border-left: 2px solid #374151;
 }
 
 .note-editor-cell.has-note {
