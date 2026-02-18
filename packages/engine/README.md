@@ -2,6 +2,10 @@
 
 Browser-based music sequencer and synthesizer engine powered by the Web Audio API.
 
+## Compose Visually
+
+Use the **[Soundscape Editor](https://anthony-liddle.github.io/soundscape/)** to compose music with a visual piano roll, then export JSON to play back with this engine.
+
 ## Install
 
 ```bash
