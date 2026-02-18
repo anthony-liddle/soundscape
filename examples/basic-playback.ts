@@ -5,9 +5,8 @@
  * This is ideal for playing background music in a game or application.
  */
 
-import { AudioEngine } from '../src/audio/AudioEngine';
-import { builtInPresets } from '../src/presets';
-import type { SoundscapeState } from '../src/types';
+import { AudioEngine, builtInPresets } from 'soundscape-engine';
+import type { SoundscapeState } from 'soundscape-engine';
 
 // Type for exported soundscape (without presets)
 type ExportedSoundscape = Omit<SoundscapeState, 'presets'>;
