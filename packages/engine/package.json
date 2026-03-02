@@ -44,10 +44,10 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^9.39.1",
-    "globals": "^17.3.0",
+    "globals": "^17.4.0",
     "jsdom": "^28.1.0",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.56.0",
+    "typescript-eslint": "^8.56.1",
     "vite": "^7.2.4",
     "vite-plugin-dts": "^4.5.4",
     "vitest": "^4.0.18"
