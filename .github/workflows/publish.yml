@@ -40,6 +40,9 @@ jobs:
       - name: Copy LICENSE into package
         run: cp LICENSE packages/engine/LICENSE
 
+      - name: Configure npm registry
+        run: echo "registry=https://registry.npmjs.org/" > ~/.npmrc
+
       - name: Publish to npm
         run: npm publish --access public --provenance
         working-directory: packages/engine
