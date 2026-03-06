@@ -24,6 +24,28 @@ interface TrackChannel {
   activeVoices: Map<string, VoiceSynthesizer>; // noteId -> voice
 }
 
+/**
+ * Core audio playback engine built on the Web Audio API.
+ *
+ * `AudioEngine` manages the full lifecycle of audio playback: scheduling notes
+ * ahead of time, applying per-track effects chains, handling the mixer, and
+ * maintaining a looping transport.
+ *
+ * ### Typical usage
+ * ```ts
+ * const engine = new AudioEngine();
+ * await engine.initialize();
+ *
+ * engine.updateState(myState);  // sync with your app state
+ * engine.onBeatUpdate((beat) => setPlayhead(beat));
+ * engine.play();
+ * ```
+ *
+ * @remarks
+ * Must be constructed and used in a browser environment with Web Audio API support.
+ * Call {@link initialize} once before any playback methods — this creates the
+ * `AudioContext` which requires a user gesture on most browsers.
+ */
 export class AudioEngine {
   private context: AudioContext | null = null;
   private masterGain: GainNode | null = null;
@@ -43,6 +65,16 @@ export class AudioEngine {
 
   private currentState: SoundscapeState | null = null;
 
+  /**
+   * Creates the underlying `AudioContext` and master gain node.
+   *
+   * Must be called once before any other playback method. Safe to call multiple
+   * times — subsequent calls are no-ops if already initialized.
+   *
+   * @remarks
+   * Browsers require a user gesture (click, keydown, etc.) before an
+   * `AudioContext` can produce sound. Call this inside an event handler.
+   */
   async initialize(): Promise<void> {
     if (this.context) return;
 
@@ -52,6 +84,12 @@ export class AudioEngine {
     this.masterGain.gain.value = 0.8;
   }
 
+  /**
+   * Resumes a suspended `AudioContext`.
+   *
+   * Browsers automatically suspend the context when the page loses focus.
+   * Call this on the next user interaction to restore audio output.
+   */
   async resume(): Promise<void> {
     if (this.context?.state === 'suspended') {
       await this.context.resume();
@@ -72,6 +110,18 @@ export class AudioEngine {
     return this.masterGain;
   }
 
+  /**
+   * Synchronizes the engine with the latest {@link SoundscapeState}.
+   *
+   * Call this whenever your application state changes — the engine diffs
+   * the new state against the previous one and only updates what changed:
+   * - Creates or destroys track channels as tracks are added/removed.
+   * - Updates effects parameters from preset + per-track overrides.
+   * - If currently playing, live-syncs the scheduled note queue so changes
+   *   are reflected in the next scheduling window (~100 ms lookahead).
+   *
+   * @param state - The full current project state.
+   */
   updateState(state: SoundscapeState): void {
     this.currentState = state;
     this.tempo = state.metadata.tempo;
@@ -200,6 +250,14 @@ export class AudioEngine {
     this.trackChannels.delete(id);
   }
 
+  /**
+   * Applies mixer state (volume, mute, solo) to all track channels immediately.
+   *
+   * This is called automatically by {@link updateState}, but you can call it
+   * directly for low-latency mixer updates without a full state sync.
+   *
+   * @param mixer - The mixer state to apply.
+   */
   updateMixer(mixer: MixerState): void {
     const masterGain = this.masterGain;
     if (!masterGain) return;
@@ -222,6 +280,18 @@ export class AudioEngine {
     }
   }
 
+  /**
+   * Starts playback from the given beat position.
+   *
+   * Notes are scheduled ~100 ms ahead of the audio clock using a 25 ms
+   * polling interval to ensure glitch-free output. If loop mode is enabled,
+   * playback will automatically wrap around when it reaches `lengthBeats`.
+   *
+   * Call {@link updateState} before `play()` to ensure the engine has the
+   * latest tracks and notes.
+   *
+   * @param startBeat - Beat position to begin playback from. Defaults to `0`.
+   */
   play(startBeat: number = 0): void {
     if (this.isPlaying || !this.currentState) return;
 
@@ -254,6 +324,12 @@ export class AudioEngine {
     this.scheduleNotes();
   }
 
+  /**
+   * Stops playback and silences all active voices immediately.
+   *
+   * Resets the playhead to beat 0 and fires the beat update callback with `0`.
+   * The engine remains initialized and ready to {@link play} again.
+   */
   stop(): void {
     if (!this.isPlaying) return;
 
@@ -369,6 +445,14 @@ export class AudioEngine {
     return voice;
   }
 
+  /**
+   * Changes the playback tempo without interrupting playback.
+   *
+   * If currently playing, the transport start time is recalculated so the
+   * playhead position stays consistent at the new BPM.
+   *
+   * @param bpm - New tempo in beats per minute.
+   */
   setTempo(bpm: number): void {
     if (this.isPlaying) {
       // Adjust start time to maintain position
@@ -380,27 +464,86 @@ export class AudioEngine {
     this.tempo = bpm;
   }
 
+  /**
+   * Enables or disables loop mode.
+   *
+   * When enabled, playback wraps back to beat 0 when it reaches `lengthBeats`.
+   *
+   * @param enabled - `true` to loop, `false` to stop at the end.
+   */
   setLoop(enabled: boolean): void {
     this.loopEnabled = enabled;
   }
 
+  /**
+   * Sets the loop length in beats.
+   *
+   * This should match `SoundscapeState.metadata.lengthBeats` in most cases.
+   * Updated automatically when you call {@link updateState}.
+   *
+   * @param beats - Total number of beats before the loop wraps.
+   */
   setLoopLength(beats: number): void {
     this.loopLengthBeats = beats;
   }
 
+  /**
+   * Returns the current playhead position in beats.
+   *
+   * Updated approximately every 25 ms during playback.
+   * Subscribe to continuous updates via {@link onBeatUpdate} instead of polling.
+   *
+   * @returns Current beat position (0-based), or `0` if stopped.
+   */
   getCurrentBeat(): number {
     return this.currentBeat;
   }
 
+  /**
+   * Returns whether the engine is currently playing.
+   *
+   * @returns `true` if {@link play} has been called and {@link stop} has not.
+   */
   getIsPlaying(): boolean {
     return this.isPlaying;
   }
 
+  /**
+   * Registers a callback that fires every ~25 ms during playback with the
+   * current beat position. Use this to drive a playhead cursor in your UI.
+   *
+   * Only one callback is active at a time; calling this again replaces the previous one.
+   *
+   * @param callback - Receives the current beat position (0-based) on each tick,
+   *   and is called with `0` when {@link stop} is invoked.
+   *
+   * @example
+   * engine.onBeatUpdate((beat) => {
+   *   setPlayheadPosition(beat);
+   * });
+   */
   onBeatUpdate(callback: (beat: number) => void): void {
     this.beatUpdateCallback = callback;
   }
 
-  // Preview a single note (for editing)
+  /**
+   * Plays a single note immediately for preview purposes (e.g., when the user
+   * clicks a key in a piano roll or selects a preset).
+   *
+   * The note is automatically released after 500 ms and cleaned up after the
+   * release tail completes (~1 s total). No interaction with the transport
+   * or scheduled notes queue.
+   *
+   * @param pitch - MIDI pitch to preview (0–127).
+   * @param velocity - Note velocity (0–127).
+   * @param presetId - ID of the preset to use for the preview sound.
+   * @param paramOverrides - Optional per-parameter overrides applied on top of
+   *   the preset's default values. Useful for previewing knob changes in real time.
+   *
+   * @example
+   * // Preview middle C using the current preset with a brighter filter
+   * engine.previewNote(60, 100, 'preset-lead', { filterCutoff: 0.9 });
+   */
   previewNote(pitch: number, velocity: number, presetId: string, paramOverrides?: Partial<InstrumentParams>): void {
     if (!this.currentState) return;
 
@@ -431,6 +574,12 @@ export class AudioEngine {
     }, 500);
   }
 
+  /**
+   * Stops playback, disconnects all audio nodes, and closes the `AudioContext`.
+   *
+   * After calling `destroy()`, the engine instance should not be reused.
+   * Create a new `AudioEngine` if you need to restart.
+   */
   destroy(): void {
     this.stop();
 
