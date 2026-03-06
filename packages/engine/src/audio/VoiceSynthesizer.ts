@@ -2,14 +2,22 @@ import type { InstrumentParams } from '../types';
 import { midiToFrequency, normalizedToFilterFreq, normalizedToQ, applyPitchOffset } from '../utils/pitch';
 import { normalizedToADSR } from '../utils/time';
 
+/** Parameters passed to a voice when triggering a note-on event. */
 export interface VoiceParams {
-  pitch: number; // MIDI note
-  velocity: number; // 0-127
+  /** MIDI pitch value (0–127). Middle C is 60. */
+  pitch: number;
+  /** Note velocity (0–127). Scales amplitude when `instrument.velocityResponse > 0`. */
+  velocity: number;
+  /** The full instrument parameter set that defines the synthesis behaviour. */
   instrument: InstrumentParams;
 }
 
 /**
- * Single voice synthesizer with oscillator, ADSR envelope, and filter
+ * A single polyphonic voice: one oscillator routed through an ADSR gain envelope
+ * and a lowpass filter, connected to a shared output node.
+ *
+ * Voices are pooled per track by {@link AudioEngine} (up to 8 per track).
+ * When all voices are busy, the oldest voice is stolen via {@link stop}.
  */
 export class VoiceSynthesizer {
   private context: AudioContext;
@@ -38,6 +46,16 @@ export class VoiceSynthesizer {
     this.filterNode.type = 'lowpass';
   }
 
+  /**
+   * Triggers a note-on event, starting the oscillator and ADSR attack phase.
+   *
+   * If the voice is already playing, it is stopped first (no click protection —
+   * the caller is responsible for voice stealing).
+   *
+   * @param params - Pitch, velocity, and instrument parameters for this note.
+   * @param startTime - `AudioContext` time (in seconds) when the note should begin.
+   *   Pass `context.currentTime` to start immediately.
+   */
   noteOn(params: VoiceParams, startTime: number): void {
     if (this.releaseTimeout !== null) {
       clearTimeout(this.releaseTimeout);
@@ -91,6 +109,16 @@ export class VoiceSynthesizer {
     this.isPlaying = true;
   }
 
+  /**
+   * Triggers a note-off event, starting the ADSR release phase.
+   *
+   * The oscillator continues running until the release tail completes, then
+   * stops and is cleaned up automatically.
+   *
+   * @param instrument - Instrument params used to read the `release` duration.
+   * @param stopTime - `AudioContext` time (in seconds) when the release should begin.
+   *   Pass `context.currentTime` to release immediately.
+   */
   noteOff(instrument: InstrumentParams, stopTime: number): void {
     if (!this.oscillator || !this.isPlaying) return;
 
@@ -123,6 +151,12 @@ export class VoiceSynthesizer {
     }, cleanupDelay);
   }
 
+  /**
+   * Immediately silences and disconnects the oscillator, bypassing the release envelope.
+   *
+   * Used for voice stealing and transport stop. May cause a slight click if the
+   * voice is mid-note — prefer {@link noteOff} when a smooth release is desired.
+   */
   stop(): void {
     if (this.releaseTimeout !== null) {
       clearTimeout(this.releaseTimeout);
@@ -143,10 +177,23 @@ export class VoiceSynthesizer {
     this.gainNode.gain.setValueAtTime(0, this.context.currentTime);
   }
 
+  /**
+   * Returns whether this voice is currently active (oscillator running).
+   *
+   * Used by the voice pool to find a free voice before resorting to stealing.
+   *
+   * @returns `true` if the oscillator is running (including during release phase).
+   */
   getIsPlaying(): boolean {
     return this.isPlaying;
   }
 
+  /**
+   * Stops the voice and disconnects all internal audio nodes from the graph.
+   *
+   * Call this when the voice is being removed from the pool entirely.
+   * After `disconnect()`, the voice instance should not be reused.
+   */
   disconnect(): void {
     this.stop();
     this.gainNode.disconnect();
