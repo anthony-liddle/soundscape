@@ -1,9 +1,11 @@
+import { useTapTempo } from '../../hooks/useTapTempo';
 import { useSoundscape } from '../../state';
 import { Button, Slider } from '../common';
 import './Transport.css';
 
 export function Transport() {
   const { state, dispatch, playback, play, stop, setTempo, setLoop } = useSoundscape();
+  const tap = useTapTempo(setTempo);
 
   const handleMasterVolumeChange = (volume: number) => {
     dispatch({ type: 'SET_MASTER_VOLUME', payload: volume });
@@ -34,6 +36,10 @@ export function Transport() {
           onClick={() => setLoop(!playback.loop)}
         >
           Loop
+        </Button>
+
+        <Button variant="secondary" onClick={tap} title="Tap to set BPM">
+          Tap
         </Button>
       </div>
 
