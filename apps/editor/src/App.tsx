@@ -5,7 +5,7 @@ import { TrackList } from './components/TrackList';
 import { NoteEditor } from './components/NoteEditor';
 import { InstrumentPanel } from './components/InstrumentPanel';
 import { ImportExport } from './components/ImportExport';
-import { WaveformVisualizer } from './components/WaveformVisualizer/WaveformVisualizer';
+
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import './App.css';
 
@@ -66,9 +66,8 @@ function SoundscapeApp() {
         </aside>
 
         <main className="app-main">
-          <WaveformVisualizer analyserNode={analyserNode} />
           <NoteEditor key={selectedTrack?.id ?? 'empty'} track={selectedTrack} />
-          <InstrumentPanel track={selectedTrack} />
+          <InstrumentPanel track={selectedTrack} analyserNode={analyserNode} />
         </main>
       </div>
     </div>

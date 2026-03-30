@@ -4,4 +4,6 @@
   display: block;
   border-radius: 6px;
   background: #111827;
+  border: 1px solid #1f2937;
+  box-sizing: border-box;
 }

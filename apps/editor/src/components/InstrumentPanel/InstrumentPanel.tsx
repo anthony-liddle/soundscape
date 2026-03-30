@@ -1,11 +1,13 @@
 import { useSoundscape } from '../../state';
 import { Slider, Select } from '../common';
+import { WaveformVisualizer } from '../WaveformVisualizer/WaveformVisualizer';
 import type { Track, InstrumentParams, Waveform, FilterType, LfoTarget } from 'soundscape-engine';
 import { getPresetById } from 'soundscape-engine';
 import './InstrumentPanel.css';
 
 interface InstrumentPanelProps {
   track: Track | null;
+  analyserNode: AnalyserNode | null;
 }
 
 const waveformOptions = [
@@ -27,7 +29,7 @@ const lfoTargetOptions = [
   { value: 'pitch', label: 'Pitch (Vibrato)' },
 ];
 
-export function InstrumentPanel({ track }: InstrumentPanelProps) {
+export function InstrumentPanel({ track, analyserNode }: InstrumentPanelProps) {
   const { state, dispatch, previewNote } = useSoundscape();
 
   if (!track) {
@@ -115,6 +117,8 @@ export function InstrumentPanel({ track }: InstrumentPanelProps) {
           </button>
         </div>
       </div>
+
+      <WaveformVisualizer analyserNode={analyserNode} />
 
       <div className="instrument-params">
         <div className="param-section">
