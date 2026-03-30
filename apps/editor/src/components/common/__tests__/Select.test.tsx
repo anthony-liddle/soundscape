@@ -12,12 +12,12 @@ describe('Select', () => {
   describe('tooltip hint', () => {
     it('shows a ? badge when tooltip prop is provided', () => {
       render(<Select value="lowpass" options={options} label="Type" tooltip="Filter shape" onChange={vi.fn()} />)
-      expect(screen.getByText('?')).toBeInTheDocument()
+      expect(screen.getByText('ⓘ')).toBeInTheDocument()
     })
 
     it('does not show a ? badge when tooltip prop is absent', () => {
       render(<Select value="lowpass" options={options} label="Type" onChange={vi.fn()} />)
-      expect(screen.queryByText('?')).not.toBeInTheDocument()
+      expect(screen.queryByText('ⓘ')).not.toBeInTheDocument()
     })
 
     it('shows the tooltip text on hover', async () => {

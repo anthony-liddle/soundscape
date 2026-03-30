@@ -27,7 +27,7 @@ export function Select({ value, options, label, tooltip, onChange }: SelectProps
           {tooltip ? (
             <Tooltip text={tooltip}>
               {label}
-              <span className="tooltip-hint">?</span>
+              <span className="tooltip-hint">ⓘ</span>
             </Tooltip>
           ) : label}
         </label>
