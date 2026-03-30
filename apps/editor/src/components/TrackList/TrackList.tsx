@@ -24,8 +24,9 @@ export function TrackList({ selectedTrackId, onSelectTrack }: TrackListProps) {
     dispatch({ type: 'REMOVE_TRACK', payload: { trackId } });
     if (selectedTrackId === trackId) {
       const remaining = state.tracks.filter((t) => t.id !== trackId);
-      if (remaining.length > 0) {
-        onSelectTrack(remaining[0].id);
+      const firstRemaining = remaining[0];
+      if (firstRemaining) {
+        onSelectTrack(firstRemaining.id);
       }
     }
   };

@@ -199,6 +199,18 @@ describe('soundscape reducer', () => {
       expect(result.mixer.tracks[newId].mute).toBe(true)
     })
 
+    it('duplicate without paramOverrides has no paramOverrides property', () => {
+      const state = createInitialState()
+      const sourceId = state.tracks[0].id
+
+      const result = soundscapeReducer(state, {
+        type: 'DUPLICATE_TRACK',
+        payload: { trackId: sourceId },
+      })
+      expect(result.tracks[1].paramOverrides).toBeUndefined()
+      expect('paramOverrides' in result.tracks[1]).toBe(false)
+    })
+
     it('returns unchanged state for non-existent track', () => {
       const state = createInitialState()
       const result = soundscapeReducer(state, {
@@ -206,6 +218,53 @@ describe('soundscape reducer', () => {
         payload: { trackId: 'non-existent' },
       })
       expect(result).toBe(state)
+    })
+  })
+
+  describe('SET_TRACK_PRESET', () => {
+    it('updates the preset id', () => {
+      const state = createInitialState()
+      const trackId = state.tracks[0].id
+
+      const result = soundscapeReducer(state, {
+        type: 'SET_TRACK_PRESET',
+        payload: { trackId, presetId: 'bass' },
+      })
+      expect(result.tracks[0].presetId).toBe('bass')
+    })
+
+    it('clears paramOverrides when preset changes', () => {
+      let state = createInitialState()
+      const trackId = state.tracks[0].id
+      state = soundscapeReducer(state, {
+        type: 'SET_TRACK_PARAM_OVERRIDES',
+        payload: { trackId, overrides: { attack: 0.9, decay: 0.1 } },
+      })
+      expect(state.tracks[0].paramOverrides).toBeDefined()
+
+      const result = soundscapeReducer(state, {
+        type: 'SET_TRACK_PRESET',
+        payload: { trackId, presetId: 'bass' },
+      })
+      expect(result.tracks[0].paramOverrides).toBeUndefined()
+      expect('paramOverrides' in result.tracks[0]).toBe(false)
+    })
+
+    it('does not affect other tracks', () => {
+      let state = createInitialState()
+      state = soundscapeReducer(state, {
+        type: 'ADD_TRACK',
+        payload: { name: 'Track 2', presetId: 'bass' },
+      })
+      const track1Id = state.tracks[0].id
+      const track2Id = state.tracks[1].id
+
+      const result = soundscapeReducer(state, {
+        type: 'SET_TRACK_PRESET',
+        payload: { trackId: track1Id, presetId: 'pad' },
+      })
+      expect(result.tracks[1].id).toBe(track2Id)
+      expect(result.tracks[1].presetId).toBe('bass')
     })
   })
 

@@ -68,3 +68,16 @@
   text-align: right;
   font-family: monospace;
 }
+
+.tooltip-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #374151;
+  color: #9ca3af;
+  font-size: 0.6rem;
+  line-height: 1;
+}

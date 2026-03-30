@@ -41,6 +41,7 @@ export const leadPreset = createPreset('lead', 'Lead', {
   delayFeedback: 0.4,
   delayMix: 0.25,
   distortion: 0.05,
+  unisonDetune: 0.2,
   velocityResponse: 0.6,
 });
 
@@ -57,6 +58,7 @@ export const padPreset = createPreset('pad', 'Pad', {
   delayFeedback: 0.5,
   delayMix: 0.35,
   distortion: 0,
+  reverbMix: 0.35,
   velocityResponse: 0.3,
 });
 
@@ -151,6 +153,8 @@ export const stringsPreset = createPreset('strings', 'Strings', {
   delayFeedback: 0.35,
   delayMix: 0.25,
   distortion: 0,
+  reverbMix: 0.25,
+  unisonDetune: 0.15,
   velocityResponse: 0.5,
 });
 

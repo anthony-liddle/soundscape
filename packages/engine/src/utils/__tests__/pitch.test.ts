@@ -6,6 +6,9 @@ import {
   applyPitchOffset,
   normalizedToFilterFreq,
   normalizedToQ,
+  normalizedToLfoRate,
+  normalizedToLfoFilterDepth,
+  normalizedToLfoPitchDepth,
 } from '../pitch'
 
 describe('pitch utilities', () => {
@@ -106,6 +109,58 @@ describe('pitch utilities', () => {
 
     it('returns linear intermediate values', () => {
       expect(normalizedToQ(0.5)).toBeCloseTo(10.25, 2)
+    })
+  })
+
+  describe('normalizedToLfoRate', () => {
+    it('returns 0.1 Hz at 0 (slowest sweep)', () => {
+      expect(normalizedToLfoRate(0)).toBeCloseTo(0.1, 5)
+    })
+
+    it('returns 20 Hz at 1 (fastest wobble)', () => {
+      expect(normalizedToLfoRate(1)).toBeCloseTo(20, 5)
+    })
+
+    it('uses exponential mapping — midpoint is geometric mean', () => {
+      const mid = normalizedToLfoRate(0.5)
+      // Geometric mean of 0.1 and 20
+      expect(mid).toBeCloseTo(Math.sqrt(0.1 * 20), 4)
+    })
+
+    it('returns values in (0.1, 20) for intermediate inputs', () => {
+      const val = normalizedToLfoRate(0.3)
+      expect(val).toBeGreaterThan(0.1)
+      expect(val).toBeLessThan(20)
+    })
+  })
+
+  describe('normalizedToLfoFilterDepth', () => {
+    it('returns 0 Hz at 0 (no modulation)', () => {
+      expect(normalizedToLfoFilterDepth(0)).toBe(0)
+    })
+
+    it('returns 4000 Hz at 1 (maximum sweep)', () => {
+      expect(normalizedToLfoFilterDepth(1)).toBe(4000)
+    })
+
+    it('scales linearly', () => {
+      expect(normalizedToLfoFilterDepth(0.5)).toBe(2000)
+      expect(normalizedToLfoFilterDepth(0.25)).toBe(1000)
+    })
+  })
+
+  describe('normalizedToLfoPitchDepth', () => {
+    it('returns 0 cents at 0 (no vibrato)', () => {
+      expect(normalizedToLfoPitchDepth(0)).toBe(0)
+    })
+
+    it('returns 100 cents at 1 (one semitone vibrato)', () => {
+      expect(normalizedToLfoPitchDepth(1)).toBe(100)
+    })
+
+    it('scales linearly', () => {
+      expect(normalizedToLfoPitchDepth(0.5)).toBe(50)
+      expect(normalizedToLfoPitchDepth(0.1)).toBeCloseTo(10, 5)
     })
   })
 })

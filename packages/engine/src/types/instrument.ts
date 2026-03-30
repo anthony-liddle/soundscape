@@ -1,6 +1,12 @@
 /** Oscillator waveform shape. Controls the tonal character of the sound. */
 export type Waveform = 'sine' | 'square' | 'sawtooth' | 'triangle';
 
+/** Filter mode. Controls which part of the frequency spectrum passes through. */
+export type FilterType = 'lowpass' | 'highpass' | 'bandpass' | 'notch';
+
+/** Which signal the LFO modulates. */
+export type LfoTarget = 'filter' | 'pitch';
+
 /**
  * Full set of synthesis parameters for a single instrument voice.
  *
@@ -40,12 +46,17 @@ export interface InstrumentParams {
 
   // ── Filter ───────────────────────────────────────────────────────────────
   /**
-   * Lowpass filter cutoff frequency (normalized 0–1).
+   * Filter mode. Controls which part of the frequency spectrum passes through.
+   * Defaults to `'lowpass'` when omitted.
+   */
+  filterType?: FilterType;
+  /**
+   * Filter cutoff frequency (normalized 0–1).
    * Mapped internally to 20 Hz – 20 kHz. Lower values produce a darker, muffled tone.
    */
   filterCutoff: number;
   /**
-   * Lowpass filter resonance / Q factor (normalized 0–1).
+   * Filter resonance / Q factor (normalized 0–1).
    * Mapped internally to Q 0.5 – 20. Higher values create a pronounced peak at the cutoff.
    */
   filterResonance: number;
@@ -72,6 +83,39 @@ export interface InstrumentParams {
    * `0` = clean, `1` = heavily saturated.
    */
   distortion: number;
+  /**
+   * Reverb wet mix (normalized 0–1).
+   * `0` = dry (no reverb), `1` = fully wet. Uses an algorithmic room impulse response.
+   * Defaults to `0` when omitted.
+   */
+  reverbMix?: number;
+
+  // ── LFO ──────────────────────────────────────────────────────────────────
+  /**
+   * LFO speed (normalized 0–1). Mapped internally to 0.1 Hz – 20 Hz.
+   * Defaults to `0.3` (~3 Hz) when omitted.
+   */
+  lfoRate?: number;
+  /**
+   * LFO modulation depth (normalized 0–1). `0` disables the LFO entirely.
+   * For `filter` target: mapped to 0–4000 Hz sweep. For `pitch`: 0–100 cents.
+   * Defaults to `0` when omitted.
+   */
+  lfoDepth?: number;
+  /**
+   * Which parameter the LFO modulates. `'filter'` sweeps the cutoff (wah/autowah);
+   * `'pitch'` adds vibrato. Defaults to `'filter'` when omitted.
+   */
+  lfoTarget?: LfoTarget;
+
+  // ── Unison ───────────────────────────────────────────────────────────────
+  /**
+   * Second-oscillator detune spread (normalized 0–1). Mapped to 0–50 cents.
+   * `0` = mono (single oscillator). Any value > 0 adds a second oscillator
+   * detuned symmetrically around the fundamental for a fatter, wider sound.
+   * Defaults to `0` when omitted.
+   */
+  unisonDetune?: number;
 
   // ── Dynamics ─────────────────────────────────────────────────────────────
   /**
@@ -101,11 +145,17 @@ export const defaultInstrumentParams: InstrumentParams = {
   decay: 0.1,
   sustain: 0.7,
   release: 0.3,
+  filterType: 'lowpass',
   filterCutoff: 0.8,
   filterResonance: 0.1,
   delayTime: 0,
   delayFeedback: 0,
   delayMix: 0,
   distortion: 0,
+  reverbMix: 0,
+  lfoRate: 0.3,
+  lfoDepth: 0,
+  lfoTarget: 'filter',
+  unisonDetune: 0,
   velocityResponse: 0.5,
 };

@@ -1,6 +1,6 @@
 import { useSoundscape } from '../../state';
 import { Slider, Select } from '../common';
-import type { Track, InstrumentParams, Waveform } from 'soundscape-engine';
+import type { Track, InstrumentParams, Waveform, FilterType, LfoTarget } from 'soundscape-engine';
 import { getPresetById } from 'soundscape-engine';
 import './InstrumentPanel.css';
 
@@ -13,6 +13,18 @@ const waveformOptions = [
   { value: 'square', label: 'Square' },
   { value: 'sawtooth', label: 'Sawtooth' },
   { value: 'triangle', label: 'Triangle' },
+];
+
+const filterTypeOptions = [
+  { value: 'lowpass', label: 'Low Pass' },
+  { value: 'highpass', label: 'High Pass' },
+  { value: 'bandpass', label: 'Band Pass' },
+  { value: 'notch', label: 'Notch' },
+];
+
+const lfoTargetOptions = [
+  { value: 'filter', label: 'Filter (Wah)' },
+  { value: 'pitch', label: 'Pitch (Vibrato)' },
 ];
 
 export function InstrumentPanel({ track }: InstrumentPanelProps) {
@@ -51,22 +63,31 @@ export function InstrumentPanel({ track }: InstrumentPanelProps) {
 
   const handleRandomize = () => {
     const waveforms: Waveform[] = ['sine', 'square', 'sawtooth', 'triangle'];
+    const filterTypes: FilterType[] = ['lowpass', 'highpass', 'bandpass', 'notch'];
+    const lfoTargets: LfoTarget[] = ['filter', 'pitch'];
     const randomFloat = (min: number, max: number) => Math.random() * (max - min) + min;
     const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 
+    // Non-null assertions are safe: randomInt bounds are [0, array.length - 1]
     const overrides: Partial<InstrumentParams> = {
-      waveform: waveforms[randomInt(0, waveforms.length - 1)],
+      waveform: waveforms[randomInt(0, waveforms.length - 1)]!,
       pitchOffset: randomInt(-24, 24),
       attack: randomFloat(0, 1),
       decay: randomFloat(0, 1),
       sustain: randomFloat(0, 1),
       release: randomFloat(0, 1),
+      filterType: filterTypes[randomInt(0, filterTypes.length - 1)]!,
       filterCutoff: randomFloat(0, 1),
       filterResonance: randomFloat(0, 1),
       delayTime: randomFloat(0, 1),
       delayFeedback: randomFloat(0, 0.8),
       delayMix: randomFloat(0, 1),
       distortion: randomFloat(0, 1),
+      reverbMix: randomFloat(0, 0.6),
+      lfoRate: randomFloat(0, 1),
+      lfoDepth: randomFloat(0, 0.5),
+      lfoTarget: lfoTargets[randomInt(0, lfoTargets.length - 1)]!,
+      unisonDetune: randomFloat(0, 0.5),
       velocityResponse: randomFloat(0, 1),
     };
 
@@ -86,9 +107,9 @@ export function InstrumentPanel({ track }: InstrumentPanelProps) {
             : ''}
         </h3>
         <div className="instrument-panel-actions">
-        <button className="randomize-btn" onClick={handleRandomize}>
+          <button className="randomize-btn" onClick={handleRandomize}>
             Randomize
-          </button>          
+          </button>
           <button className="preview-btn" onClick={handlePreview}>
             Preview
           </button>
@@ -114,6 +135,12 @@ export function InstrumentPanel({ track }: InstrumentPanelProps) {
             step={1}
             formatValue={(v) => `${v > 0 ? '+' : ''}${v}`}
             onChange={(v) => handleParamChange('pitchOffset', v)}
+          />
+          <Slider
+            label="Unison Detune"
+            tooltip="Adds a second oscillator detuned by up to ±25 cents for a fatter, wider sound. 0 = mono."
+            value={params.unisonDetune ?? 0}
+            onChange={(v) => handleParamChange('unisonDetune', v)}
           />
         </div>
 
@@ -147,9 +174,16 @@ export function InstrumentPanel({ track }: InstrumentPanelProps) {
 
         <div className="param-section">
           <h4>Filter</h4>
+          <Select
+            label="Type"
+            tooltip="Lowpass lets lows through, Highpass lets highs through, Bandpass isolates a frequency band, Notch scoops out a band."
+            value={params.filterType ?? 'lowpass'}
+            options={filterTypeOptions}
+            onChange={(v) => handleParamChange('filterType', v as FilterType)}
+          />
           <Slider
             label="Cutoff"
-            tooltip="Controls which frequencies pass through; lower values create a darker, muffled sound."
+            tooltip="Controls the filter's center frequency. Lower values create a darker, muffled sound (lowpass) or brighter sound (highpass)."
             value={params.filterCutoff}
             onChange={(v) => handleParamChange('filterCutoff', v)}
           />
@@ -158,6 +192,29 @@ export function InstrumentPanel({ track }: InstrumentPanelProps) {
             tooltip="Boosts frequencies near the cutoff point for a more pronounced, sharper tone."
             value={params.filterResonance}
             onChange={(v) => handleParamChange('filterResonance', v)}
+          />
+        </div>
+
+        <div className="param-section">
+          <h4>LFO</h4>
+          <Select
+            label="Target"
+            tooltip="What the LFO modulates: Filter creates a wah/autowah effect; Pitch creates vibrato."
+            value={params.lfoTarget ?? 'filter'}
+            options={lfoTargetOptions}
+            onChange={(v) => handleParamChange('lfoTarget', v as LfoTarget)}
+          />
+          <Slider
+            label="Rate"
+            tooltip="How fast the LFO oscillates (0.1 Hz–20 Hz). Low = slow sweep, high = fast wobble."
+            value={params.lfoRate ?? 0.3}
+            onChange={(v) => handleParamChange('lfoRate', v)}
+          />
+          <Slider
+            label="Depth"
+            tooltip="How strongly the LFO affects the target. 0 disables the LFO entirely."
+            value={params.lfoDepth ?? 0}
+            onChange={(v) => handleParamChange('lfoDepth', v)}
           />
         </div>
 
@@ -190,6 +247,12 @@ export function InstrumentPanel({ track }: InstrumentPanelProps) {
             tooltip="Adds grit and harmonic crunch to the sound."
             value={params.distortion}
             onChange={(v) => handleParamChange('distortion', v)}
+          />
+          <Slider
+            label="Reverb Mix"
+            tooltip="Blends in a room reverb effect. Higher values create a more spacious, ambient sound."
+            value={params.reverbMix ?? 0}
+            onChange={(v) => handleParamChange('reverbMix', v)}
           />
           <Slider
             label="Velocity Resp."

@@ -10,6 +10,19 @@ const LOOKAHEAD_MS = 100;
 const SCHEDULE_INTERVAL_MS = 25;
 const MAX_VOICES_PER_TRACK = 8;
 
+// AudioWorklet processor code, loaded as an inline blob to avoid bundler/path issues.
+// process() is called every 128 samples (~2.9 ms at 44.1 kHz) on the audio rendering
+// thread, which is never throttled by browsers — even in background tabs.
+const SCHEDULER_WORKLET_CODE = `
+class SchedulerProcessor extends AudioWorkletProcessor {
+  process() {
+    this.port.postMessage({ type: 'tick' });
+    return true;
+  }
+}
+registerProcessor('soundscape-scheduler', SchedulerProcessor);
+`;
+
 interface ScheduledNote {
   note: Note;
   trackId: string;
@@ -49,6 +62,8 @@ interface TrackChannel {
 export class AudioEngine {
   private context: AudioContext | null = null;
   private masterGain: GainNode | null = null;
+  private compressorNode: DynamicsCompressorNode | null = null;
+  private analyserNode: AnalyserNode | null = null;
   private trackChannels: Map<string, TrackChannel> = new Map();
 
   private isPlaying = false;
@@ -60,13 +75,20 @@ export class AudioEngine {
   private loopLengthBeats = 16;
 
   private scheduledNotes: ScheduledNote[] = [];
+  // AudioWorklet-based scheduler (preferred — audio-thread timing, never throttled)
+  private schedulerNode: AudioWorkletNode | null = null;
+  private _workletAvailable = false;
+  // setInterval fallback for environments without AudioWorklet support
   private scheduleIntervalId: ReturnType<typeof setInterval> | null = null;
-  private beatUpdateCallback: ((beat: number) => void) | null = null;
+
+  // Multi-subscriber beat update listeners. onBeatUpdate() returns an unsubscribe fn.
+  private beatUpdateListeners = new Set<(beat: number) => void>();
 
   private currentState: SoundscapeState | null = null;
 
   /**
-   * Creates the underlying `AudioContext` and master gain node.
+   * Creates the underlying `AudioContext` and master gain node, and registers
+   * the AudioWorklet scheduler processor.
    *
    * Must be called once before any other playback method. Safe to call multiple
    * times — subsequent calls are no-ops if already initialized.
@@ -80,8 +102,36 @@ export class AudioEngine {
 
     this.context = new AudioContext();
     this.masterGain = this.context.createGain();
-    this.masterGain.connect(this.context.destination);
     this.masterGain.gain.value = 0.8;
+
+    // Master compressor: transparent limiter that prevents clipping on loud patches.
+    // Fixed mastering settings: gentle threshold, high ratio, fast attack, medium release.
+    this.compressorNode = this.context.createDynamicsCompressor();
+    this.compressorNode.threshold.setValueAtTime(-24, this.context.currentTime);
+    this.compressorNode.knee.setValueAtTime(30, this.context.currentTime);
+    this.compressorNode.ratio.setValueAtTime(12, this.context.currentTime);
+    this.compressorNode.attack.setValueAtTime(0.003, this.context.currentTime);
+    this.compressorNode.release.setValueAtTime(0.25, this.context.currentTime);
+
+    this.analyserNode = this.context.createAnalyser();
+    this.analyserNode.fftSize = 2048;
+    this.analyserNode.smoothingTimeConstant = 0.8;
+
+    this.masterGain.connect(this.compressorNode);
+    this.compressorNode.connect(this.analyserNode);
+    this.analyserNode.connect(this.context.destination);
+
+    // Register AudioWorklet scheduler. Falls back to setInterval if unavailable
+    // (non-secure context, very old browser, or Jest test environment).
+    try {
+      const blob = new Blob([SCHEDULER_WORKLET_CODE], { type: 'application/javascript' });
+      const url = URL.createObjectURL(blob);
+      await this.context.audioWorklet.addModule(url);
+      URL.revokeObjectURL(url);
+      this._workletAvailable = true;
+    } catch {
+      this._workletAvailable = false;
+    }
   }
 
   /**
@@ -141,7 +191,7 @@ export class AudioEngine {
     }
 
     // Update mixer
-    this.updateMixer(state.mixer);        
+    this.updateMixer(state.mixer);
 
     // Sync scheduled notes with current state during playback
     if (this.isPlaying) {
@@ -234,6 +284,7 @@ export class AudioEngine {
         delayFeedback: params.delayFeedback,
         delayMix: params.delayMix,
         distortion: params.distortion,
+        reverbMix: params.reverbMix ?? 0,
       });
     }
 
@@ -269,7 +320,7 @@ export class AudioEngine {
     const hasSolo = Object.values(mixer.tracks).some((t) => t.solo);
 
     for (const [trackId, channel] of this.trackChannels) {
-      const trackMixer: TrackMixerState = mixer.tracks[trackId] || defaultTrackMixerState;
+      const trackMixer: TrackMixerState = mixer.tracks[trackId] ?? defaultTrackMixerState;
 
       let volume = trackMixer.volume;
       if (trackMixer.mute || (hasSolo && !trackMixer.solo)) {
@@ -283,9 +334,10 @@ export class AudioEngine {
   /**
    * Starts playback from the given beat position.
    *
-   * Notes are scheduled ~100 ms ahead of the audio clock using a 25 ms
-   * polling interval to ensure glitch-free output. If loop mode is enabled,
-   * playback will automatically wrap around when it reaches `lengthBeats`.
+   * Notes are scheduled ~100 ms ahead of the audio clock. When an
+   * `AudioWorklet` scheduler is available, ticks arrive every ~2.9 ms
+   * (128 samples) on the audio thread — immune to background-tab throttling.
+   * Falls back to a 25 ms `setInterval` if `AudioWorklet` is unavailable.
    *
    * Call {@link updateState} before `play()` to ensure the engine has the
    * latest tracks and notes.
@@ -314,11 +366,21 @@ export class AudioEngine {
       }
     }
 
-    // Start scheduling loop
-    this.scheduleIntervalId = setInterval(() => {
-      this.scheduleNotes();
-      this.updateCurrentBeat();
-    }, SCHEDULE_INTERVAL_MS);
+    // Start scheduling loop — prefer AudioWorklet for audio-thread accuracy
+    if (this._workletAvailable) {
+      this.schedulerNode = new AudioWorkletNode(context, 'soundscape-scheduler');
+      this.schedulerNode.port.onmessage = () => {
+        this.scheduleNotes();
+        this.updateCurrentBeat();
+      };
+      // Must be connected into the graph for process() to be called
+      this.schedulerNode.connect(context.destination);
+    } else {
+      this.scheduleIntervalId = setInterval(() => {
+        this.scheduleNotes();
+        this.updateCurrentBeat();
+      }, SCHEDULE_INTERVAL_MS);
+    }
 
     // Initial schedule
     this.scheduleNotes();
@@ -327,14 +389,19 @@ export class AudioEngine {
   /**
    * Stops playback and silences all active voices immediately.
    *
-   * Resets the playhead to beat 0 and fires the beat update callback with `0`.
-   * The engine remains initialized and ready to {@link play} again.
+   * Resets the playhead to beat 0 and notifies all beat update subscribers
+   * with `0`. The engine remains initialized and ready to {@link play} again.
    */
   stop(): void {
     if (!this.isPlaying) return;
 
     this.isPlaying = false;
 
+    if (this.schedulerNode) {
+      this.schedulerNode.port.onmessage = null;
+      this.schedulerNode.disconnect();
+      this.schedulerNode = null;
+    }
     if (this.scheduleIntervalId !== null) {
       clearInterval(this.scheduleIntervalId);
       this.scheduleIntervalId = null;
@@ -350,7 +417,7 @@ export class AudioEngine {
 
     this.scheduledNotes = [];
     this.currentBeat = 0;
-    this.beatUpdateCallback?.(0);
+    this.emitBeatUpdate(0);
   }
 
   private updateCurrentBeat(): void {
@@ -376,7 +443,13 @@ export class AudioEngine {
     }
 
     this.currentBeat = beat;
-    this.beatUpdateCallback?.(beat);
+    this.emitBeatUpdate(beat);
+  }
+
+  private emitBeatUpdate(beat: number): void {
+    for (const listener of this.beatUpdateListeners) {
+      listener(beat);
+    }
   }
 
   private scheduleNotes(): void {
@@ -440,8 +513,11 @@ export class AudioEngine {
     }
 
     // Voice stealing: use the first voice (oldest)
-    const voice = channel.voices[0];
-    voice.stop();
+    // channel.voices always has MAX_VOICES_PER_TRACK entries — index 0 is safe
+    const voice = channel.voices[0] ?? null;
+    if (voice) {
+      voice.stop();
+    }
     return voice;
   }
 
@@ -490,8 +566,9 @@ export class AudioEngine {
   /**
    * Returns the current playhead position in beats.
    *
-   * Updated approximately every 25 ms during playback.
-   * Subscribe to continuous updates via {@link onBeatUpdate} instead of polling.
+   * Updated approximately every ~3 ms (AudioWorklet) or every 25 ms (fallback)
+   * during playback. Subscribe to continuous updates via {@link onBeatUpdate}
+   * instead of polling.
    *
    * @returns Current beat position (0-based), or `0` if stopped.
    */
@@ -509,21 +586,42 @@ export class AudioEngine {
   }
 
   /**
-   * Registers a callback that fires every ~25 ms during playback with the
-   * current beat position. Use this to drive a playhead cursor in your UI.
+   * Subscribes to beat position updates during playback.
    *
-   * Only one callback is active at a time; calling this again replaces the previous one.
+   * The callback fires on every scheduler tick (~3 ms with AudioWorklet,
+   * ~25 ms fallback) with the current beat position, and is called with `0`
+   * when {@link stop} is invoked. Multiple subscribers are supported.
    *
-   * @param callback - Receives the current beat position (0-based) on each tick,
-   *   and is called with `0` when {@link stop} is invoked.
+   * @param callback - Receives the current beat position (0-based) on each tick.
+   * @returns An unsubscribe function — call it to remove this listener.
    *
    * @example
-   * engine.onBeatUpdate((beat) => {
+   * const unsub = engine.onBeatUpdate((beat) => {
    *   setPlayheadPosition(beat);
    * });
+   * // Later:
+   * unsub();
    */
-  onBeatUpdate(callback: (beat: number) => void): void {
-    this.beatUpdateCallback = callback;
+  /**
+   * Returns the `AnalyserNode` tapped off the master output, or `null` before
+   * {@link initialize} has been called. Use this to drive real-time visualisers.
+   *
+   * @example
+   * const analyser = engine.getAnalyserNode();
+   * if (analyser) {
+   *   const data = new Uint8Array(analyser.frequencyBinCount);
+   *   analyser.getByteTimeDomainData(data); // oscilloscope
+   * }
+   */
+  getAnalyserNode(): AnalyserNode | null {
+    return this.analyserNode;
+  }
+
+  onBeatUpdate(callback: (beat: number) => void): () => void {
+    this.beatUpdateListeners.add(callback);
+    return () => {
+      this.beatUpdateListeners.delete(callback);
+    };
   }
 
   /**
@@ -583,6 +681,19 @@ export class AudioEngine {
   destroy(): void {
     this.stop();
 
+    // Clear all beat update subscribers
+    this.beatUpdateListeners.clear();
+
+    if (this.analyserNode) {
+      this.analyserNode.disconnect();
+      this.analyserNode = null;
+    }
+
+    if (this.schedulerNode) {
+      this.schedulerNode.disconnect();
+      this.schedulerNode = null;
+    }
+
     for (const [id, channel] of this.trackChannels) {
       this.removeTrackChannel(id, channel);
     }
@@ -593,5 +704,6 @@ export class AudioEngine {
     }
 
     this.masterGain = null;
+    this.compressorNode = null;
   }
 }
