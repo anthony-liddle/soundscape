@@ -7,12 +7,12 @@ describe('Slider', () => {
   describe('tooltip hint', () => {
     it('shows a ? badge when tooltip prop is provided', () => {
       render(<Slider value={0.5} label="Attack" tooltip="How quickly the sound rises" onChange={vi.fn()} />)
-      expect(screen.getByText('?')).toBeInTheDocument()
+      expect(screen.getByText('ⓘ')).toBeInTheDocument()
     })
 
     it('does not show a ? badge when tooltip prop is absent', () => {
       render(<Slider value={0.5} label="Attack" onChange={vi.fn()} />)
-      expect(screen.queryByText('?')).not.toBeInTheDocument()
+      expect(screen.queryByText('ⓘ')).not.toBeInTheDocument()
     })
 
     it('shows the tooltip text on hover', async () => {
