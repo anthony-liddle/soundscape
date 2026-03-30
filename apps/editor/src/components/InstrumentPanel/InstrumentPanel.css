@@ -92,3 +92,63 @@
 .param-section .select-container {
   margin-bottom: 0.5rem;
 }
+
+.save-preset-form {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.save-preset-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  background: var(--bg-input, #1a1a2e);
+  border: 1px solid var(--border-color, #444);
+  border-radius: 4px;
+  color: var(--text-primary, #e0e0e0);
+  font-size: 12px;
+  outline: none;
+}
+
+.save-preset-input:focus {
+  border-color: var(--accent-color, #6c63ff);
+}
+
+.save-preset-confirm-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: none;
+  background: var(--accent-color, #6c63ff);
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.save-preset-cancel-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color, #444);
+  background: transparent;
+  color: var(--text-secondary, #aaa);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.save-preset-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color, #444);
+  background: transparent;
+  color: var(--text-secondary, #aaa);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.save-preset-btn:hover {
+  border-color: var(--accent-color, #6c63ff);
+  color: var(--text-primary, #e0e0e0);
+}

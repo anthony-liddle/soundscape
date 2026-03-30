@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { useSoundscape } from '../../state';
 import { Slider, Select } from '../common';
 import { WaveformVisualizer } from '../WaveformVisualizer/WaveformVisualizer';
-import type { Track, InstrumentParams, Waveform, FilterType, LfoTarget } from 'soundscape-engine';
+import type { Track, InstrumentParams, InstrumentPreset, Waveform, FilterType, LfoTarget } from 'soundscape-engine';
 import { getPresetById } from 'soundscape-engine';
 import './InstrumentPanel.css';
 
@@ -31,6 +32,8 @@ const lfoTargetOptions = [
 
 export function InstrumentPanel({ track, analyserNode }: InstrumentPanelProps) {
   const { state, dispatch, previewNote } = useSoundscape();
+  const [showSaveForm, setShowSaveForm] = useState(false);
+  const [savePresetName, setSavePresetName] = useState('');
 
   if (!track) {
     return (
@@ -50,6 +53,35 @@ export function InstrumentPanel({ track, analyserNode }: InstrumentPanelProps) {
   }
 
   const params = { ...preset.params, ...track.paramOverrides };
+
+  const downloadPresetJson = (preset: InstrumentPreset) => {
+    const blob = new Blob([JSON.stringify(preset, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${preset.name.toLowerCase().replace(/\s+/g, '-')}.preset.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSaveAsPreset = () => {
+    const name = savePresetName.trim();
+    if (!name) return;
+    const newPreset: InstrumentPreset = {
+      id: crypto.randomUUID(),
+      name,
+      params: { ...params },
+      isBuiltIn: false,
+    };
+    dispatch({ type: 'ADD_PRESET', payload: newPreset });
+    downloadPresetJson(newPreset);
+    setShowSaveForm(false);
+    setSavePresetName('');
+  };
 
   const handleParamChange = (key: keyof InstrumentParams, value: number | string) => {
     const overrides = { ...track.paramOverrides, [key]: value };
@@ -109,12 +141,46 @@ export function InstrumentPanel({ track, analyserNode }: InstrumentPanelProps) {
             : ''}
         </h3>
         <div className="instrument-panel-actions">
-          <button className="randomize-btn" onClick={handleRandomize}>
-            Randomize
-          </button>
-          <button className="preview-btn" onClick={handlePreview}>
-            Preview
-          </button>
+          {showSaveForm ? (
+            <div className="save-preset-form">
+              <input
+                type="text"
+                className="save-preset-input"
+                value={savePresetName}
+                placeholder="Preset name…"
+                autoFocus
+                onChange={(e) => setSavePresetName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveAsPreset();
+                  if (e.key === 'Escape') {
+                    setShowSaveForm(false);
+                    setSavePresetName('');
+                  }
+                }}
+              />
+              <button className="save-preset-confirm-btn" onClick={handleSaveAsPreset}>
+                Save
+              </button>
+              <button
+                className="save-preset-cancel-btn"
+                onClick={() => { setShowSaveForm(false); setSavePresetName(''); }}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <>
+              <button className="save-preset-btn" onClick={() => setShowSaveForm(true)}>
+                Save as Preset
+              </button>
+              <button className="randomize-btn" onClick={handleRandomize}>
+                Randomize
+              </button>
+              <button className="preview-btn" onClick={handlePreview}>
+                Preview
+              </button>
+            </>
+          )}
         </div>
       </div>
 
