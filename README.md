@@ -5,7 +5,7 @@ A browser-based music sequencer and synthesizer built with React, TypeScript, an
 **[Try it live](https://anthony-liddle.github.io/soundscape/)**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 
 ## Features
@@ -13,20 +13,28 @@ A browser-based music sequencer and synthesizer built with React, TypeScript, an
 ### Sequencer
 - **Piano Roll Editor**: 2-octave grid (C3-C5) for composing melodies
 - **16-Beat Timeline**: Click cells to add/remove notes, or click and drag to create multi-beat notes
+- **Note Selection**: Switch to select mode to drag-select notes, then delete, copy, or paste them
 - **Randomize Notes**: Generate random note patterns with one click
 - **Playback Indicator**: Visual column highlight shows current beat during playback
 - **Live Editing**: Add and remove notes during playback with immediate effect
 - **Multiple Tracks**: Create, duplicate, and manage multiple instrument tracks
+- **Undo/Redo**: Step back and forward through edit history (Ctrl+Z / Ctrl+Shift+Z)
+- **Keyboard Shortcuts**: Space (play/stop), Ctrl+S (export), Ctrl+D (duplicate track)
 
 ### Synthesizer
-- **Oscillator**: Choose from sine, square, sawtooth, and triangle waveforms with pitch offset control
+- **Oscillator**: Choose from sine, square, sawtooth, and triangle waveforms with pitch offset and unison detune
 - **ADSR Envelope**: Full control over Attack, Decay, Sustain, and Release
-- **Filter**: Low-pass filter with cutoff and resonance controls
+- **Filter**: Four filter types (low-pass, high-pass, band-pass, notch) with cutoff and resonance
+- **LFO**: Modulate filter cutoff (wah) or pitch (vibrato) with configurable rate and depth
 - **Delay Effect**: Configurable time, feedback, and mix
+- **Reverb**: Algorithmic room reverb with wet/dry mix control
 - **Distortion**: Add grit and harmonic content
 - **Velocity Response**: Control how note velocity affects sound
 - **Preview**: Audition current instrument settings with one click
 - **Randomize Sound**: Generate random instrument parameters for sound exploration
+
+### Visualizer
+- **Waveform Display**: Real-time oscilloscope showing the master audio output
 
 ### Mixing
 - **Per-Track Volume**: Inline horizontal volume slider for each track

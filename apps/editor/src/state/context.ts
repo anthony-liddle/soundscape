@@ -12,6 +12,11 @@ export interface SoundscapeContextValue {
   setTempo: (bpm: number) => void;
   setLoop: (enabled: boolean) => void;
   previewNote: (pitch: number, velocity: number, presetId: string, paramOverrides?: Partial<InstrumentParams>) => void;
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  analyserNode: AnalyserNode | null;
 }
 
 export const SoundscapeContext = createContext<SoundscapeContextValue | null>(null);

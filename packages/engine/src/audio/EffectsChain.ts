@@ -5,10 +5,18 @@ export interface EffectsParams {
   delayFeedback: number;
   delayMix: number;
   distortion: number;
+  reverbMix: number;
 }
 
 /**
- * Effects chain: Delay -> Distortion
+ * Effects chain: Delay/Distortion (wet path) + Reverb (parallel wet path).
+ *
+ * Signal flow:
+ * ```
+ * input → dryGain (1 - delayMix) → output
+ * input → delay → feedback ↻ → distortion → delayWetGain (delayMix) → output
+ * input → convolverNode → reverbWetGain (reverbMix) → output   [additive send]
+ * ```
  */
 export class EffectsChain {
   private context: AudioContext;
@@ -19,6 +27,8 @@ export class EffectsChain {
   private delayNode: DelayNode;
   private feedbackGain: GainNode;
   private distortionNode: WaveShaperNode;
+  private convolverNode: ConvolverNode;
+  private reverbWetGain: GainNode;
 
   constructor(context: AudioContext) {
     this.context = context;
@@ -31,13 +41,15 @@ export class EffectsChain {
     this.delayNode = context.createDelay(2);
     this.feedbackGain = context.createGain();
     this.distortionNode = context.createWaveShaper();
+    this.convolverNode = context.createConvolver();
+    this.reverbWetGain = context.createGain();
 
     // Set up routing
     // Dry path: input -> dryGain -> output
     this.input.connect(this.dryGain);
     this.dryGain.connect(this.output);
 
-    // Wet path: input -> delay -> distortion -> wetGain -> output
+    // Delay/distortion wet path: input -> delay -> distortion -> wetGain -> output
     this.input.connect(this.delayNode);
     this.delayNode.connect(this.distortionNode);
     this.distortionNode.connect(this.wetGain);
@@ -47,12 +59,19 @@ export class EffectsChain {
     this.delayNode.connect(this.feedbackGain);
     this.feedbackGain.connect(this.delayNode);
 
+    // Reverb parallel send: input -> convolver -> reverbWetGain -> output
+    this.convolverNode.buffer = this.createReverbIR();
+    this.input.connect(this.convolverNode);
+    this.convolverNode.connect(this.reverbWetGain);
+    this.reverbWetGain.connect(this.output);
+
     // Initialize with default values
     this.setParams({
       delayTime: 0,
       delayFeedback: 0,
       delayMix: 0,
       distortion: 0,
+      reverbMix: 0,
     });
   }
 
@@ -70,15 +89,38 @@ export class EffectsChain {
     // Delay
     const delayTimeSeconds = normalizedToDelayTime(params.delayTime);
     this.delayNode.delayTime.setValueAtTime(delayTimeSeconds, now);
-    this.feedbackGain.gain.setValueAtTime(params.delayFeedback * 0.9, now); // Cap at 0.9 to prevent runaway
+    this.feedbackGain.gain.setValueAtTime(params.delayFeedback * 0.9, now); // Cap at 0.9
 
-    // Dry/wet mix
+    // Delay dry/wet mix
     this.dryGain.gain.setValueAtTime(1 - params.delayMix, now);
     this.wetGain.gain.setValueAtTime(params.delayMix, now);
 
     // Distortion
     this.distortionNode.curve = this.makeDistortionCurve(params.distortion);
     this.distortionNode.oversample = '2x';
+
+    // Reverb (additive send — independent of delay mix)
+    this.reverbWetGain.gain.setValueAtTime(params.reverbMix, now);
+  }
+
+  /**
+   * Generates a stereo algorithmic impulse response using exponentially-decaying
+   * white noise. Produces a natural-sounding room reverb without any file loading.
+   */
+  private createReverbIR(duration = 2.5, decay = 2): AudioBuffer {
+    const sampleRate = this.context.sampleRate;
+    const length = Math.floor(sampleRate * duration);
+    const buffer = this.context.createBuffer(2, length, sampleRate);
+
+    for (let channel = 0; channel < 2; channel++) {
+      const data = buffer.getChannelData(channel);
+      for (let i = 0; i < length; i++) {
+        const t = i / length;
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, decay);
+      }
+    }
+
+    return buffer;
   }
 
   private makeDistortionCurve(amount: number): Float32Array<ArrayBuffer> {
@@ -105,6 +147,8 @@ export class EffectsChain {
     this.delayNode.disconnect();
     this.feedbackGain.disconnect();
     this.distortionNode.disconnect();
+    this.convolverNode.disconnect();
+    this.reverbWetGain.disconnect();
     this.output.disconnect();
   }
 }

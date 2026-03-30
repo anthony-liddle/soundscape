@@ -93,6 +93,10 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #111827;
 }
 
 .note-editor-label-spacer {
@@ -237,4 +241,69 @@
 
 .note-editor-cell.playing.has-note {
   background: #f59e0b;
+}
+
+/* Selected notes */
+.note-editor-cell.selected {
+  background: #f59e0b;
+  outline: 1px solid #fbbf24;
+  outline-offset: -1px;
+}
+
+.note-editor-cell.selected:hover {
+  background: #d97706;
+}
+
+.note-editor-cell.selected.playing {
+  background: #b45309;
+}
+
+/* Selection rectangle overlay */
+.note-editor-grid {
+  position: relative;
+}
+
+.selection-rect {
+  position: absolute;
+  border: 1px dashed #60a5fa;
+  background: rgba(59, 130, 246, 0.1);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Tool toggle */
+.tool-toggle {
+  display: flex;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.tool-toggle-btn {
+  padding: 0.25rem 0.5rem;
+  background: #374151;
+  border: 1px solid #4b5563;
+  border-right: none;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tool-toggle-btn:last-child {
+  border-right: 1px solid #4b5563;
+}
+
+.tool-toggle-btn:hover {
+  background: #4b5563;
+  color: #e5e7eb;
+}
+
+.tool-toggle-btn.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.tool-toggle-btn.active + .tool-toggle-btn {
+  border-left-color: #3b82f6;
 }

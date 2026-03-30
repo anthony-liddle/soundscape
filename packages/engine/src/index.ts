@@ -2,6 +2,8 @@
 export type {
   Note,
   Waveform,
+  FilterType,
+  LfoTarget,
   InstrumentParams,
   InstrumentPreset,
   Track,
@@ -47,6 +49,9 @@ export {
   applyPitchOffset,
   normalizedToFilterFreq,
   normalizedToQ,
+  normalizedToLfoRate,
+  normalizedToLfoFilterDepth,
+  normalizedToLfoPitchDepth,
 } from './utils/pitch';
 
 export {

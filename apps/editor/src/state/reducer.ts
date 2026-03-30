@@ -87,9 +87,7 @@ export function soundscapeReducer(state: SoundscapeState, action: SoundscapeActi
         name: `${sourceTrk.name} - copy`,
         presetId: sourceTrk.presetId,
         notes: sourceTrk.notes.map((n) => ({ ...n, id: crypto.randomUUID() })),
-        paramOverrides: sourceTrk.paramOverrides
-          ? { ...sourceTrk.paramOverrides }
-          : undefined,
+        ...(sourceTrk.paramOverrides && { paramOverrides: { ...sourceTrk.paramOverrides } }),
       };
       const sourceMixer = state.mixer.tracks[sourceTrk.id] || defaultTrackMixerState;
       return {
@@ -133,9 +131,13 @@ export function soundscapeReducer(state: SoundscapeState, action: SoundscapeActi
       const { trackId, presetId } = action.payload;
       return {
         ...state,
-        tracks: state.tracks.map((t) =>
-          t.id === trackId ? { ...t, presetId, paramOverrides: undefined } : t
-        ),
+        tracks: state.tracks.map((t) => {
+          if (t.id !== trackId) return t;
+          // Omit paramOverrides entirely (reset to preset defaults) by destructuring it out
+          const { paramOverrides: _unused, ...rest } = t;
+          void _unused;
+          return { ...rest, presetId };
+        }),
       };
     }
 

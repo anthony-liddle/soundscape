@@ -1,4 +1,5 @@
 import React from 'react';
+import { Tooltip } from './Tooltip';
 import './Select.css';
 
 interface SelectOption {
@@ -21,7 +22,16 @@ export function Select({ value, options, label, tooltip, onChange }: SelectProps
 
   return (
     <div className="select-container">
-      {label && <label className="select-label" title={tooltip}>{label}</label>}
+      {label && (
+        <label className="select-label">
+          {tooltip ? (
+            <Tooltip text={tooltip}>
+              {label}
+              <span className="tooltip-hint">?</span>
+            </Tooltip>
+          ) : label}
+        </label>
+      )}
       <select className="select-input" value={value} onChange={handleChange}>
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>

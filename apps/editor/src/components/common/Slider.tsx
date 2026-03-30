@@ -1,4 +1,5 @@
 import React from 'react';
+import { Tooltip } from './Tooltip';
 import './Slider.css';
 
 interface SliderProps {
@@ -34,7 +35,16 @@ export function Slider({
     <div className={`slider-container ${vertical ? 'slider-vertical' : ''}`}>
       {(label || showValue) && (
         <div className="slider-top-row">
-          {label && <label className="slider-label" title={tooltip}>{label}</label>}
+          {label && (
+            <label className="slider-label">
+              {tooltip ? (
+                <Tooltip text={tooltip}>
+                  {label}
+                  <span className="tooltip-hint">?</span>
+                </Tooltip>
+              ) : label}
+            </label>
+          )}
           {showValue && <span className="slider-value">{formatValue(value)}</span>}
         </div>
       )}

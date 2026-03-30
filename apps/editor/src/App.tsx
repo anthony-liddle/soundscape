@@ -5,15 +5,30 @@ import { TrackList } from './components/TrackList';
 import { NoteEditor } from './components/NoteEditor';
 import { InstrumentPanel } from './components/InstrumentPanel';
 import { ImportExport } from './components/ImportExport';
+
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import './App.css';
 
 function SoundscapeApp() {
-  const { state, dispatch } = useSoundscape();
+  const { state, dispatch, playback, play, stop, undo, redo, canUndo, canRedo, analyserNode } = useSoundscape();
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(
-    state.tracks.length > 0 ? state.tracks[0].id : null
+    state.tracks.length > 0 ? (state.tracks[0]?.id ?? null) : null
   );
 
   const selectedTrack = state.tracks.find((t) => t.id === selectedTrackId) || null;
+
+  useKeyboardShortcuts({
+    isPlaying: playback.isPlaying,
+    play,
+    stop,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    state,
+    selectedTrackId,
+    dispatch,
+  });
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch({ type: 'SET_METADATA', payload: { name: e.target.value } });
@@ -51,8 +66,8 @@ function SoundscapeApp() {
         </aside>
 
         <main className="app-main">
-          <NoteEditor track={selectedTrack} />
-          <InstrumentPanel track={selectedTrack} />
+          <NoteEditor key={selectedTrack?.id ?? 'empty'} track={selectedTrack} />
+          <InstrumentPanel track={selectedTrack} analyserNode={analyserNode} />
         </main>
       </div>
     </div>

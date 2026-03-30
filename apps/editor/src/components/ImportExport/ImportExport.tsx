@@ -4,33 +4,14 @@ import { useSoundscape } from '../../state';
 import { Button } from '../common';
 import { validateSoundscapeState, builtInPresets } from 'soundscape-engine';
 import type { SoundscapeState } from 'soundscape-engine';
+import { exportSoundscape } from '../../utils/exportSoundscape';
 import './ImportExport.css';
-
-type ExportState = Omit<SoundscapeState, 'presets'>;
 
 export function ImportExport() {
   const { state, dispatch, stop } = useSoundscape();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleExport = () => {
-    // Export without presets - tracks already have paramOverrides with all parameter values
-    const exportData: ExportState = {
-      metadata: state.metadata,
-      tracks: state.tracks,
-      mixer: state.mixer,
-    };
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${state.metadata.name.replace(/\s+/g, '_')}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
+  const handleExport = () => exportSoundscape(state);
 
   const handleImportClick = () => {
     fileInputRef.current?.click();

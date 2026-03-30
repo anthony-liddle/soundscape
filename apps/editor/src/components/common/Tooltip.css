@@ -1,0 +1,21 @@
+.tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: help;
+}
+
+.tooltip-panel {
+  position: fixed;
+  z-index: 1000;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 4px;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.7rem;
+  color: #d1d5db;
+  max-width: 220px;
+  line-height: 1.5;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}

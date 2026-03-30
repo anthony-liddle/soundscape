@@ -51,3 +51,27 @@ export function normalizedToQ(normalized: number): number {
   const maxQ = 20;
   return minQ + normalized * (maxQ - minQ);
 }
+
+/**
+ * Map normalized LFO rate (0-1) to frequency in Hz (0.1 Hz - 20 Hz).
+ * Uses exponential mapping for musically useful control.
+ */
+export function normalizedToLfoRate(normalized: number): number {
+  const minHz = 0.1;
+  const maxHz = 20;
+  return minHz * Math.pow(maxHz / minHz, normalized);
+}
+
+/**
+ * Map normalized LFO depth (0-1) to filter cutoff modulation in Hz (0 - 4000 Hz).
+ */
+export function normalizedToLfoFilterDepth(normalized: number): number {
+  return normalized * 4000;
+}
+
+/**
+ * Map normalized LFO depth (0-1) to pitch modulation in cents (0 - 100 cents).
+ */
+export function normalizedToLfoPitchDepth(normalized: number): number {
+  return normalized * 100;
+}
