@@ -1,4 +1,4 @@
-import { useTapTempo } from '../../hooks/useTapTempo';
+import { useTapTempo } from '../../hooks';
 import { useSoundscape } from '../../state';
 import { Button, Slider } from '../common';
 import './Transport.css';
