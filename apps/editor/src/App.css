@@ -87,6 +87,12 @@ body {
   flex-shrink: 0;
 }
 
+.app-arrangement {
+  height: 84px; /* ruler (20px) + row (44px) + border (1px) × 2 */
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
 .app-content {
   display: flex;
   gap: 1rem;

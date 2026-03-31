@@ -6,6 +6,9 @@ import { NoteEditor } from './components/NoteEditor';
 import { InstrumentPanel } from './components/InstrumentPanel';
 import { ImportExport } from './components/ImportExport';
 import { MIDIStatus } from './components/MIDIStatus';
+import { PatternList } from './components/PatternList/PatternList';
+import { ArrangementView } from './components/ArrangementView/ArrangementView';
+import type { Note } from 'soundscape-engine';
 
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import './App.css';
@@ -15,16 +18,17 @@ function SoundscapeApp() {
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(
     state.tracks.length > 0 ? (state.tracks[0]?.id ?? null) : null
   );
+  const [activePatternId, setActivePatternId] = useState<string | null>(
+    state.patterns[0]?.id ?? null
+  );
   const [subdivision, setSubdivision] = useState<0.25 | 0.5 | 1>(1);
 
   const selectedTrack = state.tracks.find((t) => t.id === selectedTrackId) || null;
-  const activePattern = state.patterns[0] ?? null;
-  const activePatternId = activePattern?.id ?? null;
-  const activePatternNotes =
-    selectedTrack && activePattern
-      ? (activePattern.trackNotes[selectedTrack.id] ?? [])
-      : [];
-  const activePatternLengthBeats = activePattern?.lengthBeats ?? state.metadata.lengthBeats;
+  const activePattern = state.patterns.find((p) => p.id === activePatternId) ?? state.patterns[0] ?? null;
+  const activeNotes: Note[] = activePattern && selectedTrack
+    ? (activePattern.trackNotes[selectedTrack.id] ?? [])
+    : [];
+  const activeLengthBeats = activePattern?.lengthBeats ?? state.metadata.lengthBeats;
 
   useKeyboardShortcuts({
     isPlaying: playback.isPlaying,
@@ -67,21 +71,29 @@ function SoundscapeApp() {
         <Transport />
       </div>
 
+      <div className="app-arrangement">
+        <ArrangementView activePatternId={activePatternId} />
+      </div>
+
       <div className="app-content">
         <aside className="app-sidebar">
           <TrackList
             selectedTrackId={selectedTrackId}
             onSelectTrack={setSelectedTrackId}
           />
+          <PatternList
+            activePatternId={activePatternId}
+            onPatternSelect={setActivePatternId}
+          />
         </aside>
 
         <main className="app-main">
           <NoteEditor
-            key={selectedTrack?.id ?? 'empty'}
+            key={`${selectedTrack?.id ?? 'empty'}-${activePattern?.id ?? 'empty'}`}
             track={selectedTrack}
             patternId={activePatternId}
-            notes={activePatternNotes}
-            lengthBeats={activePatternLengthBeats}
+            notes={activeNotes}
+            lengthBeats={activeLengthBeats}
             subdivision={subdivision}
             onSubdivisionChange={(s) => setSubdivision(s as 0.25 | 0.5 | 1)}
           />
