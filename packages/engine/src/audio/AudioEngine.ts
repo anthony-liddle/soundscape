@@ -211,17 +211,17 @@ export class AudioEngine {
     const newScheduledNotes: ScheduledNote[] = [];
 
     for (const track of state.tracks) {
-      for (const note of track.notes) {
+      for (const { note, trackId } of this.resolveTrackNotes(track)) {
         currentNoteIds.add(note.id);
         const existing = existingByNoteId.get(note.id);
         if (existing) {
           // Keep existing scheduling state
-          newScheduledNotes.push({ ...existing, trackId: track.id, note });
+          newScheduledNotes.push({ ...existing, trackId, note });
         } else {
           // New note — add as unscheduled
           newScheduledNotes.push({
             note,
-            trackId: track.id,
+            trackId,
             startScheduled: false,
             endScheduled: false,
           });
@@ -356,10 +356,10 @@ export class AudioEngine {
     // Prepare scheduled notes
     this.scheduledNotes = [];
     for (const track of this.currentState.tracks) {
-      for (const note of track.notes) {
+      for (const { note, trackId } of this.resolveTrackNotes(track)) {
         this.scheduledNotes.push({
           note,
-          trackId: track.id,
+          trackId,
           startScheduled: false,
           endScheduled: false,
         });
@@ -622,6 +622,28 @@ export class AudioEngine {
     return () => {
       this.beatUpdateListeners.delete(callback);
     };
+  }
+
+  /**
+   * Flattens a track's arrangement clips into a list of scheduled notes with
+   * absolute beat positions. Each note's `startTime` is offset by its clip's
+   * `startBeat`.
+   */
+  private resolveTrackNotes(
+    track: Track
+  ): Array<{ note: Note; trackId: string }> {
+    const result: Array<{ note: Note; trackId: string }> = [];
+    for (const clip of track.arrangement) {
+      const pattern = track.patterns.find((p) => p.id === clip.patternId);
+      if (!pattern) continue;
+      for (const note of pattern.notes) {
+        result.push({
+          note: { ...note, startTime: note.startTime + clip.startBeat },
+          trackId: track.id,
+        });
+      }
+    }
+    return result;
   }
 
   /**
