@@ -530,6 +530,16 @@ describe('arrangement actions', () => {
     const result = soundscapeReducer(state, { type: 'MOVE_CLIP', payload: { clipId, startBeat: 8 } })
     expect(result.arrangement[0]!.startBeat).toBe(8)
   })
+
+  it('ADD_CLIP is a no-op when a clip already occupies that startBeat', () => {
+    const state = createInitialState()
+    // initial clip is at startBeat 0
+    const result = soundscapeReducer(state, {
+      type: 'ADD_CLIP',
+      payload: { patternId: state.patterns[0]!.id, startBeat: 0 },
+    })
+    expect(result.arrangement).toHaveLength(1)
+  })
 })
 
 describe('note actions with patternId + trackId', () => {

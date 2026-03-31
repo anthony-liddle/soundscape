@@ -223,6 +223,7 @@ export function soundscapeReducer(state: SoundscapeState, action: SoundscapeActi
 
     case 'ADD_CLIP': {
       const { patternId, startBeat } = action.payload;
+      if (state.arrangement.some((c) => c.startBeat === startBeat)) return state;
       return { ...state, arrangement: [...state.arrangement, createClip(patternId, startBeat)] };
     }
 
