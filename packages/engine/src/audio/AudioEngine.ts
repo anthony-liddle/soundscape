@@ -742,6 +742,11 @@ export class AudioEngine {
       this.schedulerNode = null;
     }
 
+    for (const pitch of this.midiVoices.keys()) {
+      this.stopMIDINote(pitch);
+    }
+    this.midiVoices.clear();
+
     for (const [id, channel] of this.trackChannels) {
       this.removeTrackChannel(id, channel);
     }

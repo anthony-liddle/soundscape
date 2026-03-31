@@ -5,7 +5,7 @@ import { TrackList } from './components/TrackList';
 import { NoteEditor } from './components/NoteEditor';
 import { InstrumentPanel } from './components/InstrumentPanel';
 import { ImportExport } from './components/ImportExport';
-import { MIDIStatus } from './components/MIDIStatus/MIDIStatus';
+import { MIDIStatus } from './components/MIDIStatus';
 
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import './App.css';

@@ -7,6 +7,7 @@ import './MIDIStatus.css';
 interface ActiveNote {
   startBeat: number;
   velocity: number;
+  trackId: string;
 }
 
 interface MIDIStatusProps {
@@ -32,7 +33,7 @@ export function MIDIStatus({ selectedTrack, subdivision }: MIDIStatusProps) {
       startNote(pitch, velocity, track.presetId, track.paramOverrides);
       const { isRecording: rec, playback: pb } = recordingRef.current;
       if (rec && pb.isPlaying) {
-        activeNotesRef.current.set(pitch, { startBeat: pb.currentBeat, velocity });
+        activeNotesRef.current.set(pitch, { startBeat: pb.currentBeat, velocity, trackId: track.id });
       }
     },
     [startNote],
@@ -41,9 +42,9 @@ export function MIDIStatus({ selectedTrack, subdivision }: MIDIStatusProps) {
   const onNoteOff = useCallback(
     (pitch: number) => {
       stopNote(pitch);
-      const { isRecording: rec, playback: pb, selectedTrack: track, subdivision: sub } =
+      const { isRecording: rec, playback: pb, subdivision: sub } =
         recordingRef.current;
-      if (!rec || !pb.isPlaying || !track) return;
+      if (!rec || !pb.isPlaying) return;
 
       const noteData = activeNotesRef.current.get(pitch);
       if (!noteData) return;
@@ -52,7 +53,7 @@ export function MIDIStatus({ selectedTrack, subdivision }: MIDIStatusProps) {
       dispatch({
         type: 'ADD_NOTE',
         payload: {
-          trackId: track.id,
+          trackId: noteData.trackId,
           pitch,
           startTime: noteData.startBeat,
           duration,
