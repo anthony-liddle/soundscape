@@ -5,6 +5,7 @@ import { Button } from '../common';
 import { validateSoundscapeState, builtInPresets } from 'soundscape-engine';
 import type { SoundscapeState } from 'soundscape-engine';
 import { exportSoundscape } from '../../utils/exportSoundscape';
+import { migrateSoundscapeState } from '../../state/migrate';
 import './ImportExport.css';
 
 export function ImportExport() {
@@ -44,7 +45,7 @@ export function ImportExport() {
         // Stop playback before loading new state
         stop();
 
-        dispatch({ type: 'SET_STATE', payload: stateToLoad });
+        dispatch({ type: 'SET_STATE', payload: migrateSoundscapeState(stateToLoad) });
       } catch (err) {
         alert('Failed to parse file: ' + (err as Error).message);
       }
