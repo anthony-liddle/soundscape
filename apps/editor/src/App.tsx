@@ -15,6 +15,7 @@ function SoundscapeApp() {
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(
     state.tracks.length > 0 ? (state.tracks[0]?.id ?? null) : null
   );
+  const [subdivision, setSubdivision] = useState<0.25 | 0.5 | 1>(1);
 
   const selectedTrack = state.tracks.find((t) => t.id === selectedTrackId) || null;
 
@@ -50,7 +51,7 @@ function SoundscapeApp() {
           />
         </div>
         <div className="app-header-right">
-          <MIDIStatus selectedTrack={selectedTrack} />
+          <MIDIStatus selectedTrack={selectedTrack} subdivision={subdivision} />
           <ImportExport />
         </div>
       </header>
@@ -68,7 +69,12 @@ function SoundscapeApp() {
         </aside>
 
         <main className="app-main">
-          <NoteEditor key={selectedTrack?.id ?? 'empty'} track={selectedTrack} />
+          <NoteEditor
+            key={selectedTrack?.id ?? 'empty'}
+            track={selectedTrack}
+            subdivision={subdivision}
+            onSubdivisionChange={setSubdivision}
+          />
           <InstrumentPanel track={selectedTrack} analyserNode={analyserNode} />
         </main>
       </div>

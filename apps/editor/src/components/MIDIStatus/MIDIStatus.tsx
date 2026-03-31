@@ -1,25 +1,68 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSoundscape } from '../../state';
 import { useMIDIInput } from '../../hooks/useMIDIInput';
 import type { Track } from 'soundscape-engine';
 import './MIDIStatus.css';
 
-interface MIDIStatusProps {
-  selectedTrack: Track | null;
+interface ActiveNote {
+  startBeat: number;
+  velocity: number;
 }
 
-export function MIDIStatus({ selectedTrack }: MIDIStatusProps) {
-  const { startNote, stopNote } = useSoundscape();
+interface MIDIStatusProps {
+  selectedTrack: Track | null;
+  subdivision: number;
+}
+
+export function MIDIStatus({ selectedTrack, subdivision }: MIDIStatusProps) {
+  const { startNote, stopNote, dispatch, playback } = useSoundscape();
+  const [isRecording, setIsRecording] = useState(false);
+  const activeNotesRef = useRef<Map<number, ActiveNote>>(new Map());
+
+  // Ref to latest values to avoid stale closures in MIDI callbacks
+  const recordingRef = useRef({ isRecording, subdivision, playback, selectedTrack });
+  useEffect(() => {
+    recordingRef.current = { isRecording, subdivision, playback, selectedTrack };
+  });
 
   const onNoteOn = useCallback(
     (pitch: number, velocity: number) => {
-      if (!selectedTrack) return;
-      startNote(pitch, velocity, selectedTrack.presetId, selectedTrack.paramOverrides);
+      const { selectedTrack: track } = recordingRef.current;
+      if (!track) return;
+      startNote(pitch, velocity, track.presetId, track.paramOverrides);
+      const { isRecording: rec, playback: pb } = recordingRef.current;
+      if (rec && pb.isPlaying) {
+        activeNotesRef.current.set(pitch, { startBeat: pb.currentBeat, velocity });
+      }
     },
-    [selectedTrack, startNote],
+    [startNote],
   );
 
-  const onNoteOff = useCallback((pitch: number) => stopNote(pitch), [stopNote]);
+  const onNoteOff = useCallback(
+    (pitch: number) => {
+      stopNote(pitch);
+      const { isRecording: rec, playback: pb, selectedTrack: track, subdivision: sub } =
+        recordingRef.current;
+      if (!rec || !pb.isPlaying || !track) return;
+
+      const noteData = activeNotesRef.current.get(pitch);
+      if (!noteData) return;
+
+      const duration = Math.max(pb.currentBeat - noteData.startBeat, sub);
+      dispatch({
+        type: 'ADD_NOTE',
+        payload: {
+          trackId: track.id,
+          pitch,
+          startTime: noteData.startBeat,
+          duration,
+          velocity: noteData.velocity,
+        },
+      });
+      activeNotesRef.current.delete(pitch);
+    },
+    [stopNote, dispatch],
+  );
 
   const { isSupported, isConnected, error, deviceNames, connect } = useMIDIInput({
     onNoteOn,
@@ -33,14 +76,27 @@ export function MIDIStatus({ selectedTrack }: MIDIStatusProps) {
   return (
     <div className="midi-status">
       {isConnected ? (
-        <span
-          className="midi-status__connected"
-          title={deviceNames.join(', ') || 'Connected'}
-        >
-          MIDI ●{' '}
-          {deviceNames.length > 0 ? deviceNames[0] : 'connected'}
-          {deviceNames.length > 1 ? ` +${deviceNames.length - 1}` : ''}
-        </span>
+        <>
+          <span
+            className="midi-status__connected"
+            title={deviceNames.join(', ') || 'Connected'}
+          >
+            MIDI ●{' '}
+            {deviceNames.length > 0 ? deviceNames[0] : 'connected'}
+            {deviceNames.length > 1 ? ` +${deviceNames.length - 1}` : ''}
+          </span>
+          <button
+            className={`midi-status__record-btn${isRecording ? ' midi-status__record-btn--active' : ''}`}
+            onClick={() => setIsRecording((r) => !r)}
+            title={
+              isRecording
+                ? 'Stop recording'
+                : 'Record MIDI to selected track (requires playback)'
+            }
+          >
+            {isRecording ? '⏹ Stop' : '⏺ Record'}
+          </button>
+        </>
       ) : (
         <button className="midi-status__connect-btn" onClick={connect}>
           Connect MIDI

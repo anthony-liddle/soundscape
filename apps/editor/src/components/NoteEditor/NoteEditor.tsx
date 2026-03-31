@@ -6,6 +6,8 @@ import './NoteEditor.css';
 
 interface NoteEditorProps {
   track: Track | null;
+  subdivision?: 0.25 | 0.5 | 1;
+  onSubdivisionChange?: (s: 0.25 | 0.5 | 1) => void;
 }
 
 // Define piano roll range (6 octaves from C1 to C7)
@@ -35,10 +37,17 @@ interface RectDrag {
   endStep: number;
 }
 
-export function NoteEditor({ track }: NoteEditorProps) {
+export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionChange }: NoteEditorProps) {
   const { state, dispatch, previewNote, playback } = useSoundscape();
   const beats = state.metadata.lengthBeats;
-  const [subdivision, setSubdivision] = useState<Subdivision>(1);
+  const [internalSubdivision, setInternalSubdivision] = useState<Subdivision>(
+    subdivisionProp ?? 1,
+  );
+  const subdivision = subdivisionProp ?? internalSubdivision;
+  const setSubdivision = (s: Subdivision) => {
+    setInternalSubdivision(s);
+    onSubdivisionChange?.(s);
+  };
   const totalSteps = beats / subdivision;
   const currentStep = Math.floor(playback.currentBeat / subdivision);
 

@@ -39,3 +39,25 @@
   color: var(--text-muted, #555);
   font-size: 11px;
 }
+
+.midi-status__record-btn {
+  padding: 3px 10px;
+  background: transparent;
+  border: 1px solid var(--border-color, #444);
+  border-radius: 4px;
+  color: var(--text-secondary, #aaa);
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.midi-status__record-btn--active {
+  background: var(--color-record, #c62828);
+  border-color: var(--color-record, #c62828);
+  color: white;
+  animation: midi-record-blink 1s step-end infinite;
+}
+
+@keyframes midi-record-blink {
+  50% { opacity: 0.6; }
+}
