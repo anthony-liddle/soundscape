@@ -12,6 +12,8 @@ export interface SoundscapeContextValue {
   setTempo: (bpm: number) => void;
   setLoop: (enabled: boolean) => void;
   previewNote: (pitch: number, velocity: number, presetId: string, paramOverrides?: Partial<InstrumentParams>) => void;
+  startNote: (pitch: number, velocity: number, presetId: string, paramOverrides?: Partial<InstrumentParams>) => void;
+  stopNote: (pitch: number) => void;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;

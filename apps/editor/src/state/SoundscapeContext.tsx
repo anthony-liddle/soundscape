@@ -130,6 +130,17 @@ export function SoundscapeProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const startNote = useCallback(
+    (pitch: number, velocity: number, presetId: string, paramOverrides?: Partial<InstrumentParams>) => {
+      audioEngineRef.current?.startMIDINote(pitch, velocity, presetId, paramOverrides);
+    },
+    []
+  );
+
+  const stopNote = useCallback((pitch: number) => {
+    audioEngineRef.current?.stopMIDINote(pitch);
+  }, []);
+
   const value: SoundscapeContextValue = {
     state,
     dispatch: dispatchWithHistory,
@@ -139,6 +150,8 @@ export function SoundscapeProvider({ children }: { children: ReactNode }) {
     setTempo,
     setLoop,
     previewNote,
+    startNote,
+    stopNote,
     undo,
     redo,
     canUndo: past.length > 0,

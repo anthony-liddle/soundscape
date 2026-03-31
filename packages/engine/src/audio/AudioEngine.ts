@@ -85,6 +85,7 @@ export class AudioEngine {
   private beatUpdateListeners = new Set<(beat: number) => void>();
 
   private currentState: SoundscapeState | null = null;
+  private midiVoices: Map<number, { voice: VoiceSynthesizer; gainNode: GainNode; params: InstrumentParams }> = new Map();
 
   /**
    * Creates the underlying `AudioContext` and master gain node, and registers
@@ -670,6 +671,53 @@ export class AudioEngine {
         tempGain.disconnect();
       }, 1000);
     }, 500);
+  }
+
+  /**
+   * Starts a sustained MIDI note at `pitch`. Holds until {@link stopMIDINote} is
+   * called with the same pitch. Silently replaces any existing voice at that pitch.
+   */
+  startMIDINote(
+    pitch: number,
+    velocity: number,
+    presetId: string,
+    paramOverrides?: Partial<InstrumentParams>
+  ): void {
+    if (!this.currentState) return;
+    const context = this.ensureContext();
+    const masterGain = this.ensureMasterGain();
+
+    this.stopMIDINote(pitch); // replace any existing voice at this pitch
+
+    const preset = getPresetById(this.currentState.presets, presetId);
+    if (!preset) return;
+
+    const params = { ...preset.params, ...paramOverrides };
+
+    const gainNode = context.createGain();
+    gainNode.connect(masterGain);
+    gainNode.gain.value = 0.8;
+
+    const voice = new VoiceSynthesizer(context, gainNode);
+    voice.noteOn({ pitch, velocity, instrument: params }, context.currentTime);
+
+    this.midiVoices.set(pitch, { voice, gainNode, params });
+  }
+
+  /** Releases the sustained MIDI note at `pitch`. No-op if pitch is not active. */
+  stopMIDINote(pitch: number): void {
+    const entry = this.midiVoices.get(pitch);
+    if (!entry || !this.context) return;
+
+    const { voice, gainNode, params } = entry;
+    voice.noteOff(params, this.context.currentTime);
+
+    setTimeout(() => {
+      voice.disconnect();
+      gainNode.disconnect();
+    }, 1000); // wait for release tail
+
+    this.midiVoices.delete(pitch);
   }
 
   /**
