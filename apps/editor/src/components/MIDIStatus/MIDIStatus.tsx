@@ -87,7 +87,12 @@ export function MIDIStatus({ selectedTrack, subdivision }: MIDIStatusProps) {
           </span>
           <button
             className={`midi-status__record-btn${isRecording ? ' midi-status__record-btn--active' : ''}`}
-            onClick={() => setIsRecording((r) => !r)}
+            onClick={() => {
+              setIsRecording((r) => {
+                if (r) activeNotesRef.current.clear();
+                return !r;
+              });
+            }}
             title={
               isRecording
                 ? 'Stop recording'
