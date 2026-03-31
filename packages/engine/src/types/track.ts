@@ -1,38 +1,31 @@
-import type { Note } from './note';
 import type { InstrumentParams } from './instrument';
+import type { Pattern, ArrangementClip } from './pattern';
+import { createPattern, createClip } from './pattern';
 
-/** A single instrument track containing notes and optional parameter overrides. */
+/** A single instrument track in a Soundscape project. */
 export interface Track {
-  /** Unique identifier for this track. */
   id: string;
-  /** Human-readable name displayed in the editor. */
   name: string;
-  /** ID of the {@link InstrumentPreset} used as the base sound for this track. */
+  /** References an {@link InstrumentPreset} id. */
   presetId: string;
-  /** All note events placed on this track's timeline. */
-  notes: Note[];
-  /**
-   * Per-track overrides applied on top of the preset's {@link InstrumentParams}.
-   * Only the keys you include are overridden; everything else falls through to the preset.
-   */
+  /** Library of all patterns available on this track. */
+  patterns: Pattern[];
+  /** Ordered list of pattern placements in the arrangement timeline. */
+  arrangement: ArrangementClip[];
+  /** Per-track synthesis parameter overrides, merged on top of the preset at playback time. */
   paramOverrides?: Partial<InstrumentParams>;
 }
 
 /**
- * Factory helper that creates a {@link Track} with a generated `id` and an empty note list.
- *
- * @param name - Human-readable label for the track.
- * @param presetId - ID of the {@link InstrumentPreset} to use as the base sound.
- * @returns A new {@link Track} object.
- *
- * @example
- * const track = createTrack('Lead Synth', 'preset-piano');
+ * Creates a new Track with a single empty Pattern ("Pattern 1") placed at beat 0.
  */
-export function createTrack(name: string, presetId: string): Track {
+export function createTrack(name: string, presetId: string, patternLengthBeats = 16): Track {
+  const defaultPattern = createPattern('Pattern 1', patternLengthBeats);
   return {
     id: crypto.randomUUID(),
     name,
     presetId,
-    notes: [],
+    patterns: [defaultPattern],
+    arrangement: [createClip(defaultPattern.id, 0)],
   };
 }

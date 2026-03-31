@@ -6,6 +6,8 @@ export type {
   LfoTarget,
   InstrumentParams,
   InstrumentPreset,
+  Pattern,
+  ArrangementClip,
   Track,
   TrackMixerState,
   MixerState,
@@ -17,6 +19,8 @@ export type {
 export {
   createNote,
   defaultInstrumentParams,
+  createPattern,
+  createClip,
   createTrack,
   defaultTrackMixerState,
   createMixerState,
