@@ -469,6 +469,7 @@ export function NoteEditor({ track }: NoteEditorProps) {
                         subdivision === 0.25 ? 'cell-sm' : '',
                         isSelected ? 'selected' : '',
                       ].filter(Boolean).join(' ')}
+                      style={note ? ({ '--vel': String(note.velocity / 127) } as React.CSSProperties) : undefined}
                       onMouseDown={(e) => { e.preventDefault(); handleMouseDown(pitch, stepIndex); }}
                       onMouseEnter={() => handleMouseEnter(pitch, stepIndex)}
                     />

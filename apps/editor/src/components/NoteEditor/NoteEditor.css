@@ -199,6 +199,7 @@
 
 .note-editor-cell.has-note {
   background: #3b82f6;
+  opacity: calc(0.35 + var(--vel, 0.78) * 0.65);
   position: relative;
 }
 
