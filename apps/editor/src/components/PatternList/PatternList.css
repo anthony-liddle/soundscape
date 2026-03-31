@@ -1,0 +1,78 @@
+.pattern-list { display: flex; flex-direction: column; }
+
+.pattern-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-color, #333);
+}
+
+.pattern-list__title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #666);
+}
+
+.pattern-list__add-btn {
+  width: 20px; height: 20px;
+  background: transparent;
+  border: 1px solid var(--border-color, #333);
+  border-radius: 3px;
+  color: var(--text-secondary, #aaa);
+  font-size: 16px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; padding: 0;
+}
+.pattern-list__add-btn:hover {
+  border-color: var(--accent-color, #6c63ff);
+  color: var(--text-primary, #e0e0e0);
+}
+
+.pattern-list__hint {
+  padding: 4px 8px;
+  font-size: 10px;
+  color: var(--text-muted, #555);
+  border-bottom: 1px solid var(--border-subtle, #222);
+  line-height: 1.4;
+}
+
+.pattern-list__items { list-style: none; margin: 0; padding: 0; }
+
+.pattern-list__item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-subtle, #222);
+  font-size: 12px;
+  color: var(--text-secondary, #aaa);
+}
+.pattern-list__item:hover { background: var(--bg-hover, #1a1a2e); color: var(--text-primary, #e0e0e0); }
+.pattern-list__item--active {
+  background: var(--bg-active, #1e1a40);
+  color: var(--accent-color, #6c63ff);
+  border-left: 2px solid var(--accent-color, #6c63ff);
+}
+
+.pattern-list__item-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pattern-list__item-meta { font-size: 10px; color: var(--text-muted, #555); }
+
+.pattern-list__action-btn {
+  background: transparent; border: none;
+  color: var(--text-muted, #555);
+  font-size: 12px; cursor: pointer;
+  padding: 0 2px; line-height: 1; opacity: 0;
+}
+.pattern-list__item:hover .pattern-list__action-btn { opacity: 1; }
+.pattern-list__action-btn--delete:disabled { cursor: not-allowed; opacity: 0.2 !important; }
+
+.pattern-list__rename-input {
+  flex: 1;
+  background: var(--bg-input, #1a1a2e);
+  border: 1px solid var(--accent-color, #6c63ff);
+  border-radius: 3px;
+  color: var(--text-primary, #e0e0e0);
+  font-size: 12px; padding: 2px 4px; outline: none;
+}
