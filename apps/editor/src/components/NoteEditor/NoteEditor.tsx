@@ -17,6 +17,7 @@ const PITCHES = Array.from(
 );
 const CELL_HEIGHT = 20;
 const BEAT_MARKER_HEIGHT = 20;
+const VELOCITY_LANE_HEIGHT = 60;
 
 type Subdivision = 1 | 0.5 | 0.25;
 type EditorTool = 'draw' | 'select';
@@ -50,6 +51,10 @@ export function NoteEditor({ track }: NoteEditorProps) {
   const [selectedNoteIds, setSelectedNoteIds] = useState<Set<string>>(new Set());
   const [rectDrag, setRectDrag] = useState<RectDrag | null>(null);
   const [clipboard, setClipboard] = useState<Note[]>([]);
+
+  // Velocity lane state
+  const [draggingVelocityNoteId, setDraggingVelocityNoteId] = useState<string | null>(null);
+  const velocityLaneRef = useRef<HTMLDivElement>(null);
 
   // Scroll ref for auto-scroll to playhead
   const gridContainerRef = useRef<HTMLDivElement>(null);
@@ -122,6 +127,33 @@ export function NoteEditor({ track }: NoteEditorProps) {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [tool, track, selectedNoteIds, clipboard, dispatch, playback.currentBeat]);
+
+  // Velocity lane drag handlers
+  useEffect(() => {
+    if (!draggingVelocityNoteId || !track) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!velocityLaneRef.current) return;
+      const rect = velocityLaneRef.current.getBoundingClientRect();
+      const y = e.clientY - rect.top;
+      const velocity = Math.round(
+        Math.max(1, Math.min(127, (1 - y / VELOCITY_LANE_HEIGHT) * 127))
+      );
+      dispatch({
+        type: 'UPDATE_NOTE',
+        payload: { trackId: track.id, noteId: draggingVelocityNoteId, updates: { velocity } },
+      });
+    };
+
+    const handleMouseUp = () => setDraggingVelocityNoteId(null);
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [draggingVelocityNoteId, track, dispatch]);
 
   const cellWidth = subdivision === 0.25 ? 20 : 30;
 
@@ -413,6 +445,9 @@ export function NoteEditor({ track }: NoteEditorProps) {
               </div>
             );
           })}
+          <div className="velocity-lane-label" style={{ height: VELOCITY_LANE_HEIGHT }}>
+            vel
+          </div>
         </div>
 
         {/* Grid */}
@@ -483,6 +518,34 @@ export function NoteEditor({ track }: NoteEditorProps) {
           {selectionRectStyle && (
             <div className="selection-rect" style={selectionRectStyle} />
           )}
+
+          {/* Velocity lane */}
+          <div
+            className="velocity-lane"
+            ref={velocityLaneRef}
+            style={{ height: VELOCITY_LANE_HEIGHT }}
+          >
+            {track && track.notes.map((note) => {
+              const stepIndex = Math.round(note.startTime / subdivision);
+              const barHeight = (note.velocity / 127) * VELOCITY_LANE_HEIGHT;
+              return (
+                <div
+                  key={note.id}
+                  className={`velocity-bar${draggingVelocityNoteId === note.id ? ' dragging' : ''}`}
+                  style={{
+                    left: stepIndex * cellWidth,
+                    width: Math.max(cellWidth - 2, 2),
+                    height: barHeight,
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    setDraggingVelocityNoteId(note.id);
+                  }}
+                  title={`Velocity: ${note.velocity}`}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
