@@ -66,7 +66,7 @@ function SoundscapeApp() {
         </aside>
 
         <main className="app-main">
-          <NoteEditor key={selectedTrack?.id ?? 'empty'} track={selectedTrack} />
+          <NoteEditor key={selectedTrack?.id ?? 'empty'} track={selectedTrack} pattern={selectedTrack?.patterns[0] ?? null} />
           <InstrumentPanel track={selectedTrack} analyserNode={analyserNode} />
         </main>
       </div>
