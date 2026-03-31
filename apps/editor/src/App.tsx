@@ -5,6 +5,7 @@ import { TrackList } from './components/TrackList';
 import { NoteEditor } from './components/NoteEditor';
 import { InstrumentPanel } from './components/InstrumentPanel';
 import { ImportExport } from './components/ImportExport';
+import { MIDIStatus } from './components/MIDIStatus/MIDIStatus';
 
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import './App.css';
@@ -49,6 +50,7 @@ function SoundscapeApp() {
           />
         </div>
         <div className="app-header-right">
+          <MIDIStatus selectedTrack={selectedTrack} />
           <ImportExport />
         </div>
       </header>
