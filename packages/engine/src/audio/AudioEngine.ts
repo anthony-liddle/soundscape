@@ -200,6 +200,29 @@ export class AudioEngine {
     }
   }
 
+  /**
+   * Flattens the global arrangement into a list of {note, trackId} pairs.
+   * Each note's startTime is offset by its clip's startBeat.
+   */
+  private resolveArrangementNotes(
+    state: SoundscapeState
+  ): Array<{ note: import('../types').Note; trackId: string }> {
+    const result: Array<{ note: import('../types').Note; trackId: string }> = [];
+    for (const clip of state.arrangement) {
+      const pattern = state.patterns.find((p) => p.id === clip.patternId);
+      if (!pattern) continue;
+      for (const [trackId, notes] of Object.entries(pattern.trackNotes)) {
+        for (const note of notes) {
+          result.push({
+            note: { ...note, startTime: note.startTime + clip.startBeat },
+            trackId,
+          });
+        }
+      }
+    }
+    return result;
+  }
+
   private syncScheduledNotes(state: SoundscapeState): void {
     // Index existing scheduled notes by noteId for fast lookup
     const existingByNoteId = new Map<string, ScheduledNote>();
@@ -211,22 +234,13 @@ export class AudioEngine {
     const currentNoteIds = new Set<string>();
     const newScheduledNotes: ScheduledNote[] = [];
 
-    for (const track of state.tracks) {
-      for (const note of track.notes) {
-        currentNoteIds.add(note.id);
-        const existing = existingByNoteId.get(note.id);
-        if (existing) {
-          // Keep existing scheduling state
-          newScheduledNotes.push({ ...existing, trackId: track.id, note });
-        } else {
-          // New note — add as unscheduled
-          newScheduledNotes.push({
-            note,
-            trackId: track.id,
-            startScheduled: false,
-            endScheduled: false,
-          });
-        }
+    for (const { note, trackId } of this.resolveArrangementNotes(state)) {
+      currentNoteIds.add(note.id);
+      const existing = existingByNoteId.get(note.id);
+      if (existing) {
+        newScheduledNotes.push({ ...existing, trackId, note });
+      } else {
+        newScheduledNotes.push({ note, trackId, startScheduled: false, endScheduled: false });
       }
     }
 
@@ -356,15 +370,8 @@ export class AudioEngine {
 
     // Prepare scheduled notes
     this.scheduledNotes = [];
-    for (const track of this.currentState.tracks) {
-      for (const note of track.notes) {
-        this.scheduledNotes.push({
-          note,
-          trackId: track.id,
-          startScheduled: false,
-          endScheduled: false,
-        });
-      }
+    for (const { note, trackId } of this.resolveArrangementNotes(this.currentState)) {
+      this.scheduledNotes.push({ note, trackId, startScheduled: false, endScheduled: false });
     }
 
     // Start scheduling loop — prefer AudioWorklet for audio-thread accuracy
