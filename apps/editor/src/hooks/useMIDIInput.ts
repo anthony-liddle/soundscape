@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
-interface MIDIInputOptions {
+export interface MIDIInputOptions {
   onNoteOn: (pitch: number, velocity: number) => void;
   onNoteOff: (pitch: number) => void;
 }
@@ -45,6 +45,14 @@ export function useMIDIInput({
   const [error, setError] = useState<string | null>(null);
   const [deviceNames, setDeviceNames] = useState<string[]>([]);
 
+  const onNoteOnRef = useRef(onNoteOn);
+  const onNoteOffRef = useRef(onNoteOff);
+  // Keep refs up to date without triggering re-renders
+  useEffect(() => {
+    onNoteOnRef.current = onNoteOn;
+    onNoteOffRef.current = onNoteOff;
+  });
+
   const connect = useCallback(async () => {
     if (!isSupported) return;
     try {
@@ -59,7 +67,7 @@ export function useMIDIInput({
           if (input.name) names.push(input.name);
           input.onmidimessage = (event: MIDIMessageEvent) => {
             if (!event.data) return;
-            handleMIDIMessage(event.data, onNoteOn, onNoteOff);
+            handleMIDIMessage(event.data, onNoteOnRef.current, onNoteOffRef.current);
           };
         }
         setDeviceNames(names);
@@ -71,7 +79,7 @@ export function useMIDIInput({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'MIDI access denied');
     }
-  }, [isSupported, onNoteOn, onNoteOff]);
+  }, [isSupported]); // stable — only changes if support changes
 
   return { isSupported, isConnected, error, deviceNames, connect };
 }
