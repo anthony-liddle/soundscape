@@ -12,6 +12,8 @@ import {
   defaultTrackMixerState,
   createTrack,
   createNote,
+  createPattern,
+  createClip,
 } from 'soundscape-engine';
 import { builtInPresets } from 'soundscape-engine';
 
@@ -22,13 +24,22 @@ export type SoundscapeAction =
   | { type: 'ADD_TRACK'; payload: { name: string; presetId: string } }
   | { type: 'DUPLICATE_TRACK'; payload: { trackId: string } }
   | { type: 'REMOVE_TRACK'; payload: { trackId: string } }
-  | { type: 'UPDATE_TRACK'; payload: { trackId: string; updates: Partial<Omit<Track, 'id' | 'notes'>> } }
+  | { type: 'UPDATE_TRACK'; payload: { trackId: string; updates: Partial<Omit<Track, 'id' | 'patterns' | 'arrangement'>> } }
   | { type: 'SET_TRACK_PRESET'; payload: { trackId: string; presetId: string } }
   | { type: 'SET_TRACK_PARAM_OVERRIDES'; payload: { trackId: string; overrides: Partial<InstrumentParams> } }
-  | { type: 'ADD_NOTE'; payload: { trackId: string; pitch: number; startTime: number; duration?: number; velocity?: number } }
-  | { type: 'REMOVE_NOTE'; payload: { trackId: string; noteId: string } }
-  | { type: 'UPDATE_NOTE'; payload: { trackId: string; noteId: string; updates: Partial<Omit<Note, 'id'>> } }
-  | { type: 'CLEAR_TRACK_NOTES'; payload: { trackId: string } }
+  // Pattern actions
+  | { type: 'ADD_PATTERN'; payload: { trackId: string; name: string; lengthBeats: number } }
+  | { type: 'REMOVE_PATTERN'; payload: { trackId: string; patternId: string } }
+  | { type: 'RENAME_PATTERN'; payload: { trackId: string; patternId: string; name: string } }
+  // Clip actions
+  | { type: 'ADD_CLIP'; payload: { trackId: string; patternId: string; startBeat: number } }
+  | { type: 'REMOVE_CLIP'; payload: { trackId: string; clipId: string } }
+  | { type: 'MOVE_CLIP'; payload: { trackId: string; clipId: string; startBeat: number } }
+  // Note actions (now require patternId)
+  | { type: 'ADD_NOTE'; payload: { trackId: string; patternId: string; pitch: number; startTime: number; duration?: number; velocity?: number } }
+  | { type: 'REMOVE_NOTE'; payload: { trackId: string; patternId: string; noteId: string } }
+  | { type: 'UPDATE_NOTE'; payload: { trackId: string; patternId: string; noteId: string; updates: Partial<Omit<Note, 'id'>> } }
+  | { type: 'CLEAR_PATTERN_NOTES'; payload: { trackId: string; patternId: string } }
   | { type: 'ADD_PRESET'; payload: InstrumentPreset }
   | { type: 'REMOVE_PRESET'; payload: { presetId: string } }
   | { type: 'UPDATE_PRESET'; payload: { presetId: string; updates: Partial<Omit<InstrumentPreset, 'id' | 'isBuiltIn'>> } }
@@ -82,11 +93,23 @@ export function soundscapeReducer(state: SoundscapeState, action: SoundscapeActi
       const sourceTrk = state.tracks.find((t) => t.id === action.payload.trackId);
       if (!sourceTrk) return state;
       const newId = crypto.randomUUID();
+      const patternIdMap = new Map<string, string>(
+        sourceTrk.patterns.map((p) => [p.id, crypto.randomUUID()])
+      );
       const duplicatedTrack: Track = {
         id: newId,
         name: `${sourceTrk.name} - copy`,
         presetId: sourceTrk.presetId,
-        notes: sourceTrk.notes.map((n) => ({ ...n, id: crypto.randomUUID() })),
+        patterns: sourceTrk.patterns.map((p) => ({
+          ...p,
+          id: patternIdMap.get(p.id)!,
+          notes: p.notes.map((n) => ({ ...n, id: crypto.randomUUID() })),
+        })),
+        arrangement: sourceTrk.arrangement.map((c) => ({
+          ...c,
+          id: crypto.randomUUID(),
+          patternId: patternIdMap.get(c.patternId)!,
+        })),
         ...(sourceTrk.paramOverrides && { paramOverrides: { ...sourceTrk.paramOverrides } }),
       };
       const sourceMixer = state.mixer.tracks[sourceTrk.id] || defaultTrackMixerState;
@@ -95,10 +118,7 @@ export function soundscapeReducer(state: SoundscapeState, action: SoundscapeActi
         tracks: [...state.tracks, duplicatedTrack],
         mixer: {
           ...state.mixer,
-          tracks: {
-            ...state.mixer.tracks,
-            [newId]: { ...sourceMixer },
-          },
+          tracks: { ...state.mixer.tracks, [newId]: { ...sourceMixer } },
         },
       };
     }
@@ -153,52 +173,132 @@ export function soundscapeReducer(state: SoundscapeState, action: SoundscapeActi
       };
     }
 
+    case 'ADD_PATTERN': {
+      const { trackId, name, lengthBeats } = action.payload;
+      const newPattern = createPattern(name, lengthBeats);
+      return {
+        ...state,
+        tracks: state.tracks.map((t) =>
+          t.id === trackId ? { ...t, patterns: [...t.patterns, newPattern] } : t
+        ),
+      };
+    }
+
+    case 'REMOVE_PATTERN': {
+      const { trackId, patternId } = action.payload;
+      return {
+        ...state,
+        tracks: state.tracks.map((t) => {
+          if (t.id !== trackId) return t;
+          if (t.patterns.length <= 1) return t;
+          return {
+            ...t,
+            patterns: t.patterns.filter((p) => p.id !== patternId),
+            arrangement: t.arrangement.filter((c) => c.patternId !== patternId),
+          };
+        }),
+      };
+    }
+
+    case 'RENAME_PATTERN': {
+      const { trackId, patternId, name } = action.payload;
+      return {
+        ...state,
+        tracks: state.tracks.map((t) =>
+          t.id !== trackId
+            ? t
+            : { ...t, patterns: t.patterns.map((p) => p.id === patternId ? { ...p, name } : p) }
+        ),
+      };
+    }
+
+    case 'ADD_CLIP': {
+      const { trackId, patternId, startBeat } = action.payload;
+      const newClip = createClip(patternId, startBeat);
+      return {
+        ...state,
+        tracks: state.tracks.map((t) =>
+          t.id === trackId ? { ...t, arrangement: [...t.arrangement, newClip] } : t
+        ),
+      };
+    }
+
+    case 'REMOVE_CLIP': {
+      const { trackId, clipId } = action.payload;
+      return {
+        ...state,
+        tracks: state.tracks.map((t) =>
+          t.id === trackId
+            ? { ...t, arrangement: t.arrangement.filter((c) => c.id !== clipId) }
+            : t
+        ),
+      };
+    }
+
+    case 'MOVE_CLIP': {
+      const { trackId, clipId, startBeat } = action.payload;
+      return {
+        ...state,
+        tracks: state.tracks.map((t) =>
+          t.id !== trackId
+            ? t
+            : { ...t, arrangement: t.arrangement.map((c) => c.id === clipId ? { ...c, startBeat } : c) }
+        ),
+      };
+    }
+
     case 'ADD_NOTE': {
-      const { trackId, pitch, startTime, duration = 1, velocity = 100 } = action.payload;
+      const { trackId, patternId, pitch, startTime, duration = 1, velocity = 100 } = action.payload;
       const newNote = createNote(pitch, startTime, duration, velocity);
       return {
         ...state,
         tracks: state.tracks.map((t) =>
-          t.id === trackId ? { ...t, notes: [...t.notes, newNote] } : t
+          t.id !== trackId
+            ? t
+            : { ...t, patterns: t.patterns.map((p) => p.id === patternId ? { ...p, notes: [...p.notes, newNote] } : p) }
         ),
       };
     }
 
     case 'REMOVE_NOTE': {
-      const { trackId, noteId } = action.payload;
+      const { trackId, patternId, noteId } = action.payload;
       return {
         ...state,
         tracks: state.tracks.map((t) =>
-          t.id === trackId
-            ? { ...t, notes: t.notes.filter((n) => n.id !== noteId) }
-            : t
+          t.id !== trackId
+            ? t
+            : { ...t, patterns: t.patterns.map((p) => p.id === patternId ? { ...p, notes: p.notes.filter((n) => n.id !== noteId) } : p) }
         ),
       };
     }
 
     case 'UPDATE_NOTE': {
-      const { trackId, noteId, updates } = action.payload;
+      const { trackId, patternId, noteId, updates } = action.payload;
       return {
         ...state,
         tracks: state.tracks.map((t) =>
-          t.id === trackId
-            ? {
+          t.id !== trackId
+            ? t
+            : {
                 ...t,
-                notes: t.notes.map((n) =>
-                  n.id === noteId ? { ...n, ...updates } : n
+                patterns: t.patterns.map((p) =>
+                  p.id !== patternId
+                    ? p
+                    : { ...p, notes: p.notes.map((n) => n.id === noteId ? { ...n, ...updates } : n) }
                 ),
               }
-            : t
         ),
       };
     }
 
-    case 'CLEAR_TRACK_NOTES': {
-      const { trackId } = action.payload;
+    case 'CLEAR_PATTERN_NOTES': {
+      const { trackId, patternId } = action.payload;
       return {
         ...state,
         tracks: state.tracks.map((t) =>
-          t.id === trackId ? { ...t, notes: [] } : t
+          t.id !== trackId
+            ? t
+            : { ...t, patterns: t.patterns.map((p) => p.id === patternId ? { ...p, notes: [] } : p) }
         ),
       };
     }
