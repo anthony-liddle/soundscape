@@ -5,6 +5,9 @@ import { TrackList } from './components/TrackList';
 import { NoteEditor } from './components/NoteEditor';
 import { InstrumentPanel } from './components/InstrumentPanel';
 import { ImportExport } from './components/ImportExport';
+import { PatternList } from './components/PatternList/PatternList';
+import { ArrangementView } from './components/ArrangementView/ArrangementView';
+import type { Pattern } from 'soundscape-engine';
 
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import './App.css';
@@ -16,6 +19,21 @@ function SoundscapeApp() {
   );
 
   const selectedTrack = state.tracks.find((t) => t.id === selectedTrackId) || null;
+
+  const [activePatternId, setActivePatternId] = useState<string | null>(
+    selectedTrack?.patterns[0]?.id ?? null
+  );
+
+  const activePattern: Pattern | null =
+    selectedTrack?.patterns.find((p) => p.id === activePatternId) ??
+    selectedTrack?.patterns[0] ??
+    null;
+
+  const handleSelectTrack = (trackId: string) => {
+    setSelectedTrackId(trackId);
+    const track = state.tracks.find((t) => t.id === trackId);
+    setActivePatternId(track?.patterns[0]?.id ?? null);
+  };
 
   useKeyboardShortcuts({
     isPlaying: playback.isPlaying,
@@ -57,16 +75,33 @@ function SoundscapeApp() {
         <Transport />
       </div>
 
+      <div className="app-arrangement">
+        <ArrangementView
+          activePatternId={activePatternId}
+          selectedTrackId={selectedTrackId}
+          onSelectTrack={handleSelectTrack}
+        />
+      </div>
+
       <div className="app-content">
         <aside className="app-sidebar">
           <TrackList
             selectedTrackId={selectedTrackId}
-            onSelectTrack={setSelectedTrackId}
+            onSelectTrack={handleSelectTrack}
+          />
+          <PatternList
+            track={selectedTrack}
+            activePatternId={activePatternId}
+            onPatternSelect={setActivePatternId}
           />
         </aside>
 
         <main className="app-main">
-          <NoteEditor key={selectedTrack?.id ?? 'empty'} track={selectedTrack} pattern={selectedTrack?.patterns[0] ?? null} />
+          <NoteEditor
+            key={`${selectedTrack?.id ?? 'empty'}-${activePattern?.id ?? 'empty'}`}
+            track={selectedTrack}
+            pattern={activePattern}
+          />
           <InstrumentPanel track={selectedTrack} analyserNode={analyserNode} />
         </main>
       </div>
