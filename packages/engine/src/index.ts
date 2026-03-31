@@ -67,3 +67,6 @@ export {
   validateSoundscapeState,
   clamp,
 } from './utils/validation';
+
+export { createPattern, createClip } from './types/pattern';
+export type { Pattern, ArrangementClip } from './types/pattern';
