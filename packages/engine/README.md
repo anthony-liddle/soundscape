@@ -65,7 +65,7 @@ The core class that manages Web Audio scheduling and playback.
 | `setLoopLength(beats)` | Set the loop length in beats |
 | `getCurrentBeat()` | Get the current playback position |
 | `getIsPlaying()` | Check whether the engine is playing |
-| `onBeatUpdate(cb)` | Register a callback that fires each scheduling tick |
+| `onBeatUpdate(cb)` | Register a callback that fires each scheduling tick. Supports multiple subscribers — returns an unsubscribe function. |
 | `previewNote(pitch, velocity, presetId, overrides?)` | Audition a single note |
 | `updateMixer(mixer)` | Update mixer levels, mute, and solo state |
 | `destroy()` | Tear down the engine and close the audio context |
@@ -76,6 +76,8 @@ The core class that manages Web Audio scheduling and playback.
 import type {
   Note,
   Waveform,              // 'sine' | 'square' | 'sawtooth' | 'triangle'
+  FilterType,            // 'lowpass' | 'highpass' | 'bandpass' | 'notch'
+  LfoTarget,             // 'filter' | 'pitch'
   InstrumentParams,
   InstrumentPreset,
   Track,
@@ -102,16 +104,21 @@ import type {
 
 ### Built-in Presets
 
-Six presets are included out of the box:
+Eleven presets are included out of the box:
 
 | Preset | Waveform | Character |
 |--------|----------|-----------|
 | `bass` | sawtooth | Deep, filtered bass |
-| `lead` | square | Bright lead with delay |
-| `pad` | sine | Soft, sustained pad |
+| `lead` | square | Bright lead with delay and unison |
+| `pad` | sine | Soft, sustained pad with reverb |
 | `keys` | triangle | Snappy keyboard |
 | `pluck` | sawtooth | Short, resonant pluck |
 | `percussion` | square | Punchy percussion hit |
+| `piano` | triangle | Natural piano character |
+| `organ` | sine | Sustained organ with slight distortion |
+| `strings` | sawtooth | Slow-attack strings with reverb and unison |
+| `bell` | triangle | Bright bell with delay and reverb |
+| `marimba` | triangle | Quick-decay mallet sound |
 
 Access them via `builtInPresets` or individually (`bassPreset`, `leadPreset`, etc.). Look up a preset by ID with `getPresetById(presets, id)`.
 
