@@ -64,10 +64,17 @@ export function PatternList({ track, activePatternId, onPatternSelect }: Pattern
   return (
     <div className="pattern-list">
       <div className="pattern-list__header">
-        <span className="pattern-list__title">Patterns</span>
+        <div className="pattern-list__title-group">
+          <span className="pattern-list__title">Patterns</span>
+          <span className="pattern-list__track-name">{track.name}</span>
+        </div>
         <button className="pattern-list__add-btn" onClick={handleAddPattern} title="New pattern">
           +
         </button>
+      </div>
+
+      <div className="pattern-list__hint">
+        Select a pattern, then click the timeline above to place it.
       </div>
 
       <ul className="pattern-list__items">
@@ -92,13 +99,15 @@ export function PatternList({ track, activePatternId, onPatternSelect }: Pattern
               />
             ) : (
               <>
-                <span
-                  className="pattern-list__item-name"
-                  onDoubleClick={(e) => { e.stopPropagation(); handleStartRename(pattern.id, pattern.name); }}
-                >
-                  {pattern.name}
-                </span>
+                <span className="pattern-list__item-name">{pattern.name}</span>
                 <span className="pattern-list__item-meta">{pattern.lengthBeats}b</span>
+                <button
+                  className="pattern-list__rename-btn"
+                  onClick={(e) => { e.stopPropagation(); handleStartRename(pattern.id, pattern.name); }}
+                  title="Rename pattern"
+                >
+                  ✎
+                </button>
                 <button
                   className="pattern-list__duplicate-btn"
                   onClick={(e) => { e.stopPropagation(); handleDuplicate(pattern.id); }}

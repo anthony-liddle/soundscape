@@ -14,11 +14,31 @@
   border-bottom: 1px solid var(--border-color, #333);
 }
 
+.pattern-list__title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
 .pattern-list__title {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted, #666);
+}
+
+.pattern-list__track-name {
+  font-size: 11px;
+  color: var(--text-secondary, #aaa);
+  font-weight: 500;
+}
+
+.pattern-list__hint {
+  padding: 5px 8px;
+  font-size: 10px;
+  color: var(--text-muted, #555);
+  border-bottom: 1px solid var(--border-subtle, #222);
+  line-height: 1.4;
 }
 
 .pattern-list__add-btn {
@@ -82,6 +102,7 @@
   color: var(--text-muted, #555);
 }
 
+.pattern-list__rename-btn,
 .pattern-list__duplicate-btn {
   background: transparent;
   border: none;
@@ -93,6 +114,7 @@
   opacity: 0;
 }
 
+.pattern-list__item:hover .pattern-list__rename-btn,
 .pattern-list__item:hover .pattern-list__duplicate-btn {
   opacity: 1;
 }
