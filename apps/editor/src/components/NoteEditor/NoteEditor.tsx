@@ -364,7 +364,7 @@ export function NoteEditor({ track, pattern }: NoteEditorProps) {
       onMouseLeave={() => { if (drag || rectDrag) handleMouseUp(); }}
     >
       <div className="note-editor-header">
-        <h3>Note Editor - {track.name}</h3>
+        <h3>Note Editor — {track.name} / {pattern.name}</h3>
         <div className="note-editor-controls">
           {/* Tool toggle */}
           <div className="tool-toggle">

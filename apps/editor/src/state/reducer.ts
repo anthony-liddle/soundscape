@@ -29,6 +29,7 @@ export type SoundscapeAction =
   | { type: 'SET_TRACK_PARAM_OVERRIDES'; payload: { trackId: string; overrides: Partial<InstrumentParams> } }
   // Pattern actions
   | { type: 'ADD_PATTERN'; payload: { trackId: string; name: string; lengthBeats: number } }
+  | { type: 'DUPLICATE_PATTERN'; payload: { trackId: string; patternId: string } }
   | { type: 'REMOVE_PATTERN'; payload: { trackId: string; patternId: string } }
   | { type: 'RENAME_PATTERN'; payload: { trackId: string; patternId: string; name: string } }
   // Clip actions
@@ -181,6 +182,25 @@ export function soundscapeReducer(state: SoundscapeState, action: SoundscapeActi
         tracks: state.tracks.map((t) =>
           t.id === trackId ? { ...t, patterns: [...t.patterns, newPattern] } : t
         ),
+      };
+    }
+
+    case 'DUPLICATE_PATTERN': {
+      const { trackId, patternId } = action.payload;
+      return {
+        ...state,
+        tracks: state.tracks.map((t) => {
+          if (t.id !== trackId) return t;
+          const source = t.patterns.find((p) => p.id === patternId);
+          if (!source) return t;
+          const copy = {
+            ...source,
+            id: crypto.randomUUID(),
+            name: `${source.name} (copy)`,
+            notes: source.notes.map((n) => ({ ...n, id: crypto.randomUUID() })),
+          };
+          return { ...t, patterns: [...t.patterns, copy] };
+        }),
       };
     }
 

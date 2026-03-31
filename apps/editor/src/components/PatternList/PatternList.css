@@ -82,6 +82,21 @@
   color: var(--text-muted, #555);
 }
 
+.pattern-list__duplicate-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #555);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0;
+}
+
+.pattern-list__item:hover .pattern-list__duplicate-btn {
+  opacity: 1;
+}
+
 .pattern-list__delete-btn {
   background: transparent;
   border: none;

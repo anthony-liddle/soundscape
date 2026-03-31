@@ -111,6 +111,9 @@ export function ArrangementView({
               style={{ height: ROW_HEIGHT, width: totalBeats * CELL_WIDTH }}
               onClick={(e) => { onSelectTrack(track.id); handleRowClick(e, track.id); }}
             >
+              {track.arrangement.length === 0 && activePatternId && (
+                <span className="arrangement-row__hint">Click to place pattern</span>
+              )}
               {track.arrangement.map((clip) => {
                 const pattern = track.patterns.find((p) => p.id === clip.patternId);
                 if (!pattern) return null;

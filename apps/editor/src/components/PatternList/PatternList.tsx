@@ -42,6 +42,13 @@ export function PatternList({ track, activePatternId, onPatternSelect }: Pattern
     setEditingName('');
   };
 
+  const handleDuplicate = (patternId: string) => {
+    dispatch({
+      type: 'DUPLICATE_PATTERN',
+      payload: { trackId: track.id, patternId },
+    });
+  };
+
   const handleDelete = (patternId: string) => {
     dispatch({
       type: 'REMOVE_PATTERN',
@@ -92,6 +99,13 @@ export function PatternList({ track, activePatternId, onPatternSelect }: Pattern
                   {pattern.name}
                 </span>
                 <span className="pattern-list__item-meta">{pattern.lengthBeats}b</span>
+                <button
+                  className="pattern-list__duplicate-btn"
+                  onClick={(e) => { e.stopPropagation(); handleDuplicate(pattern.id); }}
+                  title="Duplicate pattern"
+                >
+                  ⧉
+                </button>
                 <button
                   className="pattern-list__delete-btn"
                   disabled={track.patterns.length <= 1}

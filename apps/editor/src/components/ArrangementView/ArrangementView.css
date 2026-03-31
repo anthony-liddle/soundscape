@@ -82,6 +82,17 @@
   background: var(--bg-row-selected, rgba(108, 99, 255, 0.04));
 }
 
+.arrangement-row__hint {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--text-muted, #444);
+  pointer-events: none;
+  user-select: none;
+}
+
 .arrangement-clip {
   position: absolute;
   top: 4px;
