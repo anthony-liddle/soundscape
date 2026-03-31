@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { resetMockUuid } from '../../test/setup'
 import { soundscapeReducer, createInitialState } from '../reducer'
-import type { SoundscapeState } from 'soundscape-engine'
+import type { SoundscapeState, InstrumentPreset } from 'soundscape-engine'
 
 describe('soundscape reducer', () => {
   beforeEach(() => {
@@ -361,6 +361,69 @@ describe('soundscape reducer', () => {
         payload: 0.5,
       })
       expect(result.mixer.masterVolume).toBe(0.5)
+    })
+  })
+
+  describe('ADD_PRESET', () => {
+    it('adds a custom preset to state', () => {
+      const state = createInitialState()
+      const newPreset: InstrumentPreset = {
+        id: 'preset-1',
+        name: 'My Preset',
+        params: state.presets[0]!.params,
+        isBuiltIn: false,
+      }
+      const result = soundscapeReducer(state, { type: 'ADD_PRESET', payload: newPreset })
+      expect(result.presets).toContainEqual(newPreset)
+      expect(result.presets.length).toBe(state.presets.length + 1)
+    })
+  })
+
+  describe('REMOVE_PRESET', () => {
+    it('removes a custom preset by id', () => {
+      const customPreset: InstrumentPreset = {
+        id: 'custom-1',
+        name: 'Custom',
+        params: createInitialState().presets[0]!.params,
+        isBuiltIn: false,
+      }
+      const state = soundscapeReducer(createInitialState(), { type: 'ADD_PRESET', payload: customPreset })
+      const result = soundscapeReducer(state, { type: 'REMOVE_PRESET', payload: { presetId: 'custom-1' } })
+      expect(result.presets.find((p) => p.id === 'custom-1')).toBeUndefined()
+    })
+
+    it('does not remove a built-in preset', () => {
+      const state = createInitialState()
+      const builtInId = state.presets[0]!.id
+      const result = soundscapeReducer(state, { type: 'REMOVE_PRESET', payload: { presetId: builtInId } })
+      expect(result.presets).toEqual(state.presets)
+    })
+  })
+
+  describe('UPDATE_PRESET', () => {
+    it('updates a custom preset name', () => {
+      const customPreset: InstrumentPreset = {
+        id: 'custom-1',
+        name: 'Old Name',
+        params: createInitialState().presets[0]!.params,
+        isBuiltIn: false,
+      }
+      const state = soundscapeReducer(createInitialState(), { type: 'ADD_PRESET', payload: customPreset })
+      const result = soundscapeReducer(state, {
+        type: 'UPDATE_PRESET',
+        payload: { presetId: 'custom-1', updates: { name: 'New Name' } },
+      })
+      expect(result.presets.find((p) => p.id === 'custom-1')?.name).toBe('New Name')
+    })
+
+    it('does not update a built-in preset', () => {
+      const state = createInitialState()
+      const builtInPreset = state.presets[0]!
+      const result = soundscapeReducer(state, {
+        type: 'UPDATE_PRESET',
+        payload: { presetId: builtInPreset.id, updates: { name: 'Hacked' } },
+      })
+      expect(result.presets.find((p) => p.id === builtInPreset.id)?.name).toBe(builtInPreset.name)
     })
   })
 
