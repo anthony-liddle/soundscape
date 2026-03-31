@@ -1,0 +1,102 @@
+.arrangement-view {
+  display: flex;
+  border-top: 1px solid var(--border-color, #333);
+  background: var(--bg-secondary, #0d0d1a);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.arrangement-label {
+  width: 100px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #555);
+  border-right: 1px solid var(--border-color, #333);
+}
+
+.arrangement-scroll {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.arrangement-ruler {
+  display: flex;
+  height: 20px;
+  border-bottom: 1px solid var(--border-color, #333);
+  background: var(--bg-secondary, #0d0d1a);
+}
+
+.arrangement-beat {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding-left: 3px;
+  font-size: 10px;
+  color: var(--text-muted, #555);
+  border-right: 1px solid var(--border-subtle, #1a1a2e);
+  box-sizing: border-box;
+}
+.arrangement-beat.bar-start {
+  border-right-color: var(--border-color, #333);
+  color: var(--text-secondary, #aaa);
+}
+
+.arrangement-row {
+  position: relative;
+  cursor: crosshair;
+  background: var(--bg-secondary, #0d0d1a);
+}
+
+.arrangement-row__empty-hint {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: var(--text-muted, #444);
+  pointer-events: none;
+  user-select: none;
+}
+
+.arrangement-clip {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  border-radius: 4px;
+  background: var(--accent-color, #6c63ff);
+  opacity: 0.65;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  user-select: none;
+}
+.arrangement-clip:hover { opacity: 0.85; }
+.arrangement-clip--active {
+  opacity: 0.9;
+  box-shadow: 0 0 0 1.5px var(--accent-color, #6c63ff), 0 0 0 2.5px rgba(108,99,255,0.3);
+}
+
+.arrangement-clip__label {
+  padding: 0 8px;
+  font-size: 11px;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arrangement-playhead {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: var(--color-playhead, #ff5252);
+  pointer-events: none;
+  z-index: 2;
+}
