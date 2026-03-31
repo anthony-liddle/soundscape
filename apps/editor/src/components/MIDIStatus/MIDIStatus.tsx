@@ -16,14 +16,15 @@ interface MIDIStatusProps {
 }
 
 export function MIDIStatus({ selectedTrack, subdivision }: MIDIStatusProps) {
-  const { startNote, stopNote, dispatch, playback } = useSoundscape();
+  const { state, startNote, stopNote, dispatch, playback } = useSoundscape();
   const [isRecording, setIsRecording] = useState(false);
   const activeNotesRef = useRef<Map<number, ActiveNote>>(new Map());
+  const activePatternId = state.patterns[0]?.id ?? null;
 
   // Ref to latest values to avoid stale closures in MIDI callbacks
-  const recordingRef = useRef({ isRecording, subdivision, playback, selectedTrack });
+  const recordingRef = useRef({ isRecording, subdivision, playback, selectedTrack, activePatternId });
   useEffect(() => {
-    recordingRef.current = { isRecording, subdivision, playback, selectedTrack };
+    recordingRef.current = { isRecording, subdivision, playback, selectedTrack, activePatternId };
   });
 
   const onNoteOn = useCallback(
@@ -42,9 +43,9 @@ export function MIDIStatus({ selectedTrack, subdivision }: MIDIStatusProps) {
   const onNoteOff = useCallback(
     (pitch: number) => {
       stopNote(pitch);
-      const { isRecording: rec, playback: pb, subdivision: sub } =
+      const { isRecording: rec, playback: pb, subdivision: sub, activePatternId: patId } =
         recordingRef.current;
-      if (!rec || !pb.isPlaying) return;
+      if (!rec || !pb.isPlaying || !patId) return;
 
       const noteData = activeNotesRef.current.get(pitch);
       if (!noteData) return;
@@ -53,6 +54,7 @@ export function MIDIStatus({ selectedTrack, subdivision }: MIDIStatusProps) {
       dispatch({
         type: 'ADD_NOTE',
         payload: {
+          patternId: patId,
           trackId: noteData.trackId,
           pitch,
           startTime: noteData.startBeat,

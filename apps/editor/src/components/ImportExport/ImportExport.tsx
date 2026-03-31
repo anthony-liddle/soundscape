@@ -31,6 +31,8 @@ export function ImportExport() {
         const stateToLoad: SoundscapeState = {
           metadata: parsed.metadata,
           tracks: parsed.tracks,
+          patterns: parsed.patterns ?? [],
+          arrangement: parsed.arrangement ?? [],
           mixer: parsed.mixer,
           // Use imported presets if present, otherwise use built-in presets
           presets: parsed.presets || [...builtInPresets],

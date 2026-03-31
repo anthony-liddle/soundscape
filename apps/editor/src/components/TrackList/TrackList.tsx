@@ -114,7 +114,7 @@ export function TrackList({ selectedTrackId, onSelectTrack }: TrackListProps) {
             </div>
 
             <div className="track-item-body">
-              <span className="track-item-notes">{track.notes.length} notes</span>
+              <span className="track-item-notes">{state.patterns.reduce((sum, p) => sum + (p.trackNotes[track.id]?.length ?? 0), 0)} notes</span>
               <Select
                 value={track.presetId}
                 options={presetOptions}

@@ -6,8 +6,11 @@ import './NoteEditor.css';
 
 interface NoteEditorProps {
   track: Track | null;
-  subdivision?: 0.25 | 0.5 | 1;
-  onSubdivisionChange?: (s: 0.25 | 0.5 | 1) => void;
+  patternId: string | null;
+  notes: Note[];               // derived in App.tsx: pattern.trackNotes[track.id] ?? []
+  lengthBeats: number;         // derived: activePattern.lengthBeats ?? state.metadata.lengthBeats
+  subdivision?: number;
+  onSubdivisionChange?: (subdivision: number) => void;
 }
 
 // Define piano roll range (6 octaves from C1 to C7)
@@ -37,19 +40,21 @@ interface RectDrag {
   endStep: number;
 }
 
-export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionChange }: NoteEditorProps) {
+export function NoteEditor({ track, patternId, notes, lengthBeats, subdivision: subdivisionProp, onSubdivisionChange }: NoteEditorProps) {
   const { state, dispatch, previewNote, playback } = useSoundscape();
-  const beats = state.metadata.lengthBeats;
+  const beats = lengthBeats;
   const [internalSubdivision, setInternalSubdivision] = useState<Subdivision>(
-    subdivisionProp ?? 1,
+    (subdivisionProp as Subdivision) ?? 1,
   );
-  const subdivision = subdivisionProp ?? internalSubdivision;
+  const subdivision = (subdivisionProp as Subdivision) ?? internalSubdivision;
   const setSubdivision = (s: Subdivision) => {
     setInternalSubdivision(s);
     onSubdivisionChange?.(s);
   };
   const totalSteps = beats / subdivision;
   const currentStep = Math.floor(playback.currentBeat / subdivision);
+
+  const patternName = state.patterns.find((p) => p.id === patternId)?.name ?? '';
 
   // Draw mode state
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -86,13 +91,13 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (!track) return;
+      if (!track || !patternId) return;
       const mod = e.ctrlKey || e.metaKey;
 
       // Select all (select mode only)
       if (mod && e.code === 'KeyA' && tool === 'select') {
         e.preventDefault();
-        setSelectedNoteIds(new Set(track.notes.map((n) => n.id)));
+        setSelectedNoteIds(new Set(notes.map((n) => n.id)));
         return;
       }
 
@@ -100,7 +105,7 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
       if ((e.code === 'Delete' || e.code === 'Backspace') && selectedNoteIds.size > 0) {
         e.preventDefault();
         selectedNoteIds.forEach((noteId) => {
-          dispatch({ type: 'REMOVE_NOTE', payload: { trackId: track.id, noteId } });
+          dispatch({ type: 'REMOVE_NOTE', payload: { patternId, trackId: track.id, noteId } });
         });
         setSelectedNoteIds(new Set());
         return;
@@ -109,7 +114,7 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
       // Copy selected notes
       if (mod && e.code === 'KeyC' && selectedNoteIds.size > 0) {
         e.preventDefault();
-        setClipboard(track.notes.filter((n) => selectedNoteIds.has(n.id)));
+        setClipboard(notes.filter((n) => selectedNoteIds.has(n.id)));
         return;
       }
 
@@ -122,6 +127,7 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
           dispatch({
             type: 'ADD_NOTE',
             payload: {
+              patternId,
               trackId: track.id,
               pitch: note.pitch,
               startTime: note.startTime - minStart + pasteAt,
@@ -135,11 +141,11 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [tool, track, selectedNoteIds, clipboard, dispatch, playback.currentBeat]);
+  }, [tool, track, patternId, notes, selectedNoteIds, clipboard, dispatch, playback.currentBeat]);
 
   // Velocity lane drag handlers
   useEffect(() => {
-    if (!draggingVelocityNoteId || !track) return;
+    if (!draggingVelocityNoteId || !track || !patternId) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!velocityLaneRef.current) return;
@@ -150,7 +156,7 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
       );
       dispatch({
         type: 'UPDATE_NOTE',
-        payload: { trackId: track.id, noteId: draggingVelocityNoteId, updates: { velocity } },
+        payload: { patternId, trackId: track.id, noteId: draggingVelocityNoteId, updates: { velocity } },
       });
     };
 
@@ -162,7 +168,7 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [draggingVelocityNoteId, track, dispatch]);
+  }, [draggingVelocityNoteId, track, patternId, dispatch]);
 
   const cellWidth = subdivision === 0.25 ? 20 : 30;
 
@@ -171,7 +177,7 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
       if (!track) return null;
       const time = step * subdivision;
       return (
-        track.notes.find(
+        notes.find(
           (n) =>
             n.pitch === pitch &&
             time >= n.startTime &&
@@ -179,60 +185,60 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
         ) || null
       );
     },
-    [track, subdivision]
+    [track, notes, subdivision]
   );
 
   const isNoteEnd = useCallback(
     (pitch: number, step: number): boolean => {
       if (!track) return false;
       const time = step * subdivision;
-      return track.notes.some(
+      return notes.some(
         (n) => n.pitch === pitch && time === n.startTime + n.duration - subdivision
       );
     },
-    [track, subdivision]
+    [track, notes, subdivision]
   );
 
   const isNoteStart = useCallback(
     (pitch: number, step: number): boolean => {
       if (!track) return false;
       const time = step * subdivision;
-      return track.notes.some((n) => n.pitch === pitch && n.startTime === time);
+      return notes.some((n) => n.pitch === pitch && n.startTime === time);
     },
-    [track, subdivision]
+    [track, notes, subdivision]
   );
 
   const isNoteMiddle = useCallback(
     (pitch: number, step: number): boolean => {
       if (!track) return false;
       const time = step * subdivision;
-      return track.notes.some(
+      return notes.some(
         (n) =>
           n.pitch === pitch &&
           time > n.startTime &&
           time < n.startTime + n.duration - subdivision
       );
     },
-    [track, subdivision]
+    [track, notes, subdivision]
   );
 
   // --- Draw mode handlers ---
 
   const handleDrawMouseDown = useCallback(
     (pitch: number, step: number) => {
-      if (!track) return;
+      if (!track || !patternId) return;
       const existingNote = isNoteAt(pitch, step);
       if (existingNote) {
         dispatch({
           type: 'REMOVE_NOTE',
-          payload: { trackId: track.id, noteId: existingNote.id },
+          payload: { patternId, trackId: track.id, noteId: existingNote.id },
         });
         return;
       }
       didDrag.current = false;
       setDrag({ pitch, startStep: step, currentStep: step });
     },
-    [track, dispatch, isNoteAt]
+    [track, patternId, dispatch, isNoteAt]
   );
 
   const handleDrawMouseEnter = useCallback(
@@ -248,7 +254,7 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
   );
 
   const handleDrawMouseUp = useCallback(() => {
-    if (!drag || !track) {
+    if (!drag || !track || !patternId) {
       setDrag(null);
       return;
     }
@@ -258,11 +264,11 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
     const duration = (toStep - fromStep + 1) * subdivision;
     dispatch({
       type: 'ADD_NOTE',
-      payload: { trackId: track.id, pitch: drag.pitch, startTime, duration, velocity: 100 },
+      payload: { patternId, trackId: track.id, pitch: drag.pitch, startTime, duration, velocity: 100 },
     });
     previewNote(drag.pitch, 100, track.presetId, track.paramOverrides);
     setDrag(null);
-  }, [drag, track, dispatch, previewNote, subdivision]);
+  }, [drag, track, patternId, dispatch, previewNote, subdivision]);
 
   // --- Select mode handlers ---
 
@@ -300,7 +306,7 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
     const minStep = Math.min(rectDrag.startStep, rectDrag.endStep);
     const maxStep = Math.max(rectDrag.startStep, rectDrag.endStep);
 
-    const selected = track.notes.filter((note) => {
+    const selected = notes.filter((note) => {
       const noteStartStep = note.startTime / subdivision;
       const noteEndStep = (note.startTime + note.duration) / subdivision;
       return (
@@ -312,7 +318,7 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
     });
     setSelectedNoteIds(new Set(selected.map((n) => n.id)));
     setRectDrag(null);
-  }, [rectDrag, track, subdivision]);
+  }, [rectDrag, track, notes, subdivision]);
 
   // --- Unified event handlers ---
 
@@ -362,8 +368,8 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
   };
 
   const handleRandomizeNotes = () => {
-    if (!track) return;
-    dispatch({ type: 'CLEAR_TRACK_NOTES', payload: { trackId: track.id } });
+    if (!track || !patternId) return;
+    dispatch({ type: 'CLEAR_PATTERN_TRACK_NOTES', payload: { patternId, trackId: track.id } });
     const noteCount = Math.floor(Math.random() * 12) + 4;
     const occupied = new Set<string>();
     for (let i = 0; i < noteCount; i++) {
@@ -379,17 +385,17 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
       const velocity = Math.floor(Math.random() * 68) + 60;
       dispatch({
         type: 'ADD_NOTE',
-        payload: { trackId: track.id, pitch, startTime, duration, velocity },
+        payload: { patternId, trackId: track.id, pitch, startTime, duration, velocity },
       });
     }
   };
 
   const selectionRectStyle = getSelectionRectStyle();
 
-  if (!track) {
+  if (!track || !patternId) {
     return (
       <div className="note-editor note-editor-empty">
-        <p>Select a track to edit notes</p>
+        <p>Select a track and pattern to edit notes</p>
       </div>
     );
   }
@@ -401,7 +407,7 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
       onMouseLeave={() => { if (drag || rectDrag) handleMouseUp(); }}
     >
       <div className="note-editor-header">
-        <h3>Note Editor - {track.name}</h3>
+        <h3>Note Editor — {track.name} / {patternName}</h3>
         <div className="note-editor-controls">
           {/* Tool toggle */}
           <div className="tool-toggle">
@@ -534,7 +540,7 @@ export function NoteEditor({ track, subdivision: subdivisionProp, onSubdivisionC
             ref={velocityLaneRef}
             style={{ height: VELOCITY_LANE_HEIGHT }}
           >
-            {track && track.notes.map((note) => {
+            {notes.map((note) => {
               const stepIndex = Math.round(note.startTime / subdivision);
               const barHeight = (note.velocity / 127) * VELOCITY_LANE_HEIGHT;
               return (

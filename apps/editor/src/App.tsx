@@ -18,6 +18,13 @@ function SoundscapeApp() {
   const [subdivision, setSubdivision] = useState<0.25 | 0.5 | 1>(1);
 
   const selectedTrack = state.tracks.find((t) => t.id === selectedTrackId) || null;
+  const activePattern = state.patterns[0] ?? null;
+  const activePatternId = activePattern?.id ?? null;
+  const activePatternNotes =
+    selectedTrack && activePattern
+      ? (activePattern.trackNotes[selectedTrack.id] ?? [])
+      : [];
+  const activePatternLengthBeats = activePattern?.lengthBeats ?? state.metadata.lengthBeats;
 
   useKeyboardShortcuts({
     isPlaying: playback.isPlaying,
@@ -72,8 +79,11 @@ function SoundscapeApp() {
           <NoteEditor
             key={selectedTrack?.id ?? 'empty'}
             track={selectedTrack}
+            patternId={activePatternId}
+            notes={activePatternNotes}
+            lengthBeats={activePatternLengthBeats}
             subdivision={subdivision}
-            onSubdivisionChange={setSubdivision}
+            onSubdivisionChange={(s) => setSubdivision(s as 0.25 | 0.5 | 1)}
           />
           <InstrumentPanel track={selectedTrack} analyserNode={analyserNode} />
         </main>

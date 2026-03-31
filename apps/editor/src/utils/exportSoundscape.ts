@@ -6,6 +6,8 @@ export function exportSoundscape(state: SoundscapeState): void {
   const exportData: ExportState = {
     metadata: state.metadata,
     tracks: state.tracks,
+    patterns: state.patterns,
+    arrangement: state.arrangement,
     mixer: state.mixer,
   };
   const dataStr = JSON.stringify(exportData, null, 2);
