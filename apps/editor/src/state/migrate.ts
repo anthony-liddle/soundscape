@@ -31,6 +31,7 @@ export function migrateSoundscapeState(state: SoundscapeState): SoundscapeState 
   const clip = createClip(pattern.id, 0);
 
   // Strip notes field from each track
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const cleanTracks = legacyTracks.map(({ notes: _notes, ...rest }) => rest) as SoundscapeState['tracks'];
 
   return { ...state, tracks: cleanTracks, patterns: [pattern], arrangement: [clip] };

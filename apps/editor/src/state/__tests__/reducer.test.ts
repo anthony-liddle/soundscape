@@ -137,33 +137,6 @@ describe('soundscape reducer', () => {
       expect(result.tracks[1].presetId).toBe(state.tracks[0].presetId)
     })
 
-    it('copies notes with new ids', () => {
-      let state = createInitialState()
-      const sourceId = state.tracks[0].id
-      state = soundscapeReducer(state, {
-        type: 'ADD_NOTE',
-        payload: { trackId: sourceId, pitch: 60, startTime: 0, duration: 2, velocity: 90 },
-      })
-      state = soundscapeReducer(state, {
-        type: 'ADD_NOTE',
-        payload: { trackId: sourceId, pitch: 64, startTime: 2, duration: 1, velocity: 100 },
-      })
-
-      const result = soundscapeReducer(state, {
-        type: 'DUPLICATE_TRACK',
-        payload: { trackId: sourceId },
-      })
-      const copied = result.tracks[1]
-      expect(copied.notes).toHaveLength(2)
-      expect(copied.notes[0].pitch).toBe(60)
-      expect(copied.notes[0].duration).toBe(2)
-      expect(copied.notes[0].velocity).toBe(90)
-      expect(copied.notes[1].pitch).toBe(64)
-      // All note ids should be new
-      expect(copied.notes[0].id).not.toBe(state.tracks[0].notes[0].id)
-      expect(copied.notes[1].id).not.toBe(state.tracks[0].notes[1].id)
-    })
-
     it('copies paramOverrides', () => {
       let state = createInitialState()
       const sourceId = state.tracks[0].id
@@ -269,63 +242,67 @@ describe('soundscape reducer', () => {
   })
 
   describe('ADD_NOTE', () => {
-    it('adds a note to a track', () => {
+    it('adds a note to a pattern track', () => {
       const initialState = createInitialState()
-      const trackId = initialState.tracks[0].id
+      const patternId = initialState.patterns[0]!.id
+      const trackId = initialState.tracks[0]!.id
       const result = soundscapeReducer(initialState, {
         type: 'ADD_NOTE',
-        payload: { trackId, pitch: 60, startTime: 0, duration: 1, velocity: 100 },
+        payload: { patternId, trackId, pitch: 60, startTime: 0, duration: 1, velocity: 100 },
       })
-      expect(result.tracks[0].notes).toHaveLength(1)
-      expect(result.tracks[0].notes[0].pitch).toBe(60)
+      expect(result.patterns[0]!.trackNotes[trackId]).toHaveLength(1)
+      expect(result.patterns[0]!.trackNotes[trackId]![0]!.pitch).toBe(60)
     })
 
     it('uses default duration and velocity', () => {
       const initialState = createInitialState()
-      const trackId = initialState.tracks[0].id
+      const patternId = initialState.patterns[0]!.id
+      const trackId = initialState.tracks[0]!.id
       const result = soundscapeReducer(initialState, {
         type: 'ADD_NOTE',
-        payload: { trackId, pitch: 60, startTime: 0 },
+        payload: { patternId, trackId, pitch: 60, startTime: 0 },
       })
-      expect(result.tracks[0].notes[0].duration).toBe(1)
-      expect(result.tracks[0].notes[0].velocity).toBe(100)
+      expect(result.patterns[0]!.trackNotes[trackId]![0]!.duration).toBe(1)
+      expect(result.patterns[0]!.trackNotes[trackId]![0]!.velocity).toBe(100)
     })
   })
 
   describe('REMOVE_NOTE', () => {
-    it('removes a note from a track', () => {
+    it('removes a note from a pattern track', () => {
       let state = createInitialState()
-      const trackId = state.tracks[0].id
+      const patternId = state.patterns[0]!.id
+      const trackId = state.tracks[0]!.id
       state = soundscapeReducer(state, {
         type: 'ADD_NOTE',
-        payload: { trackId, pitch: 60, startTime: 0 },
+        payload: { patternId, trackId, pitch: 60, startTime: 0 },
       })
-      const noteId = state.tracks[0].notes[0].id
+      const noteId = state.patterns[0]!.trackNotes[trackId]![0]!.id
 
       const result = soundscapeReducer(state, {
         type: 'REMOVE_NOTE',
-        payload: { trackId, noteId },
+        payload: { patternId, trackId, noteId },
       })
-      expect(result.tracks[0].notes).toHaveLength(0)
+      expect(result.patterns[0]!.trackNotes[trackId]).toHaveLength(0)
     })
   })
 
   describe('UPDATE_NOTE', () => {
     it('updates note properties', () => {
       let state = createInitialState()
-      const trackId = state.tracks[0].id
+      const patternId = state.patterns[0]!.id
+      const trackId = state.tracks[0]!.id
       state = soundscapeReducer(state, {
         type: 'ADD_NOTE',
-        payload: { trackId, pitch: 60, startTime: 0 },
+        payload: { patternId, trackId, pitch: 60, startTime: 0 },
       })
-      const noteId = state.tracks[0].notes[0].id
+      const noteId = state.patterns[0]!.trackNotes[trackId]![0]!.id
 
       const result = soundscapeReducer(state, {
         type: 'UPDATE_NOTE',
-        payload: { trackId, noteId, updates: { pitch: 72, duration: 2 } },
+        payload: { patternId, trackId, noteId, updates: { pitch: 72, duration: 2 } },
       })
-      expect(result.tracks[0].notes[0].pitch).toBe(72)
-      expect(result.tracks[0].notes[0].duration).toBe(2)
+      expect(result.patterns[0]!.trackNotes[trackId]![0]!.pitch).toBe(72)
+      expect(result.patterns[0]!.trackNotes[trackId]![0]!.duration).toBe(2)
     })
   })
 
@@ -435,5 +412,152 @@ describe('soundscape reducer', () => {
       })
       expect(result).toBe(initialState)
     })
+  })
+})
+
+describe('createInitialState', () => {
+  it('creates a state with one pattern and one arrangement clip', () => {
+    const state = createInitialState()
+    expect(state.patterns).toHaveLength(1)
+    expect(state.patterns[0]!.name).toBe('Pattern 1')
+    expect(state.arrangement).toHaveLength(1)
+    expect(state.arrangement[0]!.patternId).toBe(state.patterns[0]!.id)
+  })
+})
+
+describe('pattern actions', () => {
+  it('ADD_PATTERN adds a global pattern', () => {
+    const state = createInitialState()
+    const result = soundscapeReducer(state, {
+      type: 'ADD_PATTERN',
+      payload: { name: 'Chorus', lengthBeats: 8 },
+    })
+    expect(result.patterns).toHaveLength(2)
+    expect(result.patterns[1]!.name).toBe('Chorus')
+    expect(result.patterns[1]!.lengthBeats).toBe(8)
+    expect(result.patterns[1]!.trackNotes).toEqual({})
+  })
+
+  it('REMOVE_PATTERN removes the pattern and its clips', () => {
+    let state = createInitialState()
+    state = soundscapeReducer(state, { type: 'ADD_PATTERN', payload: { name: 'Chorus', lengthBeats: 8 } })
+    const patternId = state.patterns[1]!.id
+    state = soundscapeReducer(state, { type: 'ADD_CLIP', payload: { patternId, startBeat: 16 } })
+    const result = soundscapeReducer(state, { type: 'REMOVE_PATTERN', payload: { patternId } })
+    expect(result.patterns.find((p) => p.id === patternId)).toBeUndefined()
+    expect(result.arrangement.every((c) => c.patternId !== patternId)).toBe(true)
+  })
+
+  it('REMOVE_PATTERN is no-op when only one pattern remains', () => {
+    const state = createInitialState()
+    const result = soundscapeReducer(state, {
+      type: 'REMOVE_PATTERN',
+      payload: { patternId: state.patterns[0]!.id },
+    })
+    expect(result.patterns).toHaveLength(1)
+  })
+
+  it('RENAME_PATTERN updates name', () => {
+    const state = createInitialState()
+    const result = soundscapeReducer(state, {
+      type: 'RENAME_PATTERN',
+      payload: { patternId: state.patterns[0]!.id, name: 'Verse' },
+    })
+    expect(result.patterns[0]!.name).toBe('Verse')
+  })
+
+  it('DUPLICATE_PATTERN copies notes and creates new ids', () => {
+    let state = createInitialState()
+    const patternId = state.patterns[0]!.id
+    state = soundscapeReducer(state, {
+      type: 'ADD_NOTE',
+      payload: { patternId, trackId: state.tracks[0]!.id, pitch: 60, startTime: 0, duration: 1, velocity: 100 },
+    })
+    const result = soundscapeReducer(state, { type: 'DUPLICATE_PATTERN', payload: { patternId } })
+    expect(result.patterns).toHaveLength(2)
+    const copy = result.patterns[1]!
+    expect(copy.name).toBe('Pattern 1 (copy)')
+    expect(copy.id).not.toBe(patternId)
+    const originalNotes = result.patterns[0]!.trackNotes[state.tracks[0]!.id]!
+    const copyNotes = copy.trackNotes[state.tracks[0]!.id]!
+    expect(copyNotes).toHaveLength(originalNotes.length)
+    expect(copyNotes[0]!.id).not.toBe(originalNotes[0]!.id)
+  })
+
+  it('COPY_TRACK_TO_PATTERN copies notes from source to target pattern', () => {
+    let state = createInitialState()
+    const sourcePatternId = state.patterns[0]!.id
+    const trackId = state.tracks[0]!.id
+    state = soundscapeReducer(state, {
+      type: 'ADD_NOTE',
+      payload: { patternId: sourcePatternId, trackId, pitch: 60, startTime: 0, duration: 1, velocity: 100 },
+    })
+    state = soundscapeReducer(state, { type: 'ADD_PATTERN', payload: { name: 'Chorus', lengthBeats: 16 } })
+    const targetPatternId = state.patterns[1]!.id
+    const result = soundscapeReducer(state, {
+      type: 'COPY_TRACK_TO_PATTERN',
+      payload: { sourcePatternId, targetPatternId, trackId },
+    })
+    expect(result.patterns[1]!.trackNotes[trackId]).toHaveLength(1)
+    expect(result.patterns[1]!.trackNotes[trackId]![0]!.pitch).toBe(60)
+    expect(result.patterns[1]!.trackNotes[trackId]![0]!.id).not.toBe(
+      result.patterns[0]!.trackNotes[trackId]![0]!.id
+    )
+  })
+})
+
+describe('arrangement actions', () => {
+  it('ADD_CLIP adds a clip to the arrangement', () => {
+    const state = createInitialState()
+    const result = soundscapeReducer(state, {
+      type: 'ADD_CLIP',
+      payload: { patternId: state.patterns[0]!.id, startBeat: 16 },
+    })
+    expect(result.arrangement).toHaveLength(2)
+    expect(result.arrangement[1]!.startBeat).toBe(16)
+  })
+
+  it('REMOVE_CLIP removes a clip', () => {
+    const state = createInitialState()
+    const clipId = state.arrangement[0]!.id
+    const result = soundscapeReducer(state, { type: 'REMOVE_CLIP', payload: { clipId } })
+    expect(result.arrangement).toHaveLength(0)
+  })
+
+  it('MOVE_CLIP updates startBeat', () => {
+    const state = createInitialState()
+    const clipId = state.arrangement[0]!.id
+    const result = soundscapeReducer(state, { type: 'MOVE_CLIP', payload: { clipId, startBeat: 8 } })
+    expect(result.arrangement[0]!.startBeat).toBe(8)
+  })
+})
+
+describe('note actions with patternId + trackId', () => {
+  it('ADD_NOTE adds a note to the correct pattern and track', () => {
+    const state = createInitialState()
+    const patternId = state.patterns[0]!.id
+    const trackId = state.tracks[0]!.id
+    const result = soundscapeReducer(state, {
+      type: 'ADD_NOTE',
+      payload: { patternId, trackId, pitch: 60, startTime: 0, duration: 1, velocity: 100 },
+    })
+    expect(result.patterns[0]!.trackNotes[trackId]).toHaveLength(1)
+    expect(result.patterns[0]!.trackNotes[trackId]![0]!.pitch).toBe(60)
+  })
+
+  it('REMOVE_NOTE removes the correct note', () => {
+    let state = createInitialState()
+    const patternId = state.patterns[0]!.id
+    const trackId = state.tracks[0]!.id
+    state = soundscapeReducer(state, {
+      type: 'ADD_NOTE',
+      payload: { patternId, trackId, pitch: 60, startTime: 0, duration: 1, velocity: 100 },
+    })
+    const noteId = state.patterns[0]!.trackNotes[trackId]![0]!.id
+    const result = soundscapeReducer(state, {
+      type: 'REMOVE_NOTE',
+      payload: { patternId, trackId, noteId },
+    })
+    expect(result.patterns[0]!.trackNotes[trackId]).toHaveLength(0)
   })
 })
