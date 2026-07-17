@@ -586,6 +586,21 @@ export class AudioEngine {
   }
 
   /**
+   * Returns the `AnalyserNode` tapped off the master output, or `null` before
+   * {@link initialize} has been called. Use this to drive real-time visualisers.
+   *
+   * @example
+   * const analyser = engine.getAnalyserNode();
+   * if (analyser) {
+   *   const data = new Uint8Array(analyser.frequencyBinCount);
+   *   analyser.getByteTimeDomainData(data); // oscilloscope
+   * }
+   */
+  getAnalyserNode(): AnalyserNode | null {
+    return this.analyserNode;
+  }
+
+  /**
    * Subscribes to beat position updates during playback.
    *
    * The callback fires on every scheduler tick (~3 ms with AudioWorklet,
@@ -602,21 +617,6 @@ export class AudioEngine {
    * // Later:
    * unsub();
    */
-  /**
-   * Returns the `AnalyserNode` tapped off the master output, or `null` before
-   * {@link initialize} has been called. Use this to drive real-time visualisers.
-   *
-   * @example
-   * const analyser = engine.getAnalyserNode();
-   * if (analyser) {
-   *   const data = new Uint8Array(analyser.frequencyBinCount);
-   *   analyser.getByteTimeDomainData(data); // oscilloscope
-   * }
-   */
-  getAnalyserNode(): AnalyserNode | null {
-    return this.analyserNode;
-  }
-
   onBeatUpdate(callback: (beat: number) => void): () => void {
     this.beatUpdateListeners.add(callback);
     return () => {
