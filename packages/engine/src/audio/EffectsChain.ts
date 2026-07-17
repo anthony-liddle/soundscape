@@ -9,14 +9,17 @@ export interface EffectsParams {
 }
 
 /**
- * Effects chain: Delay/Distortion (wet path) + Reverb (parallel wet path).
+ * Effects chain: Distortion (main path) + Delay send + Reverb send.
  *
  * Signal flow:
  * ```
- * input → dryGain (1 - delayMix) → output
- * input → delay → feedback ↻ → distortion → delayWetGain (delayMix) → output
+ * input → distortion → dryGain (1 - delayMix) → output
+ *              ↘ delay ↻ feedback → delayWetGain (delayMix) → output
  * input → convolverNode → reverbWetGain (reverbMix) → output   [additive send]
  * ```
+ *
+ * Distortion sits on the main path so it is audible regardless of the delay
+ * mix, and delay echoes repeat the distorted signal.
  */
 export class EffectsChain {
   private context: AudioContext;
@@ -46,14 +49,14 @@ export class EffectsChain {
     this.reverbWetGain = context.createGain();
 
     // Set up routing
-    // Dry path: input -> dryGain -> output
-    this.input.connect(this.dryGain);
+    // Main path: input -> distortion -> dryGain -> output
+    this.input.connect(this.distortionNode);
+    this.distortionNode.connect(this.dryGain);
     this.dryGain.connect(this.output);
 
-    // Delay/distortion wet path: input -> delay -> distortion -> wetGain -> output
-    this.input.connect(this.delayNode);
-    this.delayNode.connect(this.distortionNode);
-    this.distortionNode.connect(this.wetGain);
+    // Delay send (from the distorted signal): distortion -> delay -> wetGain -> output
+    this.distortionNode.connect(this.delayNode);
+    this.delayNode.connect(this.wetGain);
     this.wetGain.connect(this.output);
 
     // Feedback loop: delay -> feedbackGain -> delay
@@ -135,13 +138,12 @@ export class EffectsChain {
     const curve = new Float32Array(samples);
     const k = amount * 100;
 
+    // Normalized soft-clip: curve(x) = x·(π + k) / (π + k·|x|).
+    // curve(±1) = ±1 for every amount (no level jump when the knob leaves 0)
+    // and the curve approaches the identity as k → 0.
     for (let i = 0; i < samples; i++) {
       const x = (i * 2) / samples - 1;
-      if (k === 0) {
-        curve[i] = x;
-      } else {
-        curve[i] = ((3 + k) * x * 20 * (Math.PI / 180)) / (Math.PI + k * Math.abs(x));
-      }
+      curve[i] = (x * (Math.PI + k)) / (Math.PI + k * Math.abs(x));
     }
 
     return curve;

@@ -44,25 +44,19 @@ describe('EffectsChain', () => {
   })
 
   describe('routing', () => {
-    it('wires the dry path input -> dryGain -> output', () => {
-      expect(isConnected(input, dryGain)).toBe(true)
+    it('wires distortion on the main path: input -> distortion -> dryGain -> output', () => {
+      expect(isConnected(input, distortion)).toBe(true)
+      expect(isConnected(distortion, dryGain)).toBe(true)
       expect(isConnected(dryGain, output)).toBe(true)
     })
 
-    it('wires the delay wet path input -> delay -> distortion -> wetGain -> output', () => {
-      expect(isConnected(input, delay)).toBe(true)
-      expect(isConnected(delay, distortion)).toBe(true)
-      expect(isConnected(distortion, wetGain)).toBe(true)
+    it('feeds the delay send from the distorted signal: distortion -> delay -> wetGain -> output', () => {
+      expect(isConnected(distortion, delay)).toBe(true)
+      expect(isConnected(delay, wetGain)).toBe(true)
       expect(isConnected(wetGain, output)).toBe(true)
-    })
-
-    it('[characterizes-bug H6] places distortion ONLY inside the delay wet path', () => {
-      // Distortion is presented in the UI as an independent effect, but it is
-      // wired downstream of the delay send: with delayMix = 0 the wet gain is
-      // 0 and distortion is inaudible. 0.3.0 moves distortion onto the main
-      // path — this test must be rewritten then.
-      expect(isConnected(input, distortion)).toBe(false)
-      expect(isConnected(dryGain, distortion)).toBe(false)
+      // the old wet-path-only wiring must be gone
+      expect(isConnected(input, delay)).toBe(false)
+      expect(isConnected(delay, distortion)).toBe(false)
     })
 
     it('wires the feedback loop delay -> feedbackGain -> delay', () => {
@@ -114,13 +108,19 @@ describe('EffectsChain', () => {
       expect(distortion.curve).toHaveLength(44100)
     })
 
-    it('[characterizes-quirk L5] drops output level sharply between distortion 0 and a tiny positive amount', () => {
-      // curve(x) = ((3+k)·x·20·(π/180)) / (π + k·|x|); at k→0+ the peak is
-      // ≈ 0.33 versus 1.0 for the k = 0 identity — a ~3x jump when the user
-      // first touches the knob.
+    it('keeps unity peak level across all distortion amounts (continuous at 0)', () => {
+      // Normalized curve: curve(±1) = ±1 for every amount, and the curve
+      // approaches the identity as the amount approaches 0 — no level jump
+      // when the user first touches the knob.
+      for (const amount of [0.001, 0.3, 1]) {
+        chain.setParams({ ...PARAMS, distortion: amount })
+        const curve = distortion.curve!
+        expect(curve[44099]!).toBeCloseTo(1, 2)
+        expect(curve[0]!).toBeCloseTo(-1, 2)
+      }
       chain.setParams({ ...PARAMS, distortion: 0.001 })
-      const nearZero = distortion.curve!
-      expect(Math.abs(nearZero[44099]!)).toBeLessThan(0.4)
+      const nearIdentity = distortion.curve!
+      expect(nearIdentity[33075]!).toBeCloseTo(0.5, 1) // x = 0.5 barely shaped (0.5078)
     })
 
     it('only rebuilds the distortion curve when the amount changes', () => {

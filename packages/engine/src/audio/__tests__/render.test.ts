@@ -129,31 +129,23 @@ describe('EffectsChain rendering', () => {
     expect(windowRms(data, 0.5, 1.0)).toBeLessThan(1e-4) // no tail
   })
 
-  it('[characterizes-bug H6] distortion is INAUDIBLE when delayMix is 0', async () => {
-    // Distortion sits inside the delay wet path, so with the delay mix at 0
-    // the rendered output with heavy distortion is byte-identical to a clean
-    // render. This is the review's H6 bug; 0.3.0 re-routes distortion onto
-    // the main path, after which these buffers MUST differ — flip this test.
+  it('distortion IS audible with the delay mix fully closed (H6 fixed)', async () => {
+    // Distortion now sits on the main path, so it shapes the output even
+    // with delayMix at 0. (Before 0.3.0 it was wired inside the delay wet
+    // path and these renders were byte-identical.)
     const clean = await renderThroughChain({ ...DRY_ONLY, distortion: 0 })
     const distorted = await renderThroughChain({ ...DRY_ONLY, distortion: 0.8 })
 
     let maxDiff = 0
-    let firstDiffIndex = -1
     for (let i = Math.floor(MEASURE_FROM * SAMPLE_RATE); i < clean.length; i++) {
-      const d = Math.abs(clean[i]! - distorted[i]!)
-      if (d > 1e-6 && firstDiffIndex === -1) firstDiffIndex = i
-      maxDiff = Math.max(maxDiff, d)
+      maxDiff = Math.max(maxDiff, Math.abs(clean[i]! - distorted[i]!))
     }
-    // Diagnostics printed only on failure, for platform-specific debugging
-    if (maxDiff >= 1e-6) {
-      const at = firstDiffIndex
-      console.log('[H6-diag] firstDiffIndex:', at, `(${(at / SAMPLE_RATE).toFixed(4)}s)`)
-      console.log('[H6-diag] clean around:', Array.from(clean.slice(at - 2, at + 4)))
-      console.log('[H6-diag] distorted around:', Array.from(distorted.slice(at - 2, at + 4)))
-      console.log('[H6-diag] clean rms 0-0.1:', windowRms(clean, 0, 0.1), 'post-stop 0.5-1:', windowRms(clean, 0.5, 1))
-      console.log('[H6-diag] dist  rms 0-0.1:', windowRms(distorted, 0, 0.1), 'post-stop 0.5-1:', windowRms(distorted, 0.5, 1))
-    }
-    expect(maxDiff).toBeLessThan(1e-6)
+    expect(maxDiff).toBeGreaterThan(0.01)
+
+    // And it saturates rather than attenuates: signal energy stays comparable
+    const cleanRms = windowRms(clean, 0.06, 0.14)
+    const distortedRms = windowRms(distorted, 0.06, 0.14)
+    expect(distortedRms).toBeGreaterThan(cleanRms * 0.5)
   })
 
   it('distortion IS audible when routed through an open delay mix', async () => {
