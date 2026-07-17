@@ -1,23 +1,20 @@
-import { useReducer, useEffect, useRef, useCallback, useState } from 'react';
+import { useReducer, useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import type { PlaybackState, InstrumentParams, SoundscapeState } from 'soundscape-engine';
-import { soundscapeReducer, createInitialState } from './reducer';
-import type { SoundscapeAction } from './reducer';
+import type { PlaybackState, InstrumentParams } from 'soundscape-engine';
 import { AudioEngine } from 'soundscape-engine';
+import { historyReducer, createInitialHistory } from './history';
 import { SoundscapeContext } from './context';
 import type { SoundscapeContextValue } from './context';
 
-const MAX_HISTORY = 50;
-
 export function SoundscapeProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(soundscapeReducer, null, createInitialState);
+  const [history, dispatch] = useReducer(historyReducer, null, createInitialHistory);
+  const state = history.present;
+
   const [playback, setPlayback] = useState<PlaybackState>({
     isPlaying: false,
     currentBeat: 0,
     loop: true,
   });
-  const [past, setPast] = useState<SoundscapeState[]>([]);
-  const [future, setFuture] = useState<SoundscapeState[]>([]);
 
   const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null);
   const audioEngineRef = useRef<AudioEngine | null>(null);
@@ -28,54 +25,46 @@ export function SoundscapeProvider({ children }: { children: ReactNode }) {
     stateRef.current = state;
   }, [state]);
 
-  const dispatchWithHistory = useCallback((action: SoundscapeAction) => {
-    setPast((prev) => {
-      const next = [...prev, stateRef.current];
-      return next.length > MAX_HISTORY ? next.slice(1) : next;
-    });
-    setFuture([]);
-    dispatch(action);
-  }, []);
-
-  const undo = useCallback(() => {
-    setPast((prev) => {
-      if (prev.length === 0) return prev;
-      const previous = prev[prev.length - 1];
-      if (!previous) return prev;
-      setFuture((f) => [stateRef.current, ...f]);
-      dispatch({ type: 'SET_STATE', payload: previous });
-      return prev.slice(0, -1);
-    });
-  }, []);
-
-  const redo = useCallback(() => {
-    setFuture((prev) => {
-      if (prev.length === 0) return prev;
-      const [next, ...remaining] = prev;
-      if (!next) return prev;
-      setPast((p) => [...p, stateRef.current]);
-      dispatch({ type: 'SET_STATE', payload: next });
-      return remaining;
-    });
-  }, []);
+  const undo = useCallback(() => dispatch({ type: 'UNDO' }), []);
+  const redo = useCallback(() => dispatch({ type: 'REDO' }), []);
 
   // Initialize audio engine
   useEffect(() => {
     const engine = new AudioEngine();
     audioEngineRef.current = engine;
+    let cancelled = false;
 
     engine.initialize().then(() => {
+      // Guard against the effect being cleaned up (unmount, StrictMode
+      // remount) before initialization resolved — the engine is destroyed
+      // and calling into it would throw.
+      if (cancelled) return;
       engine.updateState(stateRef.current);
       setAnalyserNode(engine.getAnalyserNode());
     });
 
+    // The engine emits beat updates per scheduler tick (~344 Hz with the
+    // AudioWorklet scheduler). Coalesce to one state update per animation
+    // frame — the display can't show more, and each setPlayback re-renders
+    // the whole consumer tree.
+    let rafId = 0;
+    let latestBeat = 0;
     const unsubBeat = engine.onBeatUpdate((beat) => {
-      setPlayback((prev) => ({ ...prev, currentBeat: beat }));
+      latestBeat = beat;
+      if (rafId === 0) {
+        rafId = requestAnimationFrame(() => {
+          rafId = 0;
+          setPlayback((prev) => ({ ...prev, currentBeat: latestBeat }));
+        });
+      }
     });
 
     return () => {
+      cancelled = true;
       unsubBeat();
+      if (rafId !== 0) cancelAnimationFrame(rafId);
       engine.destroy();
+      audioEngineRef.current = null;
     };
   }, []);
 
@@ -109,8 +98,8 @@ export function SoundscapeProvider({ children }: { children: ReactNode }) {
     if (engine) {
       engine.setTempo(bpm);
     }
-    dispatchWithHistory({ type: 'SET_METADATA', payload: { tempo: bpm } });
-  }, [dispatchWithHistory]);
+    dispatch({ type: 'SET_METADATA', payload: { tempo: bpm } });
+  }, []);
 
   const setLoop = useCallback((enabled: boolean) => {
     const engine = audioEngineRef.current;
@@ -130,21 +119,27 @@ export function SoundscapeProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const value: SoundscapeContextValue = {
-    state,
-    dispatch: dispatchWithHistory,
-    playback,
-    play,
-    stop,
-    setTempo,
-    setLoop,
-    previewNote,
-    undo,
-    redo,
-    canUndo: past.length > 0,
-    canRedo: future.length > 0,
-    analyserNode,
-  };
+  const canUndo = history.past.length > 0;
+  const canRedo = history.future.length > 0;
+
+  const value: SoundscapeContextValue = useMemo(
+    () => ({
+      state,
+      dispatch,
+      playback,
+      play,
+      stop,
+      setTempo,
+      setLoop,
+      previewNote,
+      undo,
+      redo,
+      canUndo,
+      canRedo,
+      analyserNode,
+    }),
+    [state, playback, play, stop, setTempo, setLoop, previewNote, undo, redo, canUndo, canRedo, analyserNode]
+  );
 
   return (
     <SoundscapeContext.Provider value={value}>

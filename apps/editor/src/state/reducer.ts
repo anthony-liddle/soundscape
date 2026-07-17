@@ -15,6 +15,14 @@ import {
 } from 'soundscape-engine';
 import { builtInPresets } from 'soundscape-engine';
 
+/** Input for creating a note via a batched action; the reducer generates ids. */
+export interface NoteInput {
+  pitch: number;
+  startTime: number;
+  duration: number;
+  velocity: number;
+}
+
 // Action types
 export type SoundscapeAction =
   | { type: 'SET_STATE'; payload: SoundscapeState }
@@ -26,7 +34,10 @@ export type SoundscapeAction =
   | { type: 'SET_TRACK_PRESET'; payload: { trackId: string; presetId: string } }
   | { type: 'SET_TRACK_PARAM_OVERRIDES'; payload: { trackId: string; overrides: Partial<InstrumentParams> } }
   | { type: 'ADD_NOTE'; payload: { trackId: string; pitch: number; startTime: number; duration?: number; velocity?: number } }
+  | { type: 'ADD_NOTES'; payload: { trackId: string; notes: NoteInput[] } }
   | { type: 'REMOVE_NOTE'; payload: { trackId: string; noteId: string } }
+  | { type: 'REMOVE_NOTES'; payload: { trackId: string; noteIds: string[] } }
+  | { type: 'SET_TRACK_NOTES'; payload: { trackId: string; notes: NoteInput[] } }
   | { type: 'UPDATE_NOTE'; payload: { trackId: string; noteId: string; updates: Partial<Omit<Note, 'id'>> } }
   | { type: 'CLEAR_TRACK_NOTES'; payload: { trackId: string } }
   | { type: 'ADD_PRESET'; payload: InstrumentPreset }
@@ -105,6 +116,7 @@ export function soundscapeReducer(state: SoundscapeState, action: SoundscapeActi
 
     case 'REMOVE_TRACK': {
       const { trackId } = action.payload;
+      if (!state.tracks.some((t) => t.id === trackId)) return state;
       const { [trackId]: _removed, ...remainingTracks } = state.mixer.tracks;
       void _removed; // Intentionally unused - destructuring to exclude trackId
       return {
@@ -160,6 +172,44 @@ export function soundscapeReducer(state: SoundscapeState, action: SoundscapeActi
         ...state,
         tracks: state.tracks.map((t) =>
           t.id === trackId ? { ...t, notes: [...t.notes, newNote] } : t
+        ),
+      };
+    }
+
+    case 'ADD_NOTES': {
+      const { trackId, notes } = action.payload;
+      if (notes.length === 0) return state;
+      const newNotes = notes.map((n) => createNote(n.pitch, n.startTime, n.duration, n.velocity));
+      return {
+        ...state,
+        tracks: state.tracks.map((t) =>
+          t.id === trackId ? { ...t, notes: [...t.notes, ...newNotes] } : t
+        ),
+      };
+    }
+
+    case 'REMOVE_NOTES': {
+      const { trackId, noteIds } = action.payload;
+      const track = state.tracks.find((t) => t.id === trackId);
+      const ids = new Set(noteIds);
+      if (!track || !track.notes.some((n) => ids.has(n.id))) return state;
+      return {
+        ...state,
+        tracks: state.tracks.map((t) =>
+          t.id === trackId
+            ? { ...t, notes: t.notes.filter((n) => !ids.has(n.id)) }
+            : t
+        ),
+      };
+    }
+
+    case 'SET_TRACK_NOTES': {
+      const { trackId, notes } = action.payload;
+      const newNotes = notes.map((n) => createNote(n.pitch, n.startTime, n.duration, n.velocity));
+      return {
+        ...state,
+        tracks: state.tracks.map((t) =>
+          t.id === trackId ? { ...t, notes: newNotes } : t
         ),
       };
     }
