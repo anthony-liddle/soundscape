@@ -39,6 +39,11 @@ export {
   keysPreset,
   pluckPreset,
   percussionPreset,
+  pianoPreset,
+  organPreset,
+  stringsPreset,
+  bellPreset,
+  marimbaPreset,
 } from './presets';
 
 // Utils

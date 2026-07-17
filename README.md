@@ -11,7 +11,7 @@ A browser-based music sequencer and synthesizer built with React, TypeScript, an
 ## Features
 
 ### Sequencer
-- **Piano Roll Editor**: 2-octave grid (C3-C5) for composing melodies
+- **Piano Roll Editor**: 6-octave grid (C1-C7) for composing melodies
 - **16-Beat Timeline**: Click cells to add/remove notes, or click and drag to create multi-beat notes
 - **Note Selection**: Switch to select mode to drag-select notes, then delete, copy, or paste them
 - **Randomize Notes**: Generate random note patterns with one click

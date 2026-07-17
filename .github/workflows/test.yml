@@ -16,8 +16,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v5
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -36,3 +34,6 @@ jobs:
 
       - name: Build
         run: pnpm -r build
+
+      - name: Check engine packaging
+        run: pnpm --filter soundscape-engine check:package

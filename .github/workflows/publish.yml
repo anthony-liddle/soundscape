@@ -19,8 +19,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v5
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -32,11 +30,23 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Verify tag matches package version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#engine-v}"
+          PKG_VERSION=$(node -p "require('./packages/engine/package.json').version")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "Tag version ($TAG_VERSION) does not match packages/engine/package.json version ($PKG_VERSION)" >&2
+            exit 1
+          fi
+
       - name: Run engine tests
         run: pnpm --filter soundscape-engine test run
 
       - name: Build engine
         run: pnpm --filter soundscape-engine build
+
+      - name: Check engine packaging
+        run: pnpm --filter soundscape-engine check:package
 
       - name: Copy LICENSE into package
         run: cp LICENSE packages/engine/LICENSE
