@@ -20,12 +20,13 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v5
 
+      # No registry-url here: it writes an .npmrc referencing ${NODE_AUTH_TOKEN},
+      # which breaks tokenless OIDC trusted publishing when that env is unset.
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: 'pnpm'
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -51,8 +52,12 @@ jobs:
       - name: Copy LICENSE into package
         run: cp LICENSE packages/engine/LICENSE
 
+      # Trusted publishing (OIDC) requires npm >= 11.5.1; Node 22 bundles npm 10.
+      - name: Update npm for trusted publishing
+        run: npm install -g npm@latest
+
+      # Auth via the npm Trusted Publisher for this repo + workflow (OIDC).
+      # No token; provenance is generated automatically.
       - name: Publish to npm
-        run: npm publish --access public --provenance
+        run: npm publish --access public
         working-directory: packages/engine
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
