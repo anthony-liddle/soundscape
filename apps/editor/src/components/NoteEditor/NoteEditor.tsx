@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef, useEffect } from 'react';
+import { useCallback, useState, useRef, useEffect, useMemo } from 'react';
 import { useSoundscape } from '../../state';
 import type { Track, Note } from 'soundscape-engine';
 import { midiToNoteName } from 'soundscape-engine';
@@ -82,11 +82,12 @@ export function NoteEditor({ track }: NoteEditorProps) {
         return;
       }
 
-      // Delete selected notes
+      // Delete selected notes (single action = single undo step)
       if ((e.code === 'Delete' || e.code === 'Backspace') && selectedNoteIds.size > 0) {
         e.preventDefault();
-        selectedNoteIds.forEach((noteId) => {
-          dispatch({ type: 'REMOVE_NOTE', payload: { trackId: track.id, noteId } });
+        dispatch({
+          type: 'REMOVE_NOTES',
+          payload: { trackId: track.id, noteIds: [...selectedNoteIds] },
         });
         setSelectedNoteIds(new Set());
         return;
@@ -99,80 +100,79 @@ export function NoteEditor({ track }: NoteEditorProps) {
         return;
       }
 
-      // Paste notes at current playhead position
+      // Paste notes at the playhead, quantized to the current grid so the
+      // result stays editable (off-grid notes don't render as start/end cells)
       if (mod && e.code === 'KeyV' && clipboard.length > 0) {
         e.preventDefault();
         const minStart = Math.min(...clipboard.map((n) => n.startTime));
-        const pasteAt = playback.currentBeat;
-        clipboard.forEach((note) => {
-          dispatch({
-            type: 'ADD_NOTE',
-            payload: {
-              trackId: track.id,
+        const pasteAt = Math.round(playback.currentBeat / subdivision) * subdivision;
+        dispatch({
+          type: 'ADD_NOTES',
+          payload: {
+            trackId: track.id,
+            notes: clipboard.map((note) => ({
               pitch: note.pitch,
               startTime: note.startTime - minStart + pasteAt,
               duration: note.duration,
               velocity: note.velocity,
-            },
-          });
+            })),
+          },
         });
         return;
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [tool, track, selectedNoteIds, clipboard, dispatch, playback.currentBeat]);
+  }, [tool, track, selectedNoteIds, clipboard, dispatch, playback.currentBeat, subdivision]);
 
   const cellWidth = subdivision === 0.25 ? 20 : 30;
 
+  // Index notes by pitch so each cell lookup scans only that row's notes
+  // instead of the whole track (the grid renders thousands of cells).
+  const notesByPitch = useMemo(() => {
+    const map = new Map<number, Note[]>();
+    if (!track) return map;
+    for (const note of track.notes) {
+      const row = map.get(note.pitch);
+      if (row) {
+        row.push(note);
+      } else {
+        map.set(note.pitch, [note]);
+      }
+    }
+    return map;
+  }, [track]);
+
+  interface CellInfo {
+    note: Note;
+    isStart: boolean;
+    isEnd: boolean;
+    isMiddle: boolean;
+  }
+
+  const getCellInfo = useCallback(
+    (pitch: number, step: number): CellInfo | null => {
+      const time = step * subdivision;
+      const row = notesByPitch.get(pitch);
+      if (!row) return null;
+      for (const n of row) {
+        if (time >= n.startTime && time < n.startTime + n.duration) {
+          return {
+            note: n,
+            isStart: n.startTime === time,
+            isEnd: time === n.startTime + n.duration - subdivision,
+            isMiddle: time > n.startTime && time < n.startTime + n.duration - subdivision,
+          };
+        }
+      }
+      return null;
+    },
+    [notesByPitch, subdivision]
+  );
+
   const isNoteAt = useCallback(
-    (pitch: number, step: number): Note | null => {
-      if (!track) return null;
-      const time = step * subdivision;
-      return (
-        track.notes.find(
-          (n) =>
-            n.pitch === pitch &&
-            time >= n.startTime &&
-            time < n.startTime + n.duration
-        ) || null
-      );
-    },
-    [track, subdivision]
-  );
-
-  const isNoteEnd = useCallback(
-    (pitch: number, step: number): boolean => {
-      if (!track) return false;
-      const time = step * subdivision;
-      return track.notes.some(
-        (n) => n.pitch === pitch && time === n.startTime + n.duration - subdivision
-      );
-    },
-    [track, subdivision]
-  );
-
-  const isNoteStart = useCallback(
-    (pitch: number, step: number): boolean => {
-      if (!track) return false;
-      const time = step * subdivision;
-      return track.notes.some((n) => n.pitch === pitch && n.startTime === time);
-    },
-    [track, subdivision]
-  );
-
-  const isNoteMiddle = useCallback(
-    (pitch: number, step: number): boolean => {
-      if (!track) return false;
-      const time = step * subdivision;
-      return track.notes.some(
-        (n) =>
-          n.pitch === pitch &&
-          time > n.startTime &&
-          time < n.startTime + n.duration - subdivision
-      );
-    },
-    [track, subdivision]
+    (pitch: number, step: number): Note | null => getCellInfo(pitch, step)?.note ?? null,
+    [getCellInfo]
   );
 
   // --- Draw mode handlers ---
@@ -322,9 +322,9 @@ export function NoteEditor({ track }: NoteEditorProps) {
 
   const handleRandomizeNotes = () => {
     if (!track) return;
-    dispatch({ type: 'CLEAR_TRACK_NOTES', payload: { trackId: track.id } });
     const noteCount = Math.floor(Math.random() * 12) + 4;
     const occupied = new Set<string>();
+    const notes = [];
     for (let i = 0; i < noteCount; i++) {
       const pitch = Math.floor(Math.random() * (MAX_PITCH - MIN_PITCH + 1)) + MIN_PITCH;
       const startStep = Math.floor(Math.random() * totalSteps);
@@ -336,11 +336,10 @@ export function NoteEditor({ track }: NoteEditorProps) {
       const durationSteps = Math.floor(Math.random() * maxSteps) + 1;
       const duration = durationSteps * subdivision;
       const velocity = Math.floor(Math.random() * 68) + 60;
-      dispatch({
-        type: 'ADD_NOTE',
-        payload: { trackId: track.id, pitch, startTime, duration, velocity },
-      });
+      notes.push({ pitch, startTime, duration, velocity });
     }
+    // Single action: replaces existing notes and is one undo step
+    dispatch({ type: 'SET_TRACK_NOTES', payload: { trackId: track.id, notes } });
   };
 
   const selectionRectStyle = getSelectionRectStyle();
@@ -444,10 +443,11 @@ export function NoteEditor({ track }: NoteEditorProps) {
               >
                 {Array.from({ length: totalSteps }, (_, stepIndex) => {
                   const time = stepIndex * subdivision;
-                  const note = isNoteAt(pitch, stepIndex);
-                  const start = isNoteStart(pitch, stepIndex);
-                  const end = isNoteEnd(pitch, stepIndex);
-                  const middle = isNoteMiddle(pitch, stepIndex);
+                  const cell = getCellInfo(pitch, stepIndex);
+                  const note = cell?.note ?? null;
+                  const start = cell?.isStart ?? false;
+                  const end = cell?.isEnd ?? false;
+                  const middle = cell?.isMiddle ?? false;
                   const isCurrentStep = playback.isPlaying && currentStep === stepIndex;
                   const isDragPreview = getDragRange(pitch, stepIndex);
                   const isBarStart = time % 4 === 0;
