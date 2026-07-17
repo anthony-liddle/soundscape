@@ -181,15 +181,22 @@ export class VoiceSynthesizer {
     const scheduleTime = Math.max(now, stopTime);
     const releaseTime = normalizedToADSR(instrument.release, 'release');
 
-    // Get current gain value for smooth release
-    const currentGain = this.gainNode.gain.value;
-
-    // Cancel future scheduled values
-    this.gainNode.gain.cancelScheduledValues(scheduleTime);
-    this.gainNode.gain.setValueAtTime(currentGain, scheduleTime);
+    // Start the release from the envelope's value AT scheduleTime. noteOff is
+    // typically invoked up to ~100 ms early (scheduler lookahead), so reading
+    // gain.value here would capture a stale level and cause clicks.
+    const gain = this.gainNode.gain;
+    if (typeof gain.cancelAndHoldAtTime === 'function') {
+      gain.cancelAndHoldAtTime(scheduleTime);
+    } else {
+      // Firefox has no cancelAndHoldAtTime — approximate with the current
+      // value; mid-envelope releases may start from a slightly stale level
+      const currentGain = gain.value;
+      gain.cancelScheduledValues(scheduleTime);
+      gain.setValueAtTime(currentGain, scheduleTime);
+    }
 
     // Release envelope
-    this.gainNode.gain.linearRampToValueAtTime(0, scheduleTime + releaseTime);
+    gain.linearRampToValueAtTime(0, scheduleTime + releaseTime);
 
     // Stop oscillators and LFO after release
     const oscs = [...this.oscillators];
