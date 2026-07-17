@@ -1,9 +1,10 @@
 import type { SoundscapeState, Track, Note, InstrumentParams, MixerState, TrackMixerState } from '../types';
 import { defaultTrackMixerState } from '../types';
-import { beatsToSeconds } from '../utils/time';
+import { beatsToSeconds, normalizedToADSR } from '../utils/time';
 import { VoiceSynthesizer } from './VoiceSynthesizer';
 import type { VoiceParams } from './VoiceSynthesizer';
 import { EffectsChain } from './EffectsChain';
+import type { EffectsParams } from './EffectsChain';
 import { getPresetById } from '../presets';
 
 const LOOKAHEAD_MS = 100;
@@ -11,12 +12,21 @@ const SCHEDULE_INTERVAL_MS = 25;
 const MAX_VOICES_PER_TRACK = 8;
 
 // AudioWorklet processor code, loaded as an inline blob to avoid bundler/path issues.
-// process() is called every 128 samples (~2.9 ms at 44.1 kHz) on the audio rendering
-// thread, which is never throttled by browsers — even in background tabs.
+// process() is called every 128 samples on the audio rendering thread, which is
+// never throttled by browsers — even in background tabs. Ticks are posted every
+// 8th block (~1024 samples ≈ 23 ms at 44.1 kHz): comfortably inside the 100 ms
+// scheduling lookahead without flooding the main thread with messages.
 const SCHEDULER_WORKLET_CODE = `
 class SchedulerProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this._blocks = 0;
+  }
   process() {
-    this.port.postMessage({ type: 'tick' });
+    if (++this._blocks >= 8) {
+      this._blocks = 0;
+      this.port.postMessage({ type: 'tick' });
+    }
     return true;
   }
 }
@@ -35,6 +45,7 @@ interface TrackChannel {
   effectsChain: EffectsChain;
   voices: VoiceSynthesizer[];
   activeVoices: Map<string, VoiceSynthesizer>; // noteId -> voice
+  lastEffects: EffectsParams | null; // last-applied values, for change detection
 }
 
 /**
@@ -265,6 +276,7 @@ export class AudioEngine {
         effectsChain,
         voices: [],
         activeVoices: new Map(),
+        lastEffects: null,
       };
 
       // Create voice pool
@@ -275,17 +287,33 @@ export class AudioEngine {
       this.trackChannels.set(track.id, channel);
     }
 
-    // Update effects based on preset + overrides
+    // Update effects based on preset + overrides. Compare by value against
+    // the last-applied set — updateState runs on every app dispatch, and
+    // re-applying identical params would rebuild curves and touch AudioParams
+    // for no reason. (Value comparison, not reference: callers are allowed to
+    // pass freshly-built state objects.)
     const preset = getPresetById(state.presets, track.presetId);
     if (preset) {
       const params = { ...preset.params, ...track.paramOverrides };
-      channel.effectsChain.setParams({
+      const effects: EffectsParams = {
         delayTime: params.delayTime,
         delayFeedback: params.delayFeedback,
         delayMix: params.delayMix,
         distortion: params.distortion,
         reverbMix: params.reverbMix ?? 0,
-      });
+      };
+      const last = channel.lastEffects;
+      const unchanged =
+        last !== null &&
+        last.delayTime === effects.delayTime &&
+        last.delayFeedback === effects.delayFeedback &&
+        last.delayMix === effects.delayMix &&
+        last.distortion === effects.distortion &&
+        last.reverbMix === effects.reverbMix;
+      if (!unchanged) {
+        channel.effectsChain.setParams(effects);
+        channel.lastEffects = effects;
+      }
     }
 
     return channel;
@@ -335,8 +363,8 @@ export class AudioEngine {
    * Starts playback from the given beat position.
    *
    * Notes are scheduled ~100 ms ahead of the audio clock. When an
-   * `AudioWorklet` scheduler is available, ticks arrive every ~2.9 ms
-   * (128 samples) on the audio thread — immune to background-tab throttling.
+   * `AudioWorklet` scheduler is available, ticks arrive every ~23 ms
+   * (1024 samples) on the audio thread — immune to background-tab throttling.
    * Falls back to a 25 ms `setInterval` if `AudioWorklet` is unavailable.
    *
    * Call {@link updateState} before `play()` to ensure the engine has the
@@ -512,11 +540,22 @@ export class AudioEngine {
       }
     }
 
-    // Voice stealing: use the first voice (oldest)
+    // Voice stealing: reuse the first pool slot.
     // channel.voices always has MAX_VOICES_PER_TRACK entries — index 0 is safe
     const voice = channel.voices[0] ?? null;
     if (voice) {
       voice.stop();
+      // Remove the stolen note's mapping and mark its scheduled end as done,
+      // so its pending noteOff cannot release the note that reuses this voice.
+      for (const [noteId, activeVoice] of channel.activeVoices) {
+        if (activeVoice === voice) {
+          channel.activeVoices.delete(noteId);
+          const scheduled = this.scheduledNotes.find((sn) => sn.note.id === noteId);
+          if (scheduled) {
+            scheduled.endScheduled = true;
+          }
+        }
+      }
     }
     return voice;
   }
@@ -566,7 +605,7 @@ export class AudioEngine {
   /**
    * Returns the current playhead position in beats.
    *
-   * Updated approximately every ~3 ms (AudioWorklet) or every 25 ms (fallback)
+   * Updated approximately every ~23 ms (AudioWorklet) or every 25 ms (fallback)
    * during playback. Subscribe to continuous updates via {@link onBeatUpdate}
    * instead of polling.
    *
@@ -603,7 +642,7 @@ export class AudioEngine {
   /**
    * Subscribes to beat position updates during playback.
    *
-   * The callback fires on every scheduler tick (~3 ms with AudioWorklet,
+   * The callback fires on every scheduler tick (~23 ms with AudioWorklet,
    * ~25 ms fallback) with the current beat position, and is called with `0`
    * when {@link stop} is invoked. Multiple subscribers are supported.
    *
@@ -662,13 +701,16 @@ export class AudioEngine {
 
     voice.noteOn({ pitch, velocity, instrument: params }, context.currentTime);
 
-    // Auto release after 0.5 seconds
+    // Auto release after 0.5 seconds, then clean up once the instrument's
+    // actual release tail (up to ~5 s) has finished — a fixed delay would
+    // audibly truncate long releases.
+    const releaseMs = normalizedToADSR(params.release, 'release') * 1000;
     setTimeout(() => {
       voice.noteOff(params, context.currentTime);
       setTimeout(() => {
         voice.disconnect();
         tempGain.disconnect();
-      }, 1000);
+      }, releaseMs + 100);
     }, 500);
   }
 
