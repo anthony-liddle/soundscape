@@ -29,6 +29,7 @@ export class EffectsChain {
   private distortionNode: WaveShaperNode;
   private convolverNode: ConvolverNode;
   private reverbWetGain: GainNode;
+  private lastDistortionAmount: number | null = null;
 
   constructor(context: AudioContext) {
     this.context = context;
@@ -95,9 +96,15 @@ export class EffectsChain {
     this.dryGain.gain.setValueAtTime(1 - params.delayMix, now);
     this.wetGain.gain.setValueAtTime(params.delayMix, now);
 
-    // Distortion
-    this.distortionNode.curve = this.makeDistortionCurve(params.distortion);
-    this.distortionNode.oversample = '2x';
+    // Distortion. Only rebuild the 44100-sample curve when the amount
+    // actually changes — setParams runs on every state sync. A null curve is
+    // spec-defined pass-through, equivalent to the identity curve at 0.
+    if (params.distortion !== this.lastDistortionAmount) {
+      this.lastDistortionAmount = params.distortion;
+      this.distortionNode.curve =
+        params.distortion === 0 ? null : this.makeDistortionCurve(params.distortion);
+      this.distortionNode.oversample = '2x';
+    }
 
     // Reverb (additive send — independent of delay mix)
     this.reverbWetGain.gain.setValueAtTime(params.reverbMix, now);
