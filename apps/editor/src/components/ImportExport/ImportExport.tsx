@@ -5,6 +5,7 @@ import { Button } from '../common';
 import { validateSoundscapeState, builtInPresets } from 'soundscape-engine';
 import type { SoundscapeState } from 'soundscape-engine';
 import { exportSoundscape } from '../../utils/exportSoundscape';
+import { repairSoundscapeState } from '../../utils/repairSoundscape';
 import './ImportExport.css';
 
 export function ImportExport() {
@@ -37,6 +38,20 @@ export function ImportExport() {
         };
 
         if (!validateSoundscapeState(stateToLoad)) {
+          // Offer a repaired version instead of hard-failing on one bad value
+          const repaired = repairSoundscapeState(parsed);
+          if (repaired && repaired.repairs.length > 0) {
+            const proceed = confirm(
+              'This file has problems that can be repaired:\n\n' +
+                repaired.repairs.map((r) => `• ${r}`).join('\n') +
+                '\n\nLoad the repaired project?'
+            );
+            if (proceed) {
+              stop();
+              dispatch({ type: 'SET_STATE', payload: repaired.state });
+            }
+            return;
+          }
           alert('Invalid soundscape file format');
           return;
         }
