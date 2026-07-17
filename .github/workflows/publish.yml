@@ -57,7 +57,15 @@ jobs:
         run: npm install -g npm@latest
 
       # Auth via the npm Trusted Publisher for this repo + workflow (OIDC).
-      # No token; provenance is generated automatically.
+      # No token; provenance is generated automatically. Prerelease versions
+      # (anything with a hyphen, e.g. 0.3.0-rc.1) publish under the "next"
+      # dist-tag so they never land on "latest".
       - name: Publish to npm
-        run: npm publish --access public
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [[ "$VERSION" == *-* ]]; then
+            npm publish --access public --tag next
+          else
+            npm publish --access public
+          fi
         working-directory: packages/engine
