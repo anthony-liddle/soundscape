@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased (0.4.0)
+
+### Added
+
+- `AudioEngine.startMIDINote(pitch, velocity, presetId, paramOverrides?)` and
+  `AudioEngine.stopMIDINote(pitch)` — sustained interactive voices for live
+  MIDI input. Held notes are independent of the transport (`stop()` leaves
+  them sounding); `destroy()` force-stops them; re-striking a held pitch
+  replaces its voice.
+
 ## 0.3.0
 
 ### ⚠️ Audible changes — re-audition your patches
