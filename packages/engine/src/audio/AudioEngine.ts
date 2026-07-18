@@ -108,6 +108,13 @@ export class AudioEngine {
 
   private currentState: SoundscapeState | null = null;
 
+  // Held interactive voices for live MIDI input, keyed by pitch.
+  // Independent of the transport: playback stop leaves them sounding.
+  private midiVoices: Map<
+    number,
+    { voice: VoiceSynthesizer; tempGain: GainNode; params: InstrumentParams }
+  > = new Map();
+
   /**
    * Creates the underlying `AudioContext` and master gain node, and registers
    * the AudioWorklet scheduler processor.
@@ -743,6 +750,84 @@ export class AudioEngine {
   }
 
   /**
+   * Starts a sustained interactive note for live MIDI input.
+   *
+   * Unlike {@link previewNote}, the note holds until {@link stopMIDINote} is
+   * called for the same pitch. Held notes are independent of the transport —
+   * {@link stop} leaves them sounding; {@link destroy} force-stops them.
+   * Re-striking a pitch that is already held replaces the previous voice.
+   *
+   * @param pitch - MIDI pitch to play (0–127).
+   * @param velocity - Note velocity (0–127).
+   * @param presetId - ID of the preset that defines the sound.
+   * @param paramOverrides - Optional per-parameter overrides on top of the preset.
+   */
+  startMIDINote(
+    pitch: number,
+    velocity: number,
+    presetId: string,
+    paramOverrides?: Partial<InstrumentParams>
+  ): void {
+    if (!this.currentState) return;
+
+    const context = this.ensureContext();
+    const masterGain = this.ensureMasterGain();
+
+    const preset = getPresetById(this.currentState.presets, presetId);
+    if (!preset) return;
+
+    // Replace an existing voice on this pitch (keyboard re-strike)
+    const existing = this.midiVoices.get(pitch);
+    if (existing) {
+      existing.voice.stop();
+      existing.voice.disconnect();
+      existing.tempGain.disconnect();
+      this.midiVoices.delete(pitch);
+    }
+
+    const params = { ...preset.params, ...paramOverrides };
+    const tempGain = context.createGain();
+    tempGain.connect(masterGain);
+    tempGain.gain.value = 0.8;
+
+    const voice = new VoiceSynthesizer(context, tempGain);
+    voice.noteOn({ pitch, velocity, instrument: params }, context.currentTime);
+    this.midiVoices.set(pitch, { voice, tempGain, params });
+  }
+
+  /**
+   * Releases a note held via {@link startMIDINote}.
+   *
+   * Triggers the instrument's release envelope and cleans up the voice after
+   * the tail completes. Releasing a pitch that is not held is a no-op.
+   *
+   * @param pitch - MIDI pitch to release (0–127).
+   */
+  stopMIDINote(pitch: number): void {
+    const held = this.midiVoices.get(pitch);
+    if (!held) return;
+    this.midiVoices.delete(pitch);
+
+    const context = this.ensureContext();
+    held.voice.noteOff(held.params, context.currentTime);
+
+    const releaseMs = normalizedToADSR(held.params.release, 'release') * 1000;
+    setTimeout(() => {
+      held.voice.disconnect();
+      held.tempGain.disconnect();
+    }, releaseMs + 100);
+  }
+
+  private stopAllMIDINotes(): void {
+    for (const held of this.midiVoices.values()) {
+      held.voice.stop();
+      held.voice.disconnect();
+      held.tempGain.disconnect();
+    }
+    this.midiVoices.clear();
+  }
+
+  /**
    * Stops playback, disconnects all audio nodes, and closes the `AudioContext`.
    *
    * After calling `destroy()`, the engine instance should not be reused.
@@ -750,6 +835,7 @@ export class AudioEngine {
    */
   destroy(): void {
     this.stop();
+    this.stopAllMIDINotes();
 
     // Clear all beat update subscribers
     this.beatUpdateListeners.clear();
