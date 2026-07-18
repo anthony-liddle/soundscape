@@ -1,0 +1,44 @@
+.midi-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.midi-status-unsupported {
+  color: #6b7280;
+  font-size: 12px;
+  cursor: help;
+}
+
+.midi-status-error {
+  color: #f87171;
+  font-size: 12px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.midi-status-device {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #9ca3af;
+  font-size: 12px;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.midi-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #374151;
+  flex-shrink: 0;
+}
+
+.midi-status-dot.active {
+  background: #34d399;
+}

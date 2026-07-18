@@ -119,6 +119,23 @@ export function SoundscapeProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const startNote = useCallback(
+    (pitch: number, velocity: number, presetId: string, paramOverrides?: Partial<InstrumentParams>) => {
+      const engine = audioEngineRef.current;
+      if (engine) {
+        void engine.resume();
+        engine.startMIDINote(pitch, velocity, presetId, paramOverrides);
+      }
+    },
+    []
+  );
+
+  const stopNote = useCallback((pitch: number) => {
+    audioEngineRef.current?.stopMIDINote(pitch);
+  }, []);
+
+  const getCurrentBeat = useCallback(() => audioEngineRef.current?.getCurrentBeat() ?? 0, []);
+
   const canUndo = history.past.length > 0;
   const canRedo = history.future.length > 0;
 
@@ -132,13 +149,16 @@ export function SoundscapeProvider({ children }: { children: ReactNode }) {
       setTempo,
       setLoop,
       previewNote,
+      startNote,
+      stopNote,
+      getCurrentBeat,
       undo,
       redo,
       canUndo,
       canRedo,
       analyserNode,
     }),
-    [state, playback, play, stop, setTempo, setLoop, previewNote, undo, redo, canUndo, canRedo, analyserNode]
+    [state, playback, play, stop, setTempo, setLoop, previewNote, startNote, stopNote, getCurrentBeat, undo, redo, canUndo, canRedo, analyserNode]
   );
 
   return (
