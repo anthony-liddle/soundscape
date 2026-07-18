@@ -19,6 +19,13 @@
 
 ### Fixed
 
+- **Loop boundaries are now sample-accurate.** The scheduler works in
+  absolute time across loop iterations, so the next iteration's downbeat is
+  scheduled inside the lookahead window before the wrap — previously the
+  first notes of every loop started late by up to a scheduler tick. Notes
+  whose tails cross the loop boundary now receive their note-off (they
+  previously sustained until stolen), and a note can sound in two adjacent
+  iterations at once.
 - Voice stealing no longer lets the stolen note's pending note-off cut short
   the note that reuses the voice.
 - `previewNote` waits for the instrument's full release tail before tearing

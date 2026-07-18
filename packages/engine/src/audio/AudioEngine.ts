@@ -36,8 +36,19 @@ registerProcessor('soundscape-scheduler', SchedulerProcessor);
 interface ScheduledNote {
   note: Note;
   trackId: string;
-  startScheduled: boolean;
-  endScheduled: boolean;
+  /** Next loop iteration whose note-on has not been scheduled yet. */
+  nextStartIteration: number;
+  /** Iterations whose note-on is scheduled but whose note-off is still pending. */
+  startedIterations: number[];
+}
+
+/**
+ * activeVoices key: a note can be sounding in two loop iterations at once
+ * (its tail crossing the boundary while the next iteration starts), so voices
+ * are keyed per (note, iteration) rather than per note.
+ */
+function voiceKey(noteId: string, iteration: number): string {
+  return `${noteId}|${iteration}`;
 }
 
 interface TrackChannel {
@@ -229,26 +240,30 @@ export class AudioEngine {
           // Keep existing scheduling state
           newScheduledNotes.push({ ...existing, trackId: track.id, note });
         } else {
-          // New note — add as unscheduled
+          // New note — starts unscheduled; scheduleNotes fast-forwards
+          // nextStartIteration past iterations that already elapsed
           newScheduledNotes.push({
             note,
             trackId: track.id,
-            startScheduled: false,
-            endScheduled: false,
+            nextStartIteration: 0,
+            startedIterations: [],
           });
         }
       }
     }
 
-    // Stop voices for removed notes
+    // Stop voices for removed notes, in every iteration they are sounding
     for (const sn of this.scheduledNotes) {
       if (!currentNoteIds.has(sn.note.id)) {
         const channel = this.trackChannels.get(sn.trackId);
         if (channel) {
-          const voice = channel.activeVoices.get(sn.note.id);
-          if (voice) {
-            voice.stop();
-            channel.activeVoices.delete(sn.note.id);
+          for (const iteration of sn.startedIterations) {
+            const key = voiceKey(sn.note.id, iteration);
+            const voice = channel.activeVoices.get(key);
+            if (voice) {
+              voice.stop();
+              channel.activeVoices.delete(key);
+            }
           }
         }
       }
@@ -388,8 +403,8 @@ export class AudioEngine {
         this.scheduledNotes.push({
           note,
           trackId: track.id,
-          startScheduled: false,
-          endScheduled: false,
+          nextStartIteration: 0,
+          startedIterations: [],
         });
       }
     }
@@ -451,24 +466,14 @@ export class AudioEngine {
   private updateCurrentBeat(): void {
     if (!this.isPlaying) return;
 
+    // The transport anchor (startTime/startBeat) is never rebased at the loop
+    // boundary — scheduling works in absolute time across iterations, and the
+    // wrap only affects the reported beat position.
     const context = this.ensureContext();
     const elapsedTime = context.currentTime - this.startTime;
     const elapsedBeats = (elapsedTime * this.tempo) / 60;
-    let beat = this.startBeat + elapsedBeats;
-
-    // Handle loop
-    if (this.loopEnabled && beat >= this.loopLengthBeats) {
-      // Reset for new loop
-      beat = beat % this.loopLengthBeats;
-      this.startBeat = 0;
-      this.startTime = context.currentTime - beatsToSeconds(beat, this.tempo);
-
-      // Reset scheduled notes
-      for (const sn of this.scheduledNotes) {
-        sn.startScheduled = false;
-        sn.endScheduled = false;
-      }
-    }
+    const absoluteBeat = this.startBeat + elapsedBeats;
+    const beat = this.loopEnabled ? absoluteBeat % this.loopLengthBeats : absoluteBeat;
 
     this.currentBeat = beat;
     this.emitBeatUpdate(beat);
@@ -487,6 +492,7 @@ export class AudioEngine {
     const lookaheadSec = LOOKAHEAD_MS / 1000;
     const currentTime = context.currentTime;
     const lookaheadTime = currentTime + lookaheadSec;
+    const loopBeats = this.loopLengthBeats;
 
     for (const scheduled of this.scheduledNotes) {
       const { note, trackId } = scheduled;
@@ -501,33 +507,52 @@ export class AudioEngine {
 
       const params = { ...preset.params, ...track.paramOverrides };
 
-      // Calculate note times
-      const noteStartTime = this.startTime + beatsToSeconds(note.startTime - this.startBeat, this.tempo);
-      const noteEndTime = noteStartTime + beatsToSeconds(note.duration, this.tempo);
-
-      // Schedule note start
-      if (!scheduled.startScheduled && noteStartTime < lookaheadTime && noteStartTime >= currentTime - 0.1) {
-        const voice = this.getAvailableVoice(channel);
-        if (voice) {
-          const voiceParams: VoiceParams = {
-            pitch: note.pitch,
-            velocity: note.velocity,
-            instrument: params,
-          };
-          voice.noteOn(voiceParams, noteStartTime);
-          channel.activeVoices.set(note.id, voice);
+      // Schedule note starts iteration by iteration. Because times are
+      // absolute (transport anchor is never rebased), the lookahead can cross
+      // the loop boundary and the next iteration's downbeat is scheduled
+      // sample-accurately before the wrap. Iterations that already elapsed
+      // (e.g. a note added mid-playback) are skipped without scheduling.
+      for (;;) {
+        const iteration = scheduled.nextStartIteration;
+        if (iteration > 0 && !this.loopEnabled) break;
+        const startBeats = note.startTime - this.startBeat + iteration * loopBeats;
+        const noteStartTime = this.startTime + beatsToSeconds(startBeats, this.tempo);
+        if (noteStartTime >= lookaheadTime) break;
+        if (noteStartTime >= currentTime - 0.1) {
+          const voice = this.getAvailableVoice(channel);
+          if (voice) {
+            const voiceParams: VoiceParams = {
+              pitch: note.pitch,
+              velocity: note.velocity,
+              instrument: params,
+            };
+            voice.noteOn(voiceParams, noteStartTime);
+            channel.activeVoices.set(voiceKey(note.id, iteration), voice);
+            scheduled.startedIterations.push(iteration);
+          }
         }
-        scheduled.startScheduled = true;
+        scheduled.nextStartIteration = iteration + 1;
       }
 
-      // Schedule note end
-      if (!scheduled.endScheduled && scheduled.startScheduled && noteEndTime < lookaheadTime) {
-        const voice = channel.activeVoices.get(note.id);
-        if (voice) {
-          voice.noteOff(params, noteEndTime);
-          channel.activeVoices.delete(note.id);
+      // Schedule note ends for started iterations. Duration is read fresh so
+      // live edits to a sounding note still take effect.
+      if (scheduled.startedIterations.length > 0) {
+        const stillPending: number[] = [];
+        for (const iteration of scheduled.startedIterations) {
+          const endBeats = note.startTime + note.duration - this.startBeat + iteration * loopBeats;
+          const noteEndTime = this.startTime + beatsToSeconds(endBeats, this.tempo);
+          if (noteEndTime < lookaheadTime) {
+            const key = voiceKey(note.id, iteration);
+            const voice = channel.activeVoices.get(key);
+            if (voice) {
+              voice.noteOff(params, noteEndTime);
+              channel.activeVoices.delete(key);
+            }
+          } else {
+            stillPending.push(iteration);
+          }
         }
-        scheduled.endScheduled = true;
+        scheduled.startedIterations = stillPending;
       }
     }
   }
@@ -545,14 +570,17 @@ export class AudioEngine {
     const voice = channel.voices[0] ?? null;
     if (voice) {
       voice.stop();
-      // Remove the stolen note's mapping and mark its scheduled end as done,
-      // so its pending noteOff cannot release the note that reuses this voice.
-      for (const [noteId, activeVoice] of channel.activeVoices) {
+      // Remove the stolen note's mapping and drop its pending end, so its
+      // noteOff cannot release the note that reuses this voice.
+      for (const [key, activeVoice] of channel.activeVoices) {
         if (activeVoice === voice) {
-          channel.activeVoices.delete(noteId);
+          channel.activeVoices.delete(key);
+          const sep = key.lastIndexOf('|');
+          const noteId = key.slice(0, sep);
+          const iteration = Number(key.slice(sep + 1));
           const scheduled = this.scheduledNotes.find((sn) => sn.note.id === noteId);
           if (scheduled) {
-            scheduled.endScheduled = true;
+            scheduled.startedIterations = scheduled.startedIterations.filter((i) => i !== iteration);
           }
         }
       }

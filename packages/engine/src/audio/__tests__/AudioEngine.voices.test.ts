@@ -51,6 +51,8 @@ describe('AudioEngine voice allocation (characterization)', () => {
     const channel = (engine as unknown as EngineInternals).trackChannels.get(state.tracks[0]!.id)!
     expect(channel.activeVoices.size).toBe(8)
     expect(new Set(channel.activeVoices.values()).size).toBe(8)
+    // Keys are per (note, iteration)
+    expect(channel.activeVoices.has(`${state.tracks[0]!.notes[0]!.id}|0`)).toBe(true)
   })
 
   it('voice stealing removes the stolen note mapping so its noteOff cannot cut the new note (H3 fixed)', async () => {
@@ -66,8 +68,8 @@ describe('AudioEngine voice allocation (characterization)', () => {
 
     const track = state.tracks[0]!
     const channel = (engine as unknown as EngineInternals).trackChannels.get(track.id)!
-    const firstNoteVoice = channel.activeVoices.get(track.notes[0]!.id)
-    const ninthNoteVoice = channel.activeVoices.get(track.notes[8]!.id)
+    const firstNoteVoice = channel.activeVoices.get(`${track.notes[0]!.id}|0`)
+    const ninthNoteVoice = channel.activeVoices.get(`${track.notes[8]!.id}|0`)
 
     expect(firstNoteVoice).toBeUndefined() // stale mapping removed
     expect(ninthNoteVoice).toBeDefined()
