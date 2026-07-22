@@ -23,7 +23,7 @@ jobs:
       # No registry-url here: it writes an .npmrc referencing ${NODE_AUTH_TOKEN},
       # which breaks tokenless OIDC trusted publishing when that env is unset.
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'pnpm'
