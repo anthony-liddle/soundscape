@@ -12,6 +12,11 @@ export interface SoundscapeContextValue {
   setTempo: (bpm: number) => void;
   setLoop: (enabled: boolean) => void;
   previewNote: (pitch: number, velocity: number, presetId: string, paramOverrides?: Partial<InstrumentParams>) => void;
+  /** Start a sustained note (live MIDI input); release with stopNote. */
+  startNote: (pitch: number, velocity: number, presetId: string, paramOverrides?: Partial<InstrumentParams>) => void;
+  stopNote: (pitch: number) => void;
+  /** Precise engine playhead position (playback.currentBeat is rAF-coalesced). */
+  getCurrentBeat: () => number;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;

@@ -163,24 +163,43 @@ describe('VoiceSynthesizer', () => {
       voice.noteOff(params, 2)
       const release = normalizedToADSR(0.5, 'release')
 
-      expect(gainNode().gain.calls[0]).toEqual({ method: 'cancel', time: 2 })
-      expect(gainNode().gain.calls[2]).toEqual({ method: 'ramp', value: 0, time: 2 + release })
+      expect(gainNode().gain.calls[0]).toEqual({ method: 'hold', time: 2 })
+      expect(gainNode().gain.calls[1]).toEqual({ method: 'ramp', value: 0, time: 2 + release })
       expect(oscillators()[0]!.stopped[0]!).toBeCloseTo(2 + release + 0.01)
     })
 
-    it('[characterizes-bug M3] uses the gain value at CALL time as the release start, even for a future stop time', () => {
-      // The release start level should be the gain at scheduleTime, but the
-      // implementation reads gain.value when noteOff is invoked (up to 100 ms
-      // early under the scheduler lookahead). 0.3.0 will switch to
-      // cancelAndHoldAtTime — update this test alongside that change.
-      const params = makeParams()
+    it('holds the envelope at the scheduled stop time via cancelAndHoldAtTime (M3 fixed)', () => {
+      // The release must start from the envelope's value AT scheduleTime —
+      // not the value when noteOff happens to be invoked (up to 100 ms early
+      // under the scheduler lookahead)
+      const params = makeParams({ release: 0.5 })
       voice.noteOn({ pitch: 60, velocity: 100, instrument: params }, 0)
-      gainNode().gain.value = 0.25 // simulated mid-envelope level "now"
       gainNode().gain.calls.length = 0
 
       voice.noteOff(params, 0.1)
-      const setCall = gainNode().gain.calls.find((c) => c.method === 'set')!
-      expect(setCall).toEqual({ method: 'set', value: 0.25, time: 0.1 })
+      const release = normalizedToADSR(0.5, 'release')
+      expect(gainNode().gain.calls).toEqual([
+        { method: 'hold', time: 0.1 },
+        { method: 'ramp', value: 0, time: 0.1 + release },
+      ])
+    })
+
+    it('falls back to cancel + set-current-value when cancelAndHoldAtTime is unavailable (Firefox)', () => {
+      const params = makeParams({ release: 0.5 })
+      voice.noteOn({ pitch: 60, velocity: 100, instrument: params }, 0)
+      const gain = gainNode().gain
+      // Simulate an implementation without cancelAndHoldAtTime
+      ;(gain as { cancelAndHoldAtTime?: unknown }).cancelAndHoldAtTime = undefined
+      gain.value = 0.25
+      gain.calls.length = 0
+
+      voice.noteOff(params, 0.1)
+      const release = normalizedToADSR(0.5, 'release')
+      expect(gain.calls).toEqual([
+        { method: 'cancel', time: 0.1 },
+        { method: 'set', value: 0.25, time: 0.1 },
+        { method: 'ramp', value: 0, time: 0.1 + release },
+      ])
     })
 
     it('does nothing when the voice is not playing', () => {

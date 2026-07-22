@@ -51,13 +51,15 @@ describe('AudioEngine voice allocation (characterization)', () => {
     const channel = (engine as unknown as EngineInternals).trackChannels.get(state.tracks[0]!.id)!
     expect(channel.activeVoices.size).toBe(8)
     expect(new Set(channel.activeVoices.values()).size).toBe(8)
+    // Keys are per (note, iteration)
+    expect(channel.activeVoices.has(`${state.tracks[0]!.notes[0]!.id}|0`)).toBe(true)
   })
 
-  it('[characterizes-bug H3] voice stealing leaves the stolen note pointing at the reused voice', async () => {
-    // When a 9th simultaneous note steals voices[0], the stolen note's
-    // activeVoices entry is NOT removed — both the old and new note ids map
-    // to the same voice, so the old note's scheduled noteOff will cut the
-    // new note short. 0.3.0 removes the stale entry — flip this test then.
+  it('voice stealing removes the stolen note mapping so its noteOff cannot cut the new note (H3 fixed)', async () => {
+    // A 9th simultaneous note steals voices[0]. The stolen note's
+    // activeVoices entry must be removed (and its scheduled end marked done)
+    // so the old note's scheduled noteOff can no longer reach the voice now
+    // playing the new note.
     engine = new AudioEngine()
     await engine.initialize()
     const state = makeState(9)
@@ -66,11 +68,11 @@ describe('AudioEngine voice allocation (characterization)', () => {
 
     const track = state.tracks[0]!
     const channel = (engine as unknown as EngineInternals).trackChannels.get(track.id)!
-    const firstNoteVoice = channel.activeVoices.get(track.notes[0]!.id)
-    const ninthNoteVoice = channel.activeVoices.get(track.notes[8]!.id)
+    const firstNoteVoice = channel.activeVoices.get(`${track.notes[0]!.id}|0`)
+    const ninthNoteVoice = channel.activeVoices.get(`${track.notes[8]!.id}|0`)
 
-    expect(firstNoteVoice).toBeDefined()
-    expect(firstNoteVoice).toBe(ninthNoteVoice) // stale mapping — the bug
-    expect(channel.activeVoices.size).toBe(9) // 9 entries over 8 voices
+    expect(firstNoteVoice).toBeUndefined() // stale mapping removed
+    expect(ninthNoteVoice).toBeDefined()
+    expect(channel.activeVoices.size).toBe(8) // one entry per live voice
   })
 })

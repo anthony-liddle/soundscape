@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { validateSoundscapeState, clamp } from '../validation'
+import { defaultInstrumentParams } from '../../types'
 import type { SoundscapeState } from '../../types'
 
 describe('validation utilities', () => {
@@ -56,7 +57,7 @@ describe('validation utilities', () => {
           id: 'lead',
           name: 'Lead',
           isBuiltIn: true,
-          params: {},
+          params: { ...defaultInstrumentParams },
         },
       ],
       mixer: {
@@ -213,6 +214,103 @@ describe('validation utilities', () => {
           presets: [{ ...validState.presets[0], isBuiltIn: undefined }],
         }
         expect(validateSoundscapeState(state)).toBe(false)
+      })
+    })
+
+    describe('strict validation (0.3.0)', () => {
+      const withNote = (noteOverride: object) => ({
+        ...validState,
+        tracks: [
+          {
+            ...validState.tracks[0],
+            notes: [{ ...validState.tracks[0]!.notes[0], ...noteOverride }],
+          },
+        ],
+      })
+      const withParams = (paramsOverride: object) => ({
+        ...validState,
+        presets: [
+          { ...validState.presets[0], params: { ...defaultInstrumentParams, ...paramsOverride } },
+        ],
+      })
+
+      it('rejects NaN and Infinity tempo', () => {
+        expect(validateSoundscapeState({ ...validState, metadata: { ...validState.metadata, tempo: NaN } })).toBe(false)
+        expect(validateSoundscapeState({ ...validState, metadata: { ...validState.metadata, tempo: Infinity } })).toBe(false)
+      })
+
+      it('rejects NaN lengthBeats', () => {
+        expect(validateSoundscapeState({ ...validState, metadata: { ...validState.metadata, lengthBeats: NaN } })).toBe(false)
+      })
+
+      it('rejects non-finite time signature entries', () => {
+        expect(validateSoundscapeState({ ...validState, metadata: { ...validState.metadata, timeSignature: [NaN, 4] } })).toBe(false)
+      })
+
+      it('rejects NaN note fields', () => {
+        expect(validateSoundscapeState(withNote({ pitch: NaN }))).toBe(false)
+        expect(validateSoundscapeState(withNote({ startTime: NaN }))).toBe(false)
+        expect(validateSoundscapeState(withNote({ duration: NaN }))).toBe(false)
+        expect(validateSoundscapeState(withNote({ velocity: NaN }))).toBe(false)
+      })
+
+      it('rejects presets with an unknown or missing waveform', () => {
+        expect(validateSoundscapeState(withParams({ waveform: 'sine2' }))).toBe(false)
+        const noWaveform = { ...defaultInstrumentParams } as Record<string, unknown>
+        delete noWaveform.waveform
+        expect(
+          validateSoundscapeState({
+            ...validState,
+            presets: [{ ...validState.presets[0], params: noWaveform }],
+          })
+        ).toBe(false)
+      })
+
+      it('rejects presets with non-finite numeric params', () => {
+        expect(validateSoundscapeState(withParams({ attack: NaN }))).toBe(false)
+        expect(validateSoundscapeState(withParams({ filterCutoff: Infinity }))).toBe(false)
+      })
+
+      it('rejects presets with invalid optional enums when present', () => {
+        expect(validateSoundscapeState(withParams({ filterType: 'sharpen' }))).toBe(false)
+        expect(validateSoundscapeState(withParams({ lfoTarget: 'volume' }))).toBe(false)
+      })
+
+      it('accepts presets with valid optional fields omitted', () => {
+        const minimal = { ...defaultInstrumentParams } as Record<string, unknown>
+        delete minimal.filterType
+        delete minimal.reverbMix
+        delete minimal.lfoRate
+        delete minimal.lfoDepth
+        delete minimal.lfoTarget
+        delete minimal.unisonDetune
+        expect(
+          validateSoundscapeState({
+            ...validState,
+            presets: [{ ...validState.presets[0], params: minimal }],
+          })
+        ).toBe(true)
+      })
+
+      it('rejects mixer track entries with non-finite volume or non-boolean flags', () => {
+        expect(
+          validateSoundscapeState({
+            ...validState,
+            mixer: { ...validState.mixer, tracks: { 't': { volume: NaN, mute: false, solo: false } } },
+          })
+        ).toBe(false)
+        expect(
+          validateSoundscapeState({
+            ...validState,
+            mixer: { ...validState.mixer, tracks: { 't': { volume: 0.5, mute: 'yes', solo: false } } },
+          })
+        ).toBe(false)
+      })
+
+      it('rejects NaN masterVolume', () => {
+        expect(
+          validateSoundscapeState({ ...validState, mixer: { ...validState.mixer, masterVolume: NaN } })
+        ).toBe(false)
       })
     })
 

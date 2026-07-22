@@ -1,9 +1,10 @@
 import type { SoundscapeState, Track, Note, InstrumentParams, MixerState, TrackMixerState } from '../types';
 import { defaultTrackMixerState } from '../types';
-import { beatsToSeconds } from '../utils/time';
+import { beatsToSeconds, normalizedToADSR } from '../utils/time';
 import { VoiceSynthesizer } from './VoiceSynthesizer';
 import type { VoiceParams } from './VoiceSynthesizer';
 import { EffectsChain } from './EffectsChain';
+import type { EffectsParams } from './EffectsChain';
 import { getPresetById } from '../presets';
 
 const LOOKAHEAD_MS = 100;
@@ -11,12 +12,21 @@ const SCHEDULE_INTERVAL_MS = 25;
 const MAX_VOICES_PER_TRACK = 8;
 
 // AudioWorklet processor code, loaded as an inline blob to avoid bundler/path issues.
-// process() is called every 128 samples (~2.9 ms at 44.1 kHz) on the audio rendering
-// thread, which is never throttled by browsers — even in background tabs.
+// process() is called every 128 samples on the audio rendering thread, which is
+// never throttled by browsers — even in background tabs. Ticks are posted every
+// 8th block (~1024 samples ≈ 23 ms at 44.1 kHz): comfortably inside the 100 ms
+// scheduling lookahead without flooding the main thread with messages.
 const SCHEDULER_WORKLET_CODE = `
 class SchedulerProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this._blocks = 0;
+  }
   process() {
-    this.port.postMessage({ type: 'tick' });
+    if (++this._blocks >= 8) {
+      this._blocks = 0;
+      this.port.postMessage({ type: 'tick' });
+    }
     return true;
   }
 }
@@ -26,8 +36,19 @@ registerProcessor('soundscape-scheduler', SchedulerProcessor);
 interface ScheduledNote {
   note: Note;
   trackId: string;
-  startScheduled: boolean;
-  endScheduled: boolean;
+  /** Next loop iteration whose note-on has not been scheduled yet. */
+  nextStartIteration: number;
+  /** Iterations whose note-on is scheduled but whose note-off is still pending. */
+  startedIterations: number[];
+}
+
+/**
+ * activeVoices key: a note can be sounding in two loop iterations at once
+ * (its tail crossing the boundary while the next iteration starts), so voices
+ * are keyed per (note, iteration) rather than per note.
+ */
+function voiceKey(noteId: string, iteration: number): string {
+  return `${noteId}|${iteration}`;
 }
 
 interface TrackChannel {
@@ -35,6 +56,7 @@ interface TrackChannel {
   effectsChain: EffectsChain;
   voices: VoiceSynthesizer[];
   activeVoices: Map<string, VoiceSynthesizer>; // noteId -> voice
+  lastEffects: EffectsParams | null; // last-applied values, for change detection
 }
 
 /**
@@ -85,6 +107,13 @@ export class AudioEngine {
   private beatUpdateListeners = new Set<(beat: number) => void>();
 
   private currentState: SoundscapeState | null = null;
+
+  // Held interactive voices for live MIDI input, keyed by pitch.
+  // Independent of the transport: playback stop leaves them sounding.
+  private midiVoices: Map<
+    number,
+    { voice: VoiceSynthesizer; tempGain: GainNode; params: InstrumentParams }
+  > = new Map();
 
   /**
    * Creates the underlying `AudioContext` and master gain node, and registers
@@ -218,26 +247,30 @@ export class AudioEngine {
           // Keep existing scheduling state
           newScheduledNotes.push({ ...existing, trackId: track.id, note });
         } else {
-          // New note — add as unscheduled
+          // New note — starts unscheduled; scheduleNotes fast-forwards
+          // nextStartIteration past iterations that already elapsed
           newScheduledNotes.push({
             note,
             trackId: track.id,
-            startScheduled: false,
-            endScheduled: false,
+            nextStartIteration: 0,
+            startedIterations: [],
           });
         }
       }
     }
 
-    // Stop voices for removed notes
+    // Stop voices for removed notes, in every iteration they are sounding
     for (const sn of this.scheduledNotes) {
       if (!currentNoteIds.has(sn.note.id)) {
         const channel = this.trackChannels.get(sn.trackId);
         if (channel) {
-          const voice = channel.activeVoices.get(sn.note.id);
-          if (voice) {
-            voice.stop();
-            channel.activeVoices.delete(sn.note.id);
+          for (const iteration of sn.startedIterations) {
+            const key = voiceKey(sn.note.id, iteration);
+            const voice = channel.activeVoices.get(key);
+            if (voice) {
+              voice.stop();
+              channel.activeVoices.delete(key);
+            }
           }
         }
       }
@@ -265,6 +298,7 @@ export class AudioEngine {
         effectsChain,
         voices: [],
         activeVoices: new Map(),
+        lastEffects: null,
       };
 
       // Create voice pool
@@ -275,17 +309,33 @@ export class AudioEngine {
       this.trackChannels.set(track.id, channel);
     }
 
-    // Update effects based on preset + overrides
+    // Update effects based on preset + overrides. Compare by value against
+    // the last-applied set — updateState runs on every app dispatch, and
+    // re-applying identical params would rebuild curves and touch AudioParams
+    // for no reason. (Value comparison, not reference: callers are allowed to
+    // pass freshly-built state objects.)
     const preset = getPresetById(state.presets, track.presetId);
     if (preset) {
       const params = { ...preset.params, ...track.paramOverrides };
-      channel.effectsChain.setParams({
+      const effects: EffectsParams = {
         delayTime: params.delayTime,
         delayFeedback: params.delayFeedback,
         delayMix: params.delayMix,
         distortion: params.distortion,
         reverbMix: params.reverbMix ?? 0,
-      });
+      };
+      const last = channel.lastEffects;
+      const unchanged =
+        last !== null &&
+        last.delayTime === effects.delayTime &&
+        last.delayFeedback === effects.delayFeedback &&
+        last.delayMix === effects.delayMix &&
+        last.distortion === effects.distortion &&
+        last.reverbMix === effects.reverbMix;
+      if (!unchanged) {
+        channel.effectsChain.setParams(effects);
+        channel.lastEffects = effects;
+      }
     }
 
     return channel;
@@ -335,8 +385,8 @@ export class AudioEngine {
    * Starts playback from the given beat position.
    *
    * Notes are scheduled ~100 ms ahead of the audio clock. When an
-   * `AudioWorklet` scheduler is available, ticks arrive every ~2.9 ms
-   * (128 samples) on the audio thread — immune to background-tab throttling.
+   * `AudioWorklet` scheduler is available, ticks arrive every ~23 ms
+   * (1024 samples) on the audio thread — immune to background-tab throttling.
    * Falls back to a 25 ms `setInterval` if `AudioWorklet` is unavailable.
    *
    * Call {@link updateState} before `play()` to ensure the engine has the
@@ -360,8 +410,8 @@ export class AudioEngine {
         this.scheduledNotes.push({
           note,
           trackId: track.id,
-          startScheduled: false,
-          endScheduled: false,
+          nextStartIteration: 0,
+          startedIterations: [],
         });
       }
     }
@@ -423,24 +473,14 @@ export class AudioEngine {
   private updateCurrentBeat(): void {
     if (!this.isPlaying) return;
 
+    // The transport anchor (startTime/startBeat) is never rebased at the loop
+    // boundary — scheduling works in absolute time across iterations, and the
+    // wrap only affects the reported beat position.
     const context = this.ensureContext();
     const elapsedTime = context.currentTime - this.startTime;
     const elapsedBeats = (elapsedTime * this.tempo) / 60;
-    let beat = this.startBeat + elapsedBeats;
-
-    // Handle loop
-    if (this.loopEnabled && beat >= this.loopLengthBeats) {
-      // Reset for new loop
-      beat = beat % this.loopLengthBeats;
-      this.startBeat = 0;
-      this.startTime = context.currentTime - beatsToSeconds(beat, this.tempo);
-
-      // Reset scheduled notes
-      for (const sn of this.scheduledNotes) {
-        sn.startScheduled = false;
-        sn.endScheduled = false;
-      }
-    }
+    const absoluteBeat = this.startBeat + elapsedBeats;
+    const beat = this.loopEnabled ? absoluteBeat % this.loopLengthBeats : absoluteBeat;
 
     this.currentBeat = beat;
     this.emitBeatUpdate(beat);
@@ -459,6 +499,7 @@ export class AudioEngine {
     const lookaheadSec = LOOKAHEAD_MS / 1000;
     const currentTime = context.currentTime;
     const lookaheadTime = currentTime + lookaheadSec;
+    const loopBeats = this.loopLengthBeats;
 
     for (const scheduled of this.scheduledNotes) {
       const { note, trackId } = scheduled;
@@ -473,33 +514,52 @@ export class AudioEngine {
 
       const params = { ...preset.params, ...track.paramOverrides };
 
-      // Calculate note times
-      const noteStartTime = this.startTime + beatsToSeconds(note.startTime - this.startBeat, this.tempo);
-      const noteEndTime = noteStartTime + beatsToSeconds(note.duration, this.tempo);
-
-      // Schedule note start
-      if (!scheduled.startScheduled && noteStartTime < lookaheadTime && noteStartTime >= currentTime - 0.1) {
-        const voice = this.getAvailableVoice(channel);
-        if (voice) {
-          const voiceParams: VoiceParams = {
-            pitch: note.pitch,
-            velocity: note.velocity,
-            instrument: params,
-          };
-          voice.noteOn(voiceParams, noteStartTime);
-          channel.activeVoices.set(note.id, voice);
+      // Schedule note starts iteration by iteration. Because times are
+      // absolute (transport anchor is never rebased), the lookahead can cross
+      // the loop boundary and the next iteration's downbeat is scheduled
+      // sample-accurately before the wrap. Iterations that already elapsed
+      // (e.g. a note added mid-playback) are skipped without scheduling.
+      for (;;) {
+        const iteration = scheduled.nextStartIteration;
+        if (iteration > 0 && !this.loopEnabled) break;
+        const startBeats = note.startTime - this.startBeat + iteration * loopBeats;
+        const noteStartTime = this.startTime + beatsToSeconds(startBeats, this.tempo);
+        if (noteStartTime >= lookaheadTime) break;
+        if (noteStartTime >= currentTime - 0.1) {
+          const voice = this.getAvailableVoice(channel);
+          if (voice) {
+            const voiceParams: VoiceParams = {
+              pitch: note.pitch,
+              velocity: note.velocity,
+              instrument: params,
+            };
+            voice.noteOn(voiceParams, noteStartTime);
+            channel.activeVoices.set(voiceKey(note.id, iteration), voice);
+            scheduled.startedIterations.push(iteration);
+          }
         }
-        scheduled.startScheduled = true;
+        scheduled.nextStartIteration = iteration + 1;
       }
 
-      // Schedule note end
-      if (!scheduled.endScheduled && scheduled.startScheduled && noteEndTime < lookaheadTime) {
-        const voice = channel.activeVoices.get(note.id);
-        if (voice) {
-          voice.noteOff(params, noteEndTime);
-          channel.activeVoices.delete(note.id);
+      // Schedule note ends for started iterations. Duration is read fresh so
+      // live edits to a sounding note still take effect.
+      if (scheduled.startedIterations.length > 0) {
+        const stillPending: number[] = [];
+        for (const iteration of scheduled.startedIterations) {
+          const endBeats = note.startTime + note.duration - this.startBeat + iteration * loopBeats;
+          const noteEndTime = this.startTime + beatsToSeconds(endBeats, this.tempo);
+          if (noteEndTime < lookaheadTime) {
+            const key = voiceKey(note.id, iteration);
+            const voice = channel.activeVoices.get(key);
+            if (voice) {
+              voice.noteOff(params, noteEndTime);
+              channel.activeVoices.delete(key);
+            }
+          } else {
+            stillPending.push(iteration);
+          }
         }
-        scheduled.endScheduled = true;
+        scheduled.startedIterations = stillPending;
       }
     }
   }
@@ -512,11 +572,25 @@ export class AudioEngine {
       }
     }
 
-    // Voice stealing: use the first voice (oldest)
+    // Voice stealing: reuse the first pool slot.
     // channel.voices always has MAX_VOICES_PER_TRACK entries — index 0 is safe
     const voice = channel.voices[0] ?? null;
     if (voice) {
       voice.stop();
+      // Remove the stolen note's mapping and drop its pending end, so its
+      // noteOff cannot release the note that reuses this voice.
+      for (const [key, activeVoice] of channel.activeVoices) {
+        if (activeVoice === voice) {
+          channel.activeVoices.delete(key);
+          const sep = key.lastIndexOf('|');
+          const noteId = key.slice(0, sep);
+          const iteration = Number(key.slice(sep + 1));
+          const scheduled = this.scheduledNotes.find((sn) => sn.note.id === noteId);
+          if (scheduled) {
+            scheduled.startedIterations = scheduled.startedIterations.filter((i) => i !== iteration);
+          }
+        }
+      }
     }
     return voice;
   }
@@ -566,7 +640,7 @@ export class AudioEngine {
   /**
    * Returns the current playhead position in beats.
    *
-   * Updated approximately every ~3 ms (AudioWorklet) or every 25 ms (fallback)
+   * Updated approximately every ~23 ms (AudioWorklet) or every 25 ms (fallback)
    * during playback. Subscribe to continuous updates via {@link onBeatUpdate}
    * instead of polling.
    *
@@ -603,7 +677,7 @@ export class AudioEngine {
   /**
    * Subscribes to beat position updates during playback.
    *
-   * The callback fires on every scheduler tick (~3 ms with AudioWorklet,
+   * The callback fires on every scheduler tick (~23 ms with AudioWorklet,
    * ~25 ms fallback) with the current beat position, and is called with `0`
    * when {@link stop} is invoked. Multiple subscribers are supported.
    *
@@ -662,14 +736,95 @@ export class AudioEngine {
 
     voice.noteOn({ pitch, velocity, instrument: params }, context.currentTime);
 
-    // Auto release after 0.5 seconds
+    // Auto release after 0.5 seconds, then clean up once the instrument's
+    // actual release tail (up to ~5 s) has finished — a fixed delay would
+    // audibly truncate long releases.
+    const releaseMs = normalizedToADSR(params.release, 'release') * 1000;
     setTimeout(() => {
       voice.noteOff(params, context.currentTime);
       setTimeout(() => {
         voice.disconnect();
         tempGain.disconnect();
-      }, 1000);
+      }, releaseMs + 100);
     }, 500);
+  }
+
+  /**
+   * Starts a sustained interactive note for live MIDI input.
+   *
+   * Unlike {@link previewNote}, the note holds until {@link stopMIDINote} is
+   * called for the same pitch. Held notes are independent of the transport —
+   * {@link stop} leaves them sounding; {@link destroy} force-stops them.
+   * Re-striking a pitch that is already held replaces the previous voice.
+   *
+   * @param pitch - MIDI pitch to play (0–127).
+   * @param velocity - Note velocity (0–127).
+   * @param presetId - ID of the preset that defines the sound.
+   * @param paramOverrides - Optional per-parameter overrides on top of the preset.
+   */
+  startMIDINote(
+    pitch: number,
+    velocity: number,
+    presetId: string,
+    paramOverrides?: Partial<InstrumentParams>
+  ): void {
+    if (!this.currentState) return;
+
+    const context = this.ensureContext();
+    const masterGain = this.ensureMasterGain();
+
+    const preset = getPresetById(this.currentState.presets, presetId);
+    if (!preset) return;
+
+    // Replace an existing voice on this pitch (keyboard re-strike)
+    const existing = this.midiVoices.get(pitch);
+    if (existing) {
+      existing.voice.stop();
+      existing.voice.disconnect();
+      existing.tempGain.disconnect();
+      this.midiVoices.delete(pitch);
+    }
+
+    const params = { ...preset.params, ...paramOverrides };
+    const tempGain = context.createGain();
+    tempGain.connect(masterGain);
+    tempGain.gain.value = 0.8;
+
+    const voice = new VoiceSynthesizer(context, tempGain);
+    voice.noteOn({ pitch, velocity, instrument: params }, context.currentTime);
+    this.midiVoices.set(pitch, { voice, tempGain, params });
+  }
+
+  /**
+   * Releases a note held via {@link startMIDINote}.
+   *
+   * Triggers the instrument's release envelope and cleans up the voice after
+   * the tail completes. Releasing a pitch that is not held is a no-op.
+   *
+   * @param pitch - MIDI pitch to release (0–127).
+   */
+  stopMIDINote(pitch: number): void {
+    const held = this.midiVoices.get(pitch);
+    if (!held) return;
+    this.midiVoices.delete(pitch);
+
+    const context = this.ensureContext();
+    held.voice.noteOff(held.params, context.currentTime);
+
+    const releaseMs = normalizedToADSR(held.params.release, 'release') * 1000;
+    setTimeout(() => {
+      held.voice.disconnect();
+      held.tempGain.disconnect();
+    }, releaseMs + 100);
+  }
+
+  private stopAllMIDINotes(): void {
+    for (const held of this.midiVoices.values()) {
+      held.voice.stop();
+      held.voice.disconnect();
+      held.tempGain.disconnect();
+    }
+    this.midiVoices.clear();
   }
 
   /**
@@ -680,6 +835,7 @@ export class AudioEngine {
    */
   destroy(): void {
     this.stop();
+    this.stopAllMIDINotes();
 
     // Clear all beat update subscribers
     this.beatUpdateListeners.clear();

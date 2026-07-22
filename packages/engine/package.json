@@ -1,6 +1,6 @@
 {
   "name": "soundscape-engine",
-  "version": "0.2.3",
+  "version": "0.3.0-rc.1",
   "description": "Browser-based music sequencer and synthesizer engine powered by the Web Audio API",
   "type": "module",
   "license": "MIT",
@@ -33,7 +33,8 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsc --project tsconfig.json && vite build",
