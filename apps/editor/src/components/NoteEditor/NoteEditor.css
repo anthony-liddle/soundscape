@@ -206,6 +206,13 @@
   background: #2563eb;
 }
 
+/* MIDI take in progress — not yet committed to state, so it reads as
+   provisional rather than as a normal note */
+.note-editor-cell.note-preview {
+  background: rgba(248, 113, 113, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.7);
+}
+
 /* Single-beat note (is both start and end) */
 .note-editor-cell.note-start.note-end {
   border-radius: 3px;

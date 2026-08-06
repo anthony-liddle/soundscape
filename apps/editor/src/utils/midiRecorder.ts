@@ -9,8 +9,19 @@ export interface MidiRecorderOptions {
 export interface MidiRecorder {
   noteOn(pitch: number, velocity: number, beat: number): void;
   noteOff(pitch: number, beat: number): void;
+  /**
+   * The take as it stands, with still-held notes grown to `beat`. Read-only:
+   * the recording is untouched, so this is safe to call while recording to
+   * drive an in-progress display.
+   */
+  snapshot(beat: number): NoteInput[];
   /** Close any still-held notes at `beat` and return all recorded notes. */
   finish(beat: number): NoteInput[];
+}
+
+interface HeldNote {
+  velocity: number;
+  startBeat: number;
 }
 
 /**
@@ -21,16 +32,16 @@ export interface MidiRecorder {
  * always snapped. A note held across the loop wrap is clamped at the loop end.
  */
 export function createMidiRecorder({ grid, loopLengthBeats }: MidiRecorderOptions): MidiRecorder {
-  const held = new Map<number, { velocity: number; startBeat: number }>();
+  const held = new Map<number, HeldNote>();
   const recorded: NoteInput[] = [];
 
   const snap = (beat: number) => Math.round(beat / grid) * grid;
 
-  function close(pitch: number, endBeat: number): void {
-    const note = held.get(pitch);
-    if (!note) return;
-    held.delete(pitch);
+  const byStart = (a: NoteInput, b: NoteInput) =>
+    a.startTime - b.startTime || a.pitch - b.pitch;
 
+  /** Quantize one held note against an end beat. Pure — no state touched. */
+  function toNote(pitch: number, note: HeldNote, endBeat: number): NoteInput {
     // Quantize the start, keeping it inside the loop
     const start = Math.min(snap(note.startBeat), loopLengthBeats - grid);
 
@@ -39,7 +50,14 @@ export function createMidiRecorder({ grid, loopLengthBeats }: MidiRecorderOption
     const end = endBeat < note.startBeat ? loopLengthBeats : snap(endBeat);
     const duration = Math.max(grid, end - start);
 
-    recorded.push({ pitch, startTime: start, duration, velocity: note.velocity });
+    return { pitch, startTime: start, duration, velocity: note.velocity };
+  }
+
+  function close(pitch: number, endBeat: number): void {
+    const note = held.get(pitch);
+    if (!note) return;
+    held.delete(pitch);
+    recorded.push(toNote(pitch, note, endBeat));
   }
 
   return {
@@ -53,11 +71,18 @@ export function createMidiRecorder({ grid, loopLengthBeats }: MidiRecorderOption
       close(pitch, beat);
     },
 
+    snapshot(beat) {
+      const inProgress = [...held.entries()].map(([pitch, note]) =>
+        toNote(pitch, note, beat)
+      );
+      return [...recorded, ...inProgress].sort(byStart);
+    },
+
     finish(beat) {
       for (const pitch of [...held.keys()]) {
         close(pitch, beat);
       }
-      return [...recorded].sort((a, b) => a.startTime - b.startTime || a.pitch - b.pitch);
+      return [...recorded].sort(byStart);
     },
   };
 }
