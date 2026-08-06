@@ -7,6 +7,7 @@ import type { Subdivision } from './components/NoteEditor';
 import { InstrumentPanel } from './components/InstrumentPanel';
 import { ImportExport } from './components/ImportExport';
 import { MIDIStatus, RECORD_GRID } from './components/MIDIStatus';
+import type { RecordingPreview } from './components/MIDIStatus';
 
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import './App.css';
@@ -22,6 +23,9 @@ function SoundscapeApp() {
   // Owned here so a committed MIDI take can widen the piano roll: notes land
   // on RECORD_GRID, and a coarser resolution has no cell to draw them in
   const [subdivision, setSubdivision] = useState<Subdivision>(1);
+
+  // Display-only notes from a MIDI take in progress; never dispatched
+  const [preview, setPreview] = useState<RecordingPreview | null>(null);
 
   useKeyboardShortcuts({
     isPlaying: playback.isPlaying,
@@ -58,6 +62,7 @@ function SoundscapeApp() {
           <MIDIStatus
             track={selectedTrack}
             onRecordingGrid={() => setSubdivision(RECORD_GRID)}
+            onPreviewChange={setPreview}
           />
           <ImportExport />
         </div>
@@ -81,6 +86,11 @@ function SoundscapeApp() {
             track={selectedTrack}
             subdivision={subdivision}
             onSubdivisionChange={setSubdivision}
+            previewNotes={
+              preview && preview.trackId === selectedTrack?.id
+                ? preview.notes
+                : []
+            }
           />
           <InstrumentPanel track={selectedTrack} analyserNode={analyserNode} />
         </main>

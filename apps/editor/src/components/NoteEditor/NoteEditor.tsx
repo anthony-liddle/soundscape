@@ -1,5 +1,6 @@
 import { useCallback, useState, useRef, useEffect, useMemo } from 'react';
 import { useSoundscape } from '../../state';
+import type { NoteInput } from '../../state';
 import type { Track, Note } from 'soundscape-engine';
 import { midiToNoteName } from 'soundscape-engine';
 import './NoteEditor.css';
@@ -11,6 +12,11 @@ interface NoteEditorProps {
   /** Grid resolution, owned by the parent so MIDI recording can widen it. */
   subdivision: Subdivision;
   onSubdivisionChange: (subdivision: Subdivision) => void;
+  /**
+   * Notes from a MIDI take in progress. Drawn in a distinct style and inert —
+   * they aren't in state yet, so they can't be selected, dragged, or deleted.
+   */
+  previewNotes?: NoteInput[];
 }
 
 // Define piano roll range (6 octaves from C1 to C7)
@@ -42,6 +48,7 @@ export function NoteEditor({
   track,
   subdivision,
   onSubdivisionChange,
+  previewNotes,
 }: NoteEditorProps) {
   const { state, dispatch, previewNote, playback } = useSoundscape();
   const beats = state.metadata.lengthBeats;
@@ -149,6 +156,33 @@ export function NoteEditor({
     }
     return map;
   }, [track]);
+
+  // Kept separate from notesByPitch so preview cells never yield a Note, and
+  // therefore stay out of selection, drag, and delete paths entirely.
+  const previewByPitch = useMemo(() => {
+    const map = new Map<number, NoteInput[]>();
+    for (const note of previewNotes ?? []) {
+      const row = map.get(note.pitch);
+      if (row) {
+        row.push(note);
+      } else {
+        map.set(note.pitch, [note]);
+      }
+    }
+    return map;
+  }, [previewNotes]);
+
+  const isPreviewCell = useCallback(
+    (pitch: number, step: number): boolean => {
+      const row = previewByPitch.get(pitch);
+      if (!row) return false;
+      const time = step * subdivision;
+      return row.some(
+        (n) => time >= n.startTime && time < n.startTime + n.duration
+      );
+    },
+    [previewByPitch, subdivision]
+  );
 
   interface CellInfo {
     note: Note;
@@ -460,6 +494,8 @@ export function NoteEditor({
                   const isBarStart = time % 4 === 0;
                   const isBeatStart = !isBarStart && time % 1 === 0;
                   const isSelected = note ? selectedNoteIds.has(note.id) : false;
+                  // Only where no committed note already occupies the cell
+                  const isPreview = !note && isPreviewCell(pitch, stepIndex);
                   return (
                     <div
                       key={stepIndex}
@@ -475,6 +511,7 @@ export function NoteEditor({
                         isDragPreview ? 'drag-preview' : '',
                         subdivision === 0.25 ? 'cell-sm' : '',
                         isSelected ? 'selected' : '',
+                        isPreview ? 'note-preview' : '',
                       ].filter(Boolean).join(' ')}
                       onMouseDown={(e) => { e.preventDefault(); handleMouseDown(pitch, stepIndex); }}
                       onMouseEnter={() => handleMouseEnter(pitch, stepIndex)}

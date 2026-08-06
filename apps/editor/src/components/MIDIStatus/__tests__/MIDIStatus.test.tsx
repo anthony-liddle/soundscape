@@ -122,6 +122,93 @@ describe('MIDIStatus recording', () => {
     expect(onRecordingGrid).toHaveBeenCalledWith(RECORD_GRID);
   });
 
+  it('publishes an in-progress preview without dispatching', async () => {
+    const onPreviewChange = vi.fn();
+    const user = userEvent.setup();
+    const view = render(
+      <MIDIStatus track={track} onPreviewChange={onPreviewChange} />
+    );
+    await user.click(screen.getByRole('button', { name: /connect midi/i }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /record/i })).toBeTruthy()
+    );
+    await user.click(screen.getByRole('button', { name: /record/i }));
+
+    isPlaying = true;
+    view.rerender(
+      <MIDIStatus track={track} onPreviewChange={onPreviewChange} />
+    );
+
+    // A held note shows up before it is released
+    currentBeat = 1;
+    act(() => sendMIDI([0x90, 60, 100]));
+    currentBeat = 2;
+    act(() => sendMIDI([0x80, 60, 0]));
+
+    expect(onPreviewChange).toHaveBeenLastCalledWith({
+      trackId: 'track-1',
+      notes: [{ pitch: 60, startTime: 1, duration: 1, velocity: 100 }],
+    });
+    // Preview is display-only — nothing reaches the reducer mid-take
+    expect(dispatch).not.toHaveBeenCalled();
+
+    // Committing clears it
+    isPlaying = false;
+    view.rerender(
+      <MIDIStatus track={track} onPreviewChange={onPreviewChange} />
+    );
+    expect(onPreviewChange).toHaveBeenLastCalledWith(null);
+    expect(dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'ADD_NOTES' })
+    );
+  });
+
+  it('commits the take to the track that was selected when recording started', async () => {
+    const onPreviewChange = vi.fn();
+    const user = userEvent.setup();
+    const view = render(
+      <MIDIStatus track={track} onPreviewChange={onPreviewChange} />
+    );
+    await user.click(screen.getByRole('button', { name: /connect midi/i }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /record/i })).toBeTruthy()
+    );
+    await user.click(screen.getByRole('button', { name: /record/i }));
+
+    isPlaying = true;
+    view.rerender(
+      <MIDIStatus track={track} onPreviewChange={onPreviewChange} />
+    );
+
+    currentBeat = 1;
+    act(() => sendMIDI([0x90, 60, 100]));
+    currentBeat = 2;
+    act(() => sendMIDI([0x80, 60, 0]));
+
+    // The user selects a different track mid-take
+    const otherTrack: Track = { ...track, id: 'track-2', name: 'Bass' };
+    view.rerender(
+      <MIDIStatus track={otherTrack} onPreviewChange={onPreviewChange} />
+    );
+
+    // The take stays with the track it was recorded against
+    expect(onPreviewChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ trackId: 'track-1' })
+    );
+
+    isPlaying = false;
+    view.rerender(
+      <MIDIStatus track={otherTrack} onPreviewChange={onPreviewChange} />
+    );
+
+    expect(dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'ADD_NOTES',
+        payload: expect.objectContaining({ trackId: 'track-1' }),
+      })
+    );
+  });
+
   it('commits nothing when a take recorded no notes', async () => {
     const onRecordingGrid = vi.fn();
     const view = await connectAndArm(onRecordingGrid);
