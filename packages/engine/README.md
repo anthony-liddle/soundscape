@@ -1,5 +1,8 @@
 # soundscape-engine
 
+[![npm](https://img.shields.io/npm/v/soundscape-engine.svg)](https://www.npmjs.com/package/soundscape-engine)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/anthony-liddle/soundscape/blob/main/LICENSE)
+
 Browser-based music sequencer and synthesizer engine powered by the Web Audio API.
 
 ## Compose Visually
