@@ -1,6 +1,6 @@
 {
   "name": "soundscape-engine",
-  "version": "0.3.0-rc.1",
+  "version": "0.3.0",
   "description": "Browser-based music sequencer and synthesizer engine powered by the Web Audio API",
   "type": "module",
   "license": "MIT",
