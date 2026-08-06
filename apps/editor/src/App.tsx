@@ -3,9 +3,10 @@ import { SoundscapeProvider, useSoundscape } from './state';
 import { Transport } from './components/Transport';
 import { TrackList } from './components/TrackList';
 import { NoteEditor } from './components/NoteEditor';
+import type { Subdivision } from './components/NoteEditor';
 import { InstrumentPanel } from './components/InstrumentPanel';
 import { ImportExport } from './components/ImportExport';
-import { MIDIStatus } from './components/MIDIStatus';
+import { MIDIStatus, RECORD_GRID } from './components/MIDIStatus';
 
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import './App.css';
@@ -17,6 +18,10 @@ function SoundscapeApp() {
   );
 
   const selectedTrack = state.tracks.find((t) => t.id === selectedTrackId) || null;
+
+  // Owned here so a committed MIDI take can widen the piano roll: notes land
+  // on RECORD_GRID, and a coarser resolution has no cell to draw them in
+  const [subdivision, setSubdivision] = useState<Subdivision>(1);
 
   useKeyboardShortcuts({
     isPlaying: playback.isPlaying,
@@ -50,7 +55,10 @@ function SoundscapeApp() {
           />
         </div>
         <div className="app-header-right">
-          <MIDIStatus track={selectedTrack} />
+          <MIDIStatus
+            track={selectedTrack}
+            onRecordingGrid={() => setSubdivision(RECORD_GRID)}
+          />
           <ImportExport />
         </div>
       </header>
@@ -68,7 +76,12 @@ function SoundscapeApp() {
         </aside>
 
         <main className="app-main">
-          <NoteEditor key={selectedTrack?.id ?? 'empty'} track={selectedTrack} />
+          <NoteEditor
+            key={selectedTrack?.id ?? 'empty'}
+            track={selectedTrack}
+            subdivision={subdivision}
+            onSubdivisionChange={setSubdivision}
+          />
           <InstrumentPanel track={selectedTrack} analyserNode={analyserNode} />
         </main>
       </div>

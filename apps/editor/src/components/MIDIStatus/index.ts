@@ -1,1 +1,1 @@
-export { MIDIStatus } from './MIDIStatus';
+export { MIDIStatus, RECORD_GRID } from './MIDIStatus';

@@ -4,8 +4,13 @@ import type { Track, Note } from 'soundscape-engine';
 import { midiToNoteName } from 'soundscape-engine';
 import './NoteEditor.css';
 
+export type Subdivision = 1 | 0.5 | 0.25;
+
 interface NoteEditorProps {
   track: Track | null;
+  /** Grid resolution, owned by the parent so MIDI recording can widen it. */
+  subdivision: Subdivision;
+  onSubdivisionChange: (subdivision: Subdivision) => void;
 }
 
 // Define piano roll range (6 octaves from C1 to C7)
@@ -18,7 +23,6 @@ const PITCHES = Array.from(
 const CELL_HEIGHT = 20;
 const BEAT_MARKER_HEIGHT = 20;
 
-type Subdivision = 1 | 0.5 | 0.25;
 type EditorTool = 'draw' | 'select';
 
 interface DragState {
@@ -34,10 +38,13 @@ interface RectDrag {
   endStep: number;
 }
 
-export function NoteEditor({ track }: NoteEditorProps) {
+export function NoteEditor({
+  track,
+  subdivision,
+  onSubdivisionChange,
+}: NoteEditorProps) {
   const { state, dispatch, previewNote, playback } = useSoundscape();
   const beats = state.metadata.lengthBeats;
-  const [subdivision, setSubdivision] = useState<Subdivision>(1);
   const totalSteps = beats / subdivision;
   const currentStep = Math.floor(playback.currentBeat / subdivision);
 
@@ -384,7 +391,7 @@ export function NoteEditor({ track }: NoteEditorProps) {
               <button
                 key={sub}
                 className={`resolution-btn ${subdivision === sub ? 'active' : ''}`}
-                onClick={() => setSubdivision(sub)}
+                onClick={() => onSubdivisionChange(sub)}
               >
                 {sub === 1 ? '1/4' : sub === 0.5 ? '1/8' : '1/16'}
               </button>
