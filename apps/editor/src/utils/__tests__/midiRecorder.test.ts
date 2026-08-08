@@ -70,4 +70,47 @@ describe('createMidiRecorder', () => {
     const notes = rec.finish(4)
     expect(notes.map((n) => n.startTime)).toEqual([0.5, 2])
   })
+
+  describe('snapshot', () => {
+    it('includes closed notes and held notes grown to the current beat', () => {
+      const rec = createMidiRecorder({ grid: GRID, loopLengthBeats: 16 })
+      rec.noteOn(60, 100, 0)
+      rec.noteOff(60, 1)
+      rec.noteOn(64, 80, 2) // still held
+
+      expect(rec.snapshot(3)).toEqual([
+        { pitch: 60, startTime: 0, duration: 1, velocity: 100 },
+        { pitch: 64, startTime: 2, duration: 1, velocity: 80 },
+      ])
+    })
+
+    it('grows a held note as the beat advances', () => {
+      const rec = createMidiRecorder({ grid: GRID, loopLengthBeats: 16 })
+      rec.noteOn(60, 100, 1)
+
+      expect(rec.snapshot(1.5)[0]?.duration).toBe(0.5)
+      expect(rec.snapshot(3)[0]?.duration).toBe(2)
+    })
+
+    it('does not mutate the recording', () => {
+      const rec = createMidiRecorder({ grid: GRID, loopLengthBeats: 16 })
+      rec.noteOn(60, 100, 0)
+      rec.noteOff(60, 1)
+      rec.noteOn(64, 80, 2)
+
+      rec.snapshot(3)
+      rec.snapshot(4)
+
+      // finish() must behave exactly as if snapshot() had never been called
+      expect(rec.finish(5)).toEqual([
+        { pitch: 60, startTime: 0, duration: 1, velocity: 100 },
+        { pitch: 64, startTime: 2, duration: 3, velocity: 80 },
+      ])
+    })
+
+    it('is empty before anything is played', () => {
+      const rec = createMidiRecorder({ grid: GRID, loopLengthBeats: 16 })
+      expect(rec.snapshot(2)).toEqual([])
+    })
+  })
 })

@@ -25,7 +25,9 @@
   gap: 6px;
   color: #9ca3af;
   font-size: 12px;
-  max-width: 180px;
+  /* Wide enough for a full device name (e.g. "Launchkey Mini MK3 MIDI Port")
+     before the tooltip has to carry it */
+  max-width: 260px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
