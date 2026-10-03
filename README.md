@@ -6,7 +6,7 @@ A browser-based music sequencer and synthesizer built with React, TypeScript, an
 
 [![npm](https://img.shields.io/npm/v/soundscape-engine.svg)](https://www.npmjs.com/package/soundscape-engine)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.0-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
 
 The audio engine is published standalone as
