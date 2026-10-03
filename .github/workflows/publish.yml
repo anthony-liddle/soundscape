@@ -25,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version-file: '.nvmrc'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -52,7 +52,8 @@ jobs:
       - name: Copy LICENSE into package
         run: cp LICENSE packages/engine/LICENSE
 
-      # Trusted publishing (OIDC) requires npm >= 11.5.1; Node 22 bundles npm 10.
+      # Trusted publishing (OIDC) requires npm >= 11.5.1. Node 24 bundles it from
+      # 24.5.0 on, but .nvmrc only pins the major, so keep npm current regardless.
       - name: Update npm for trusted publishing
         run: npm install -g npm@latest
 
