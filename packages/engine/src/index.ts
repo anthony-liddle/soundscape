@@ -32,6 +32,17 @@ export type { VoiceParams } from './audio/VoiceSynthesizer';
 export { EffectsChain } from './audio';
 export type { EffectsParams } from './audio/EffectsChain';
 
+// Cues
+export {
+  CUE_FORMAT,
+  CUE_VERSION,
+  CueDocumentError,
+  parseCueDocument,
+  validateCueDocument,
+  serializeCueDocument,
+} from './cues';
+export type { Cue, CueDocument, CueInstrument, CueNote, CueProblem, CueValidation } from './cues';
+
 // Presets
 export { builtInPresets, getPresetById } from './presets';
 export {
