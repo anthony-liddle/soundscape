@@ -89,6 +89,17 @@ describe('repairSoundscapeState', () => {
     expect(result!.state.tracks[0]!.paramOverrides).toEqual(overrides)
   })
 
+  it('drops 0.4.0 overrides that do not fit together, rather than keep a file that cannot play', () => {
+    const input = validInput()
+    input.tracks[0]!.notes.push({ id: 'bad', pitch: Number.NaN, startTime: 0, duration: 1, velocity: 100 })
+    ;(input.tracks[0] as Record<string, unknown>).paramOverrides = { envelopeCurve: 'exponential', attack: 0.2 }
+    const result = repairSoundscapeState(input)
+    expect(result).not.toBeNull()
+    expect(result!.state.tracks[0]!.paramOverrides).toEqual({ attack: 0.2 })
+    expect(result!.repairs.join(' ')).toMatch(/envelope or filter override/)
+    expect(validateSoundscapeState(result!.state)).toBe(true)
+  })
+
   it('keeps valid custom presets from the file', () => {
     const input = validInput() as Record<string, unknown>
     input.presets = [

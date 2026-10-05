@@ -44,6 +44,22 @@ export function validateSoundscapeState(state: unknown): state is SoundscapeStat
     if (!validatePreset(preset)) return false;
   }
 
+  // A track's overrides can switch on the 0.4.0 fields too, and an instrument
+  // that breaks their rules would throw on every scheduler tick when played.
+  // So the instrument a track actually plays, its preset with its overrides on
+  // top, follows the same rules. No file from before 0.4.0 can hold these
+  // fields, so this rejects nothing older.
+  const presetParams = new Map<unknown, Record<string, unknown>>();
+  for (const preset of s.presets as { id: unknown; params: Record<string, unknown> }[]) {
+    if (!presetParams.has(preset.id)) presetParams.set(preset.id, preset.params);
+  }
+  for (const track of s.tracks as Record<string, unknown>[]) {
+    const base = presetParams.get(track.presetId);
+    const overrides = track.paramOverrides;
+    if (!base || !overrides || typeof overrides !== 'object') continue;
+    if (envelopeAndFilterProblems({ ...base, ...overrides }).length > 0) return false;
+  }
+
   // Check mixer
   if (!s.mixer || typeof s.mixer !== 'object') return false;
   const mixer = s.mixer as Record<string, unknown>;

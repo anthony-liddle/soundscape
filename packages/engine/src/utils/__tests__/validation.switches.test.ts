@@ -55,4 +55,31 @@ describe('0.4.0 instrument fields in a state file', () => {
     expect(validateSoundscapeState(stateWith({ filterType: 'none', lfoDepth: 0.3, lfoTarget: 'pitch' }))).toBe(true)
     expect(validateSoundscapeState(stateWith({ filterType: 'none', lfoDepth: 0 }))).toBe(true)
   })
+
+  describe('on a track, where overrides change the instrument it plays', () => {
+    const withOverrides = (presetParams: Record<string, unknown>, overrides: Record<string, unknown>) => {
+      const state = stateWith(presetParams)
+      state.tracks.push({ id: 't', name: 'T', presetId: 'p', notes: [], paramOverrides: overrides as never })
+      return state
+    }
+
+    it('accepts overrides that leave the instrument valid', () => {
+      expect(validateSoundscapeState(withOverrides({}, { envelopeCurve: 'exponential', envelopeFloor: 1e-4 }))).toBe(true)
+      expect(validateSoundscapeState(withOverrides({ envelopeCurve: 'exponential', envelopeFloor: 1e-4 }, { attack: 0.2 }))).toBe(true)
+    })
+
+    it('rejects an override that switches on an exponential envelope with no floor', () => {
+      // Playing it would throw on every scheduler tick, so it is refused at load
+      expect(validateSoundscapeState(withOverrides({}, { envelopeCurve: 'exponential' }))).toBe(false)
+      expect(validateSoundscapeState(withOverrides({}, { envelopeCurve: 'exponential', envelopeFloor: 0 }))).toBe(false)
+    })
+
+    it("rejects an override that takes the filter away from an LFO aimed at it", () => {
+      expect(validateSoundscapeState(withOverrides({ lfoDepth: 0.3 }, { filterType: 'none' }))).toBe(false)
+    })
+
+    it('leaves tracks without overrides, and overrides without the new fields, alone', () => {
+      expect(validateSoundscapeState(withOverrides({}, { attack: 0.5, filterCutoff: 0.2 }))).toBe(true)
+    })
+  })
 })
