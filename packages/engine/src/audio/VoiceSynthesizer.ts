@@ -18,6 +18,12 @@ export interface VoiceParams {
   velocity: number;
   /** The full instrument parameter set that defines the synthesis behaviour. */
   instrument: InstrumentParams;
+  /**
+   * The envelope's peak as an absolute linear gain. When given, it replaces the
+   * voice's 0.3 ceiling scaled by velocity, so neither `velocity` nor the
+   * instrument's `velocityResponse` affects the level. Cues use it.
+   */
+  peak?: number;
 }
 
 /**
@@ -39,6 +45,11 @@ export class VoiceSynthesizer {
   private releaseTimeout: ReturnType<typeof setTimeout> | null = null;
   /** True while the gain feeds the output directly, with no filter between. */
   private filterBypassed = false;
+  /**
+   * Called once the voice's oscillators have stopped, on the audio clock. Set
+   * by whoever wants to release the voice's nodes after its sound has ended.
+   */
+  onEnded: (() => void) | null = null;
   /** The exponential envelope last scheduled, so a release can know its level. */
   private exponentialEnvelope: ExponentialEnvelope | null = null;
 
@@ -148,10 +159,10 @@ export class VoiceSynthesizer {
       this.lfoNode.start(scheduleTime);
     }
 
-    // Calculate velocity-adjusted amplitude
+    // Calculate velocity-adjusted amplitude, unless an absolute peak is given
     const normalizedVelocity = velocity / 127;
     const velocityScale = 1 - instrument.velocityResponse + instrument.velocityResponse * normalizedVelocity;
-    const maxAmplitude = 0.3 * velocityScale; // Keep reasonable volume
+    const maxAmplitude = params.peak ?? 0.3 * velocityScale; // Keep reasonable volume
 
     // ADSR envelope
     const attackTime = normalizedToADSR(instrument.attack, 'attack');
@@ -272,7 +283,10 @@ export class VoiceSynthesizer {
     for (const osc of oscs) {
       osc.stop(releaseEnd);
     }
-
+    if (this.onEnded && oscs[0]) {
+      const notify = this.onEnded;
+      oscs[0].onended = () => notify();
+    }
     if (this.lfoNode) {
       try {
         this.lfoNode.stop(releaseEnd);
