@@ -3,6 +3,7 @@ export type {
   Note,
   Waveform,
   FilterType,
+  EnvelopeCurve,
   LfoTarget,
   InstrumentParams,
   InstrumentPreset,
@@ -25,6 +26,7 @@ export {
 
 // Audio
 export { AudioEngine } from './audio';
+export type { AudioEngineOptions } from './audio/AudioEngine';
 export { VoiceSynthesizer } from './audio';
 export type { VoiceParams } from './audio/VoiceSynthesizer';
 export { EffectsChain } from './audio';

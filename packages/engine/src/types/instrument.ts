@@ -1,8 +1,20 @@
 /** Oscillator waveform shape. Controls the tonal character of the sound. */
 export type Waveform = 'sine' | 'square' | 'sawtooth' | 'triangle';
 
-/** Filter mode. Controls which part of the frequency spectrum passes through. */
-export type FilterType = 'lowpass' | 'highpass' | 'bandpass' | 'notch';
+/**
+ * Filter mode. Controls which part of the frequency spectrum passes through.
+ * `'none'` takes the filter out of the voice's path entirely: even the most
+ * open biquad changes a sound's peak and its tail.
+ */
+export type FilterType = 'lowpass' | 'highpass' | 'bandpass' | 'notch' | 'none';
+
+/**
+ * Shape of the envelope's attack, decay and release ramps. `'exponential'`
+ * ramps by a constant ratio per second, which is how a sound's level falls in
+ * nature and how most hand-built Web Audio cues are written. An exponential
+ * ramp can neither start from nor reach zero, so it needs `envelopeFloor`.
+ */
+export type EnvelopeCurve = 'linear' | 'exponential';
 
 /** Which signal the LFO modulates. */
 export type LfoTarget = 'filter' | 'pitch';
@@ -116,6 +128,24 @@ export interface InstrumentParams {
    * Defaults to `0` when omitted.
    */
   unisonDetune?: number;
+
+  // ── Envelope Shape ───────────────────────────────────────────────────────
+  /**
+   * Shape of the attack, decay and release ramps. Defaults to `'linear'` when
+   * omitted, which is exactly how every voice has always sounded.
+   */
+  envelopeCurve?: EnvelopeCurve;
+  /**
+   * The level an exponential envelope starts from, decays toward and releases
+   * to. Required when `envelopeCurve` is `'exponential'`, and only then.
+   *
+   * It is absolute, in the same linear units as the envelope's peak: for a cue
+   * note, the note's `level`; for a music note, the voice's 0.3 ceiling scaled
+   * by velocity. So one floor serves every note of an instrument, whatever its
+   * level, the way a fixed gain floor does in a hand-built Web Audio cue.
+   * Between 0 and 1, exclusive.
+   */
+  envelopeFloor?: number;
 
   // ── Dynamics ─────────────────────────────────────────────────────────────
   /**

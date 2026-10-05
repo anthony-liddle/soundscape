@@ -28,7 +28,7 @@ export interface VoiceParams {
  * When all voices are busy, the oldest voice is stolen via {@link stop}.
  */
 export class VoiceSynthesizer {
-  private context: AudioContext;
+  private context: BaseAudioContext;
   private oscillators: OscillatorNode[] = [];
   private lfoNode: OscillatorNode | null = null;
   private lfoGainNode: GainNode | null = null;
@@ -37,8 +37,12 @@ export class VoiceSynthesizer {
   private output: GainNode;
   private isPlaying = false;
   private releaseTimeout: ReturnType<typeof setTimeout> | null = null;
+  /** True while the gain feeds the output directly, with no filter between. */
+  private filterBypassed = false;
+  /** The exponential envelope last scheduled, so a release can know its level. */
+  private exponentialEnvelope: ExponentialEnvelope | null = null;
 
-  constructor(context: AudioContext, outputNode: AudioNode) {
+  constructor(context: BaseAudioContext, outputNode: AudioNode) {
     this.context = context;
 
     // Create nodes
@@ -99,13 +103,16 @@ export class VoiceSynthesizer {
       return osc;
     });
 
-    // Set filter parameters
-    this.filterNode.type = (instrument.filterType ?? 'lowpass') as BiquadFilterType;
-    this.filterNode.frequency.setValueAtTime(
-      normalizedToFilterFreq(instrument.filterCutoff),
-      scheduleTime
-    );
-    this.filterNode.Q.setValueAtTime(normalizedToQ(instrument.filterResonance), scheduleTime);
+    // Set filter parameters, or take the filter out of the path entirely
+    this.routeFilter(instrument.filterType === 'none');
+    if (!this.filterBypassed) {
+      this.filterNode.type = (instrument.filterType ?? 'lowpass') as BiquadFilterType;
+      this.filterNode.frequency.setValueAtTime(
+        normalizedToFilterFreq(instrument.filterCutoff),
+        scheduleTime
+      );
+      this.filterNode.Q.setValueAtTime(normalizedToQ(instrument.filterResonance), scheduleTime);
+    }
 
     // LFO modulation
     const lfoDepth = instrument.lfoDepth ?? 0;
@@ -153,15 +160,52 @@ export class VoiceSynthesizer {
 
     // Cancel any scheduled values and set to 0
     this.gainNode.gain.cancelScheduledValues(scheduleTime);
-    this.gainNode.gain.setValueAtTime(0, scheduleTime);
 
-    // Attack
-    this.gainNode.gain.linearRampToValueAtTime(maxAmplitude, scheduleTime + attackTime);
+    if (instrument.envelopeCurve === 'exponential' && maxAmplitude > 0) {
+      // Exponential ramps cannot start from or reach zero, so the envelope runs
+      // from the floor, to the peak, and back down toward the floor.
+      const floor = envelopeFloorOf(instrument);
+      const envelope: ExponentialEnvelope = {
+        start: scheduleTime,
+        attackEnd: scheduleTime + attackTime,
+        decayEnd: scheduleTime + attackTime + decayTime,
+        floor,
+        peak: maxAmplitude,
+        sustain: Math.max(sustainLevel, floor),
+      };
+      this.gainNode.gain.setValueAtTime(floor, envelope.start);
+      this.gainNode.gain.exponentialRampToValueAtTime(envelope.peak, envelope.attackEnd);
+      this.gainNode.gain.exponentialRampToValueAtTime(envelope.sustain, envelope.decayEnd);
+      this.exponentialEnvelope = envelope;
+    } else {
+      this.exponentialEnvelope = null;
+      this.gainNode.gain.setValueAtTime(0, scheduleTime);
 
-    // Decay to sustain
-    this.gainNode.gain.linearRampToValueAtTime(sustainLevel, scheduleTime + attackTime + decayTime);
+      // Attack
+      this.gainNode.gain.linearRampToValueAtTime(maxAmplitude, scheduleTime + attackTime);
+
+      // Decay to sustain
+      this.gainNode.gain.linearRampToValueAtTime(sustainLevel, scheduleTime + attackTime + decayTime);
+    }
 
     this.isPlaying = true;
+  }
+
+  /**
+   * Put the filter in the voice's path, or take it out. Rewires only when the
+   * routing actually changes, so a voice that never sees `'none'` keeps the
+   * exact graph it has always had.
+   */
+  private routeFilter(bypass: boolean): void {
+    if (bypass === this.filterBypassed) return;
+    if (bypass) {
+      this.gainNode.disconnect(this.filterNode);
+      this.gainNode.connect(this.output);
+    } else {
+      this.gainNode.disconnect(this.output);
+      this.gainNode.connect(this.filterNode);
+    }
+    this.filterBypassed = bypass;
   }
 
   /**
@@ -185,18 +229,42 @@ export class VoiceSynthesizer {
     // typically invoked up to ~100 ms early (scheduler lookahead), so reading
     // gain.value here would capture a stale level and cause clicks.
     const gain = this.gainNode.gain;
+    const exponential = instrument.envelopeCurve === 'exponential';
+    const floor = exponential ? envelopeFloorOf(instrument) : 0;
     if (typeof gain.cancelAndHoldAtTime === 'function') {
+      // Holds the envelope's own value at scheduleTime, mid-ramp included,
+      // exponential or linear.
       gain.cancelAndHoldAtTime(scheduleTime);
     } else {
       // Firefox has no cancelAndHoldAtTime — approximate with the current
-      // value; mid-envelope releases may start from a slightly stale level
-      const currentGain = gain.value;
-      gain.cancelScheduledValues(scheduleTime);
-      gain.setValueAtTime(currentGain, scheduleTime);
+      // value; mid-envelope releases may start from a slightly stale level.
+      const envelope = exponential ? this.exponentialEnvelope : null;
+      if (envelope) {
+        // An exponential envelope reads nothing: the voice scheduled it, so it
+        // knows the level at scheduleTime. Cancelling removes the ramp in
+        // progress, so mid-ramp it is ended again at that level, which traces
+        // exactly the curve it was on: what cancelAndHoldAtTime would hold.
+        const held = exponentialLevelAt(envelope, scheduleTime);
+        gain.cancelScheduledValues(scheduleTime);
+        if (scheduleTime > envelope.start && scheduleTime < envelope.decayEnd) {
+          gain.exponentialRampToValueAtTime(held, scheduleTime);
+        } else {
+          gain.setValueAtTime(held, scheduleTime);
+        }
+      } else {
+        const currentGain = gain.value;
+        gain.cancelScheduledValues(scheduleTime);
+        gain.setValueAtTime(currentGain, scheduleTime);
+      }
     }
 
-    // Release envelope
-    gain.linearRampToValueAtTime(0, scheduleTime + releaseTime);
+    // Release envelope: to zero, or for an exponential one, to its floor, where
+    // it stays until the oscillators stop
+    if (exponential) {
+      gain.exponentialRampToValueAtTime(floor, scheduleTime + releaseTime);
+    } else {
+      gain.linearRampToValueAtTime(0, scheduleTime + releaseTime);
+    }
 
     // Stop oscillators and LFO after release
     const oscs = [...this.oscillators];
@@ -204,6 +272,7 @@ export class VoiceSynthesizer {
     for (const osc of oscs) {
       osc.stop(releaseEnd);
     }
+
     if (this.lfoNode) {
       try {
         this.lfoNode.stop(releaseEnd);
@@ -291,4 +360,42 @@ export class VoiceSynthesizer {
     this.filterNode.disconnect();
     this.output.disconnect();
   }
+}
+
+/**
+ * The floor of an exponential envelope. Validation guarantees one wherever a
+ * file or a cue document is loaded; a caller building params in code without
+ * one gets an error naming the problem, not a silent fallback.
+ */
+function envelopeFloorOf(instrument: InstrumentParams): number {
+  const floor = instrument.envelopeFloor;
+  if (typeof floor !== 'number' || !Number.isFinite(floor) || floor <= 0 || floor >= 1) {
+    throw new RangeError(
+      `An exponential envelope needs envelopeFloor between 0 and 1, exclusive; got ${String(floor)}`
+    );
+  }
+  return floor;
+}
+
+/** An exponential envelope as scheduled: floor, up to the peak, down to sustain. */
+interface ExponentialEnvelope {
+  start: number;
+  attackEnd: number;
+  decayEnd: number;
+  floor: number;
+  peak: number;
+  sustain: number;
+}
+
+/**
+ * The level of an exponential envelope at time `t`, computed the way Web Audio
+ * computes an exponential ramp: v0 * (v1 / v0) ^ ((t - t0) / (t1 - t0)).
+ */
+function exponentialLevelAt(e: ExponentialEnvelope, t: number): number {
+  const ramp = (v0: number, v1: number, t0: number, t1: number) =>
+    t1 <= t0 ? v1 : v0 * Math.pow(v1 / v0, (t - t0) / (t1 - t0));
+  if (t <= e.start) return e.floor;
+  if (t < e.attackEnd) return ramp(e.floor, e.peak, e.start, e.attackEnd);
+  if (t < e.decayEnd) return ramp(e.peak, e.sustain, e.attackEnd, e.decayEnd);
+  return e.sustain;
 }

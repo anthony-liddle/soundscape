@@ -22,7 +22,7 @@ export interface EffectsParams {
  * mix, and delay echoes repeat the distorted signal.
  */
 export class EffectsChain {
-  private context: AudioContext;
+  private context: BaseAudioContext;
   private input: GainNode;
   private output: GainNode;
   private dryGain: GainNode;
@@ -34,7 +34,7 @@ export class EffectsChain {
   private reverbWetGain: GainNode;
   private lastDistortionAmount: number | null = null;
 
-  constructor(context: AudioContext) {
+  constructor(context: BaseAudioContext) {
     this.context = context;
 
     // Create nodes

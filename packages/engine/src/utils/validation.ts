@@ -1,7 +1,8 @@
 import type { SoundscapeState } from '../types';
 
 const WAVEFORMS = new Set(['sine', 'square', 'sawtooth', 'triangle']);
-const FILTER_TYPES = new Set(['lowpass', 'highpass', 'bandpass', 'notch']);
+const FILTER_TYPES = new Set(['lowpass', 'highpass', 'bandpass', 'notch', 'none']);
+const ENVELOPE_CURVES = new Set(['linear', 'exponential']);
 const LFO_TARGETS = new Set(['filter', 'pitch']);
 
 /** Finite number check — rejects NaN and ±Infinity, which `typeof` lets through. */
@@ -101,7 +102,7 @@ const REQUIRED_NUMERIC_PARAMS = [
 ] as const;
 
 // Optional numeric params — validated only when present
-const OPTIONAL_NUMERIC_PARAMS = ['reverbMix', 'lfoRate', 'lfoDepth', 'unisonDetune'] as const;
+const OPTIONAL_NUMERIC_PARAMS = ['reverbMix', 'lfoRate', 'lfoDepth', 'unisonDetune', 'envelopeFloor'] as const;
 
 function validatePreset(preset: unknown): boolean {
   if (!preset || typeof preset !== 'object') return false;
@@ -127,7 +128,38 @@ function validatePreset(preset: unknown): boolean {
     if (typeof params.lfoTarget !== 'string' || !LFO_TARGETS.has(params.lfoTarget)) return false;
   }
 
-  return true;
+  return envelopeAndFilterProblems(params).length === 0;
+}
+
+/**
+ * Rules for the 0.4.0 fields, shared with the cue validator. Each problem names
+ * the key it is about. A file that validated before 0.4.0 cannot hold any of
+ * these values, so none of them can reject an older file.
+ */
+export function envelopeAndFilterProblems(
+  params: Record<string, unknown>
+): { key: string; message: string }[] {
+  const problems: { key: string; message: string }[] = [];
+  const curve = params.envelopeCurve;
+  if (curve !== undefined && (typeof curve !== 'string' || !ENVELOPE_CURVES.has(curve))) {
+    problems.push({ key: 'envelopeCurve', message: "must be 'linear' or 'exponential'" });
+  }
+  const floor = params.envelopeFloor;
+  if (curve === 'exponential') {
+    if (!isFinite_(floor) || floor <= 0 || floor >= 1) {
+      problems.push({
+        key: 'envelopeFloor',
+        message: 'an exponential envelope needs a floor between 0 and 1, exclusive',
+      });
+    }
+  } else if (floor !== undefined) {
+    problems.push({ key: 'envelopeFloor', message: 'applies only to an exponential envelope' });
+  }
+  const lfoOnFilter = (params.lfoTarget ?? 'filter') === 'filter';
+  if (params.filterType === 'none' && isFinite_(params.lfoDepth) && params.lfoDepth > 0 && lfoOnFilter) {
+    problems.push({ key: 'lfoTarget', message: "an LFO aimed at the filter does nothing when filterType is 'none'" });
+  }
+  return problems;
 }
 
 function validateTrackMixer(entry: unknown): boolean {

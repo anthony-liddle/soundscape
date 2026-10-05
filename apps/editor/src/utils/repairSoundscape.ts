@@ -206,11 +206,13 @@ const NUMERIC_OVERRIDE_KEYS = new Set([
   'pitchOffset', 'attack', 'decay', 'sustain', 'release', 'filterCutoff',
   'filterResonance', 'delayTime', 'delayFeedback', 'delayMix', 'distortion',
   'reverbMix', 'lfoRate', 'lfoDepth', 'unisonDetune', 'velocityResponse',
+  'envelopeFloor',
 ]);
 const ENUM_OVERRIDE_VALUES: Record<string, Set<string>> = {
   waveform: new Set(['sine', 'square', 'sawtooth', 'triangle']),
-  filterType: new Set(['lowpass', 'highpass', 'bandpass', 'notch']),
+  filterType: new Set(['lowpass', 'highpass', 'bandpass', 'notch', 'none']),
   lfoTarget: new Set(['filter', 'pitch']),
+  envelopeCurve: new Set(['linear', 'exponential']),
 };
 
 function cleanOverrides(raw: Record<string, unknown>): {

@@ -78,6 +78,17 @@ describe('repairSoundscapeState', () => {
     expect(validateSoundscapeState(result.state)).toBe(true)
   })
 
+  it('keeps the 0.4.0 instrument fields in track overrides when repairing something else', () => {
+    // An invalid note forces a repair; the new fields must survive it
+    const input = validInput()
+    input.tracks[0]!.notes.push({ id: 'bad', pitch: Number.NaN, startTime: 0, duration: 1, velocity: 100 })
+    const overrides = { envelopeCurve: 'exponential', envelopeFloor: 1e-4, filterType: 'none' }
+    ;(input.tracks[0] as Record<string, unknown>).paramOverrides = overrides
+    const result = repairSoundscapeState(input)
+    expect(result).not.toBeNull()
+    expect(result!.state.tracks[0]!.paramOverrides).toEqual(overrides)
+  })
+
   it('keeps valid custom presets from the file', () => {
     const input = validInput() as Record<string, unknown>
     input.presets = [

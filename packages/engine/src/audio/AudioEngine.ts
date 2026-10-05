@@ -81,8 +81,25 @@ interface TrackChannel {
  * Call {@link initialize} once before any playback methods — this creates the
  * `AudioContext` which requires a user gesture on most browsers.
  */
+/** Options for {@link AudioEngine}. All are optional. */
+export interface AudioEngineOptions {
+  /**
+   * A context to play into instead of the `AudioContext` the engine would
+   * create. Pass an `OfflineAudioContext` to render offline, or a context your
+   * application already owns to share it. The engine never closes a context it
+   * was given; the caller owns it.
+   */
+  context?: BaseAudioContext;
+}
+
+/** An OfflineAudioContext starts when it is rendered, and has no close(). */
+function isOffline(context: BaseAudioContext): boolean {
+  return 'startRendering' in context;
+}
+
 export class AudioEngine {
-  private context: AudioContext | null = null;
+  private context: BaseAudioContext | null = null;
+  private readonly givenContext: BaseAudioContext | null;
   private masterGain: GainNode | null = null;
   private compressorNode: DynamicsCompressorNode | null = null;
   private analyserNode: AnalyserNode | null = null;
@@ -116,6 +133,15 @@ export class AudioEngine {
   > = new Map();
 
   /**
+   * @param options - Optional. `context` plays into a context you supply; with
+   *   no options, {@link initialize} creates an `AudioContext`, exactly as it
+   *   always has.
+   */
+  constructor(options: AudioEngineOptions = {}) {
+    this.givenContext = options.context ?? null;
+  }
+
+  /**
    * Creates the underlying `AudioContext` and master gain node, and registers
    * the AudioWorklet scheduler processor.
    *
@@ -129,7 +155,7 @@ export class AudioEngine {
   async initialize(): Promise<void> {
     if (this.context) return;
 
-    this.context = new AudioContext();
+    this.context = this.givenContext ?? new AudioContext();
     this.masterGain = this.context.createGain();
     this.masterGain.gain.value = 0.8;
 
@@ -170,12 +196,14 @@ export class AudioEngine {
    * Call this on the next user interaction to restore audio output.
    */
   async resume(): Promise<void> {
-    if (this.context?.state === 'suspended') {
-      await this.context.resume();
+    const context = this.context;
+    // An offline context runs when it is rendered, and rejects a resume before.
+    if (context && context.state === 'suspended' && !isOffline(context)) {
+      await (context as AudioContext).resume();
     }
   }
 
-  private ensureContext(): AudioContext {
+  private ensureContext(): BaseAudioContext {
     if (!this.context) {
       throw new Error('AudioEngine not initialized');
     }
@@ -855,7 +883,11 @@ export class AudioEngine {
     }
 
     if (this.context) {
-      this.context.close();
+      // Close only a context this engine created. A given one belongs to the
+      // caller, and an offline one has no close().
+      if (!this.givenContext && !isOffline(this.context)) {
+        void (this.context as AudioContext).close();
+      }
       this.context = null;
     }
 
