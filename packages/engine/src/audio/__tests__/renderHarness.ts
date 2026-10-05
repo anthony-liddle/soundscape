@@ -65,6 +65,10 @@ export function useLockstepTimers(): void {
 /**
  * Render `ctx`, stepping the fake clock with it. `at` maps a step's time to
  * work to do there, after the timers due by then have fired.
+ *
+ * node-web-audio-api accepts a suspension only before rendering starts, so
+ * every one is registered up front. A refused suspension would silently shift
+ * every timer after it, so one fails the render instead, naming its frame.
  */
 export async function renderInLockstep(
   ctx: OfflineAudioContext,
@@ -72,16 +76,51 @@ export async function renderInLockstep(
 ): Promise<Float32Array> {
   const frames = ctx.length
   const step = Math.round(STEP_SECONDS * SAMPLE_RATE)
+  const refused: string[] = []
   for (let frame = step; frame < frames; frame += step) {
-    const time = frame / SAMPLE_RATE
-    void ctx.suspend(time).then(() => {
-      vi.advanceTimersByTime(STEP_SECONDS * 1000)
-      for (const [when, work] of at) if (Math.round(when * SAMPLE_RATE) === frame) work()
-      void ctx.resume()
-    })
+    ctx.suspend(frame / SAMPLE_RATE).then(
+      () => {
+        vi.advanceTimersByTime(STEP_SECONDS * 1000)
+        for (const [when, work] of at) if (Math.round(when * SAMPLE_RATE) === frame) work()
+        void ctx.resume()
+      },
+      (error: unknown) => refused.push(`frame ${frame} of ${frames}: ${String(error)}`)
+    )
   }
   const buffer = await ctx.startRendering()
-  return buffer.getChannelData(0)
+  if (refused.length > 0) throw new LockstepRefused(refused)
+  // Copied at once: node-web-audio-api can reuse an AudioBuffer's memory
+  // once the buffer is collected, under a view still held here.
+  return Float32Array.from(buffer.getChannelData(0))
+}
+
+/**
+ * node-web-audio-api occasionally refuses a suspension registered up front,
+ * mid-render, under load: it was seen in 3 of 12 runs of the whole suite, one
+ * suspension each, at a different frame every time. The render is then not a
+ * lockstep render, so it is thrown away rather than compared.
+ */
+export class LockstepRefused extends Error {
+  constructor(refused: string[]) {
+    super(`A lockstep suspension was refused, ${refused.join('; ')}`)
+    this.name = 'LockstepRefused'
+  }
+}
+
+/**
+ * Run a whole render again, from a fresh context, if node-web-audio-api
+ * refused one of its suspensions. A render that is returned had every
+ * suspension honoured, so it is exactly a lockstep render.
+ */
+export async function retryRefused<T>(render: () => Promise<T>, attempts = 5): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await render()
+    } catch (error) {
+      if (!(error instanceof LockstepRefused) || attempt >= attempts) throw error
+      vi.clearAllTimers()
+    }
+  }
 }
 
 /** Largest absolute sample difference from `fromSeconds` on. */

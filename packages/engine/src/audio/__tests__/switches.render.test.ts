@@ -47,7 +47,7 @@ async function renderVoice(
   voice.noteOff(params, START + offAfter)
   const buffer = await ctx.startRendering()
   voice.stop()
-  return buffer.getChannelData(0)
+  return Float32Array.from(buffer.getChannelData(0))
 }
 
 /**
@@ -82,7 +82,7 @@ async function renderByHand(curve: 'linear' | 'exponential', offAfter: number, w
   gain.connect(ctx.destination)
   osc.start(START)
   osc.stop(START + offAfter + release + 0.01)
-  return (await ctx.startRendering()).getChannelData(0)
+  return Float32Array.from((await ctx.startRendering()).getChannelData(0))
 }
 
 const peakIn = (x: Float32Array, from: number, to: number) => {

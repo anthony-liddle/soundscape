@@ -14,6 +14,7 @@ import {
   installOfflineAudioContext,
   largestDifference,
   renderInLockstep,
+  retryRefused,
   seedRandom,
   useLockstepTimers,
 } from './renderHarness'
@@ -91,7 +92,7 @@ async function render(play: (engine: AudioEngine) => void, cues: CueDocument = P
   engine.loadCues(cues)
   play(engine)
   const buffer = await ctx.startRendering()
-  return buffer.getChannelData(0)
+  return Float32Array.from(buffer.getChannelData(0))
 }
 
 const sum = (a: Float32Array, b: Float32Array) => a.map((v, i) => v + b[i]!)
@@ -197,19 +198,21 @@ describe('the analyser', () => {
 
 describe('loading cues leaves music alone', () => {
   it('previewNote renders exactly its pre-cue reference with a cue document loaded', async () => {
-    seedRandom()
-    useLockstepTimers()
-    const context = installOfflineAudioContext(1.6)
-    const engine = new AudioEngine()
-    await engine.initialize()
-    engine.updateState({
-      metadata: { ...defaultMetadata, name: 'Guard', tempo: 120, lengthBeats: 4 },
-      presets: [...builtInPresets],
-      mixer: createMixerState(),
-      tracks: [],
+    const samples = await retryRefused(async () => {
+      seedRandom()
+      useLockstepTimers()
+      const context = installOfflineAudioContext(1.6)
+      const engine = new AudioEngine()
+      await engine.initialize()
+      engine.updateState({
+        metadata: { ...defaultMetadata, name: 'Guard', tempo: 120, lengthBeats: 4 },
+        presets: [...builtInPresets],
+        mixer: createMixerState(),
+        tracks: [],
+      })
+      engine.loadCues(PAIR)
+      return renderInLockstep(context(), new Map([[START, () => engine.previewNote(60, 100, 'keys')]]))
     })
-    engine.loadCues(PAIR)
-    const samples = await renderInLockstep(context(), new Map([[START, () => engine.previewNote(60, 100, 'keys')]]))
     const reference = decodeWav(readFileSync(resolve(__dirname, 'reference/existing/preview-keys.wav')))
     expect(largestDifference(samples, reference)).toBe(0)
   })

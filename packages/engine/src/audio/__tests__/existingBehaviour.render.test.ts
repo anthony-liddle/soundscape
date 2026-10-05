@@ -15,6 +15,7 @@ import {
   installOfflineAudioContext,
   largestDifference,
   renderInLockstep,
+  retryRefused,
   seedRandom,
   useLockstepTimers,
 } from './renderHarness'
@@ -88,15 +89,17 @@ async function renderEngine(
   setup: (engine: AudioEngine) => void,
   act: (engine: AudioEngine) => void
 ): Promise<Float32Array> {
-  seedRandom()
-  useLockstepTimers()
-  const context = installOfflineAudioContext(seconds)
-  const engine = new AudioEngine()
-  await engine.initialize()
-  setup(engine)
-  const samples = await renderInLockstep(context(), new Map([[START, () => act(engine)]]))
-  engine.stop()
-  return samples
+  return retryRefused(async () => {
+    seedRandom()
+    useLockstepTimers()
+    const context = installOfflineAudioContext(seconds)
+    const engine = new AudioEngine()
+    await engine.initialize()
+    setup(engine)
+    const samples = await renderInLockstep(context(), new Map([[START, () => act(engine)]]))
+    engine.stop()
+    return samples
+  })
 }
 
 /** Render one voice the way render.test.ts does, starting at START. */
@@ -110,7 +113,7 @@ async function renderVoice(
   if (noteOffAfter !== null) voice.noteOff(params, START + noteOffAfter)
   const buffer = await ctx.startRendering()
   voice.stop()
-  return buffer.getChannelData(0)
+  return Float32Array.from(buffer.getChannelData(0))
 }
 
 const params = (overrides: Partial<InstrumentParams>): InstrumentParams => ({ ...defaultInstrumentParams, ...overrides })
