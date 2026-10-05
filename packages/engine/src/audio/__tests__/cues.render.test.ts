@@ -1,6 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { OfflineAudioContext } from 'node-web-audio-api'
 import { AudioEngine } from '../AudioEngine'
 import { VoiceSynthesizer } from '../VoiceSynthesizer'
@@ -13,7 +11,6 @@ import { createMixerState, defaultMetadata } from '../../types'
 import {
   SAMPLE_RATE,
   START,
-  decodeWav,
   installOfflineAudioContext,
   largestDifference,
   renderInLockstep,
@@ -200,8 +197,8 @@ describe('the analyser', () => {
 })
 
 describe('loading cues leaves music alone', () => {
-  it('previewNote renders exactly its pre-cue reference with a cue document loaded', async () => {
-    const samples = await retryRefused(async () => {
+  const preview = (withCues: boolean) =>
+    retryRefused(async () => {
       seedRandom()
       useLockstepTimers()
       const context = installOfflineAudioContext(1.6)
@@ -213,11 +210,19 @@ describe('loading cues leaves music alone', () => {
         mixer: createMixerState(),
         tracks: [],
       })
-      engine.loadCues(PAIR)
+      if (withCues) engine.loadCues(PAIR)
       return renderInLockstep(context(), new Map([[START, () => engine.previewNote(60, 100, 'keys')]]))
     })
-    const reference = decodeWav(readFileSync(resolve(__dirname, 'reference/existing/preview-keys.wav')))
-    expect(largestDifference(samples, reference)).toBe(0)
+
+  it('previewNote renders identically with a cue document loaded', async () => {
+    // Both renders come from this machine, so they can be held to exactly
+    // zero; the reference WAVs were recorded on macOS, and Linux renders the
+    // same graph up to 4.5e-8 away from them. The existing-behaviour guard
+    // holds the render without cues to that reference, within its tolerance.
+    const without = await preview(false)
+    const withCues = await preview(true)
+    expect(peakIn(without, START, START + 0.5)).toBeGreaterThan(0.01)
+    expect(largestDifference(withCues, without)).toBe(0)
   })
 })
 
