@@ -3,6 +3,9 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { OfflineAudioContext } from 'node-web-audio-api'
 import { AudioEngine } from '../AudioEngine'
+import { VoiceSynthesizer } from '../VoiceSynthesizer'
+import { createMockAudioContext } from './mockWebAudio'
+import { midiToFrequency } from '../../utils/pitch'
 import { CueDocumentError } from '../../cues/types'
 import type { CueDocument, CueInstrument, CueNote } from '../../cues/types'
 import { builtInPresets } from '../../presets'
@@ -215,5 +218,32 @@ describe('loading cues leaves music alone', () => {
     })
     const reference = decodeWav(readFileSync(resolve(__dirname, 'reference/existing/preview-keys.wav')))
     expect(largestDifference(samples, reference)).toBe(0)
+  })
+})
+
+describe("a cue note's settings are values, not events at its start", () => {
+  // In Chrome 154, an oscillator whose frequency is an automation event at a
+  // start that falls inside a render quantum begins with a different phase
+  // from one whose frequency is a value: a 0.5 sine started 96 frames into a
+  // quantum differed by up to 0.998. Hand-built cues set values, so a cue's
+  // single-note voices do too, and match them in Chrome as well.
+  it('sets a cue note frequency as a value, with no event', async () => {
+    const ctx = createMockAudioContext()
+    const engine = new AudioEngine({ context: ctx as unknown as BaseAudioContext })
+    await engine.initialize()
+    engine.loadCues(PAIR)
+    engine.playCue('g', 0.09)
+    const oscillators = ctx.createdNodes.filter((n) => n.kind === 'oscillator')
+    expect(oscillators).toHaveLength(1)
+    expect(oscillators[0]!.frequency.value).toBe(midiToFrequency(55))
+    expect(oscillators[0]!.frequency.setValueAtTime).not.toHaveBeenCalled()
+  })
+
+  it('leaves a music note with the event it has always had', () => {
+    const ctx = createMockAudioContext()
+    const voice = new VoiceSynthesizer(ctx as unknown as BaseAudioContext, ctx.destination as unknown as AudioNode)
+    voice.noteOn({ pitch: 55, velocity: 100, instrument: PAIR.instruments.sine! }, 0.09)
+    const oscillator = ctx.createdNodes.find((n) => n.kind === 'oscillator')!
+    expect(oscillator.frequency.setValueAtTime).toHaveBeenCalledWith(midiToFrequency(55), 0.09)
   })
 })

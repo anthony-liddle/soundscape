@@ -949,7 +949,10 @@ export class AudioEngine {
         chain.voices--;
         if (chain.retired && chain.voices === 0) chain.effectsChain.disconnect();
       };
-      voice.noteOn({ pitch: note.pitch, velocity: 127, instrument, peak: note.level }, base + note.start);
+      voice.noteOn(
+        { pitch: note.pitch, velocity: 127, instrument, peak: note.level, setAsValues: true },
+        base + note.start
+      );
       voice.noteOff(instrument, base + note.start + note.duration);
     }
   }

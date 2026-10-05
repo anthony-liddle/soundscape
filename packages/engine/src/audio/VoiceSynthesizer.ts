@@ -24,6 +24,15 @@ export interface VoiceParams {
    * instrument's `velocityResponse` affects the level. Cues use it.
    */
   peak?: number;
+  /**
+   * Set the note's frequency, detune, filter and LFO settings as the params'
+   * values, rather than as automation events at its start. Only for a voice
+   * that plays this one note, as a cue's voices do. The two sound the same
+   * everywhere but Chrome, where an oscillator whose frequency is an event at
+   * a start falling inside a render quantum begins with a different phase.
+   * Hand-built Web Audio cues set values, so cues do too.
+   */
+  setAsValues?: boolean;
 }
 
 /**
@@ -93,6 +102,12 @@ export class VoiceSynthesizer {
     const { pitch, velocity, instrument } = params;
     const now = this.context.currentTime;
     const scheduleTime = Math.max(now, startTime);
+    // Settings fixed for the whole note: an event at its start, as always, or
+    // for a single-note voice that asks, the param's value.
+    const fix = (param: AudioParam, value: number): void => {
+      if (params.setAsValues) param.value = value;
+      else param.setValueAtTime(value, scheduleTime);
+    };
 
     // Apply pitch offset
     const adjustedPitch = applyPitchOffset(pitch, instrument.pitchOffset);
@@ -105,9 +120,9 @@ export class VoiceSynthesizer {
     this.oscillators = Array.from({ length: oscCount }, (_, i) => {
       const osc = this.context.createOscillator();
       osc.type = instrument.waveform as OscillatorType;
-      osc.frequency.setValueAtTime(frequency, scheduleTime);
+      fix(osc.frequency, frequency);
       if (oscCount === 2) {
-        osc.detune.setValueAtTime(i === 0 ? -detuneCents / 2 : detuneCents / 2, scheduleTime);
+        fix(osc.detune, i === 0 ? -detuneCents / 2 : detuneCents / 2);
       }
       osc.connect(this.gainNode);
       osc.start(scheduleTime);
@@ -118,11 +133,8 @@ export class VoiceSynthesizer {
     this.routeFilter(instrument.filterType === 'none');
     if (!this.filterBypassed) {
       this.filterNode.type = (instrument.filterType ?? 'lowpass') as BiquadFilterType;
-      this.filterNode.frequency.setValueAtTime(
-        normalizedToFilterFreq(instrument.filterCutoff),
-        scheduleTime
-      );
-      this.filterNode.Q.setValueAtTime(normalizedToQ(instrument.filterResonance), scheduleTime);
+      fix(this.filterNode.frequency, normalizedToFilterFreq(instrument.filterCutoff));
+      fix(this.filterNode.Q, normalizedToQ(instrument.filterResonance));
     }
 
     // LFO modulation
@@ -135,21 +147,15 @@ export class VoiceSynthesizer {
       this.lfoGainNode = this.context.createGain();
 
       this.lfoNode.type = 'sine';
-      this.lfoNode.frequency.setValueAtTime(lfoRate, scheduleTime);
+      fix(this.lfoNode.frequency, lfoRate);
 
       if (lfoTarget === 'filter') {
-        this.lfoGainNode.gain.setValueAtTime(
-          normalizedToLfoFilterDepth(lfoDepth),
-          scheduleTime
-        );
+        fix(this.lfoGainNode.gain, normalizedToLfoFilterDepth(lfoDepth));
         this.lfoNode.connect(this.lfoGainNode);
         this.lfoGainNode.connect(this.filterNode.frequency);
       } else {
         // pitch vibrato — modulate detune on all oscillators
-        this.lfoGainNode.gain.setValueAtTime(
-          normalizedToLfoPitchDepth(lfoDepth),
-          scheduleTime
-        );
+        fix(this.lfoGainNode.gain, normalizedToLfoPitchDepth(lfoDepth));
         this.lfoNode.connect(this.lfoGainNode);
         for (const osc of this.oscillators) {
           this.lfoGainNode.connect(osc.detune);
