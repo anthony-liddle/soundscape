@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { AudioEngine } from '../AudioEngine'
+import { createMockAudioContext } from './mockWebAudio'
 
 // emitBeatUpdate is private — cast to any to access it directly.
 // This lets us test the subscription contract without needing a full AudioContext mock.
@@ -73,5 +74,48 @@ describe('AudioEngine', () => {
 
       expect(cb).not.toHaveBeenCalled()
     })
+  })
+})
+
+describe('AudioEngine context lifecycle', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
+  })
+
+  it('creates, resumes and closes its own AudioContext when given none, as before 0.4.0', async () => {
+    vi.useFakeTimers()
+    const ctx = createMockAudioContext()
+    ctx.state = 'suspended'
+    const resume = vi.spyOn(ctx, 'resume')
+    const close = vi.spyOn(ctx, 'close')
+    const created = vi.fn(function () {
+      return ctx
+    })
+    vi.stubGlobal('AudioContext', created)
+
+    const engine = new AudioEngine()
+    await engine.initialize()
+    await engine.resume()
+    engine.destroy()
+
+    expect(created).toHaveBeenCalledOnce()
+    expect(resume).toHaveBeenCalledOnce()
+    expect(close).toHaveBeenCalledOnce()
+  })
+
+  it('uses a context it is given, and leaves it open', async () => {
+    vi.useFakeTimers()
+    const ctx = createMockAudioContext()
+    const close = vi.spyOn(ctx, 'close')
+    const created = vi.fn()
+    vi.stubGlobal('AudioContext', created)
+
+    const engine = new AudioEngine({ context: ctx as unknown as BaseAudioContext })
+    await engine.initialize()
+    engine.destroy()
+
+    expect(created).not.toHaveBeenCalled()
+    expect(close).not.toHaveBeenCalled()
   })
 })
