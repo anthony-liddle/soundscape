@@ -34,6 +34,13 @@ A complete `GameMusicManager` class that responds to game events:
 ### 4. Sample Soundscape (`sample-soundscape.json`)
 A pre-made 3-track composition (bass, melody, pad) you can use for testing.
 
+### 5. Cues (`cues/peach.cues.json`)
+A cue document holding two of Peach of a Word's sound effects, written from
+the game's own engine: its tile tick, and the length 8 mythic found word in
+the cute theme, five notes up to a glint at five times the pitch. With the dev
+server running, **`/examples/cues.html`** has a button per cue, played through
+a real `AudioContext`.
+
 ## Using the Examples
 
 These examples are written in TypeScript and designed to be integrated into a project that includes Soundscape.

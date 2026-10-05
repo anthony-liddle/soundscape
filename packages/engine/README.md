@@ -70,6 +70,10 @@ The core class that manages Web Audio scheduling and playback.
 | `getIsPlaying()` | Check whether the engine is playing |
 | `onBeatUpdate(cb)` | Register a callback that fires each scheduling tick. Supports multiple subscribers — returns an unsubscribe function. |
 | `previewNote(pitch, velocity, presetId, overrides?)` | Audition a single note |
+| `loadCues(document)` | Load a cue document (see [Cues](#cues)); throws `CueDocumentError` if it is invalid |
+| `playCue(name, when?)` | Play a cue, every note scheduled on the audio clock, at `when` or now |
+| `getCueNames()` | The names of the loaded document's cues |
+| `setCueVolume(volume)` / `setCuesMuted(muted)` | The cues' own volume and mute |
 | `updateMixer(mixer)` | Update mixer levels, mute, and solo state |
 | `destroy()` | Tear down the engine and close the audio context |
 
@@ -79,7 +83,8 @@ The core class that manages Web Audio scheduling and playback.
 import type {
   Note,
   Waveform,              // 'sine' | 'square' | 'sawtooth' | 'triangle'
-  FilterType,            // 'lowpass' | 'highpass' | 'bandpass' | 'notch'
+  FilterType,            // 'lowpass' | 'highpass' | 'bandpass' | 'notch' | 'none'
+  EnvelopeCurve,         // 'linear' | 'exponential'
   LfoTarget,             // 'filter' | 'pitch'
   InstrumentParams,
   InstrumentPreset,
@@ -149,6 +154,129 @@ Access them via `builtInPresets` or individually (`bassPreset`, `leadPreset`, et
 
 - `validateSoundscapeState(state)` — Type-guard that validates a `SoundscapeState`
 - `clamp(value, min, max)` — Clamp a number
+
+## Cues
+
+A cue is a short sound effect: a handful of notes at exact offsets in seconds,
+from a JSON document of its own. Every note's start and release is scheduled
+on the audio clock when the cue is played, so a cue sounds the same every
+time, overlaps freely with other cues, and renders offline.
+
+```ts
+import { AudioEngine, parseCueDocument } from 'soundscape-engine';
+
+const engine = new AudioEngine();
+await engine.initialize();
+
+const parsed = parseCueDocument(await (await fetch('/sounds.cues.json')).text());
+if (!parsed.ok) throw new Error(parsed.problems.map((p) => `${p.path}: ${p.message}`).join('\n'));
+engine.loadCues(parsed.document);
+
+engine.playCue('tick');
+```
+
+### Cues or `previewNote`
+
+| | Cues | `previewNote` |
+|---|---|---|
+| Notes | Any number, each at its own offset | One |
+| Timing | Every start and release on the audio clock | Released by a 500 ms timer |
+| Same every time | Yes | Depends on what the compressor heard last |
+| Renders offline | Yes | No: the timer and the render clock never meet |
+| Level | Each note's `level`, exactly | Through the 0.3 voice ceiling, 0.8, the master and the compressor |
+| Defined in | A cue document | Code, from a preset |
+
+Choose cues for a game's sound effects. `previewNote` is for auditioning a
+preset while editing.
+
+### The Document
+
+```json
+{
+  "format": "soundscape-cues",
+  "version": 1,
+  "instruments": {
+    "click": {
+      "waveform": "square",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.05172606001118717,
+      "sustain": 0,
+      "release": 0,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "none",
+      "filterCutoff": 1,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    }
+  },
+  "cues": {
+    "tick": {
+      "notes": [
+        { "id": "tick", "instrument": "click", "start": 0, "duration": 0.03, "pitch": 81, "level": 0.0216 }
+      ]
+    }
+  }
+}
+```
+
+- **Instruments are the document's own**, by name, so a cue never depends on
+  presets kept elsewhere. Every `InstrumentParams` field is spelled out, so
+  nothing falls back to a default. `reverbMix` and `velocityResponse` must be 0:
+  the reverb is random, and a note's level replaces velocity.
+- **A note** has a stable `id`, unique in the document; the `instrument` it
+  plays; `start` and `duration` in seconds from the cue's start; `pitch` as
+  MIDI, fractional allowed; and `level`.
+- **`level` is the envelope's peak as a linear gain** on an oscillator whose
+  waveform peaks at 1, at the cue output with its volume at 1. A sine at 0.5
+  peaks at 0.5, which is -6.02 dBFS. No velocity or ceiling stands in between.
+- `parseCueDocument(text)` reads JSON text and also rejects a key repeated in
+  one object, which `JSON.parse` would silently resolve. `validateCueDocument`
+  checks a parsed object. Both reject rather than repair, and report every
+  problem with its path, such as `cues.tick.notes[0].level`.
+- `serializeCueDocument(document)` writes the canonical form, so saving an
+  unchanged document reproduces its bytes.
+
+### Three Switches, All Opt-In
+
+New optional fields on `InstrumentParams`. Omitted, a voice sounds exactly as
+it always has.
+
+- **`envelopeCurve: 'exponential'`** ramps the envelope by a constant ratio. An
+  exponential ramp cannot reach or start from zero, so it needs
+  **`envelopeFloor`**: the level it starts from, decays to and releases to,
+  absolute, in the same units as the peak.
+- **`filterType: 'none'`** takes the filter out of the voice entirely. Even the
+  most open lowpass moves a click's peak by about 1 dB and lengthens its tail.
+- **Cues have their own route**, with `setCueVolume` and `setCuesMuted`, past the
+  master gain and the master compressor, which would raise a lone cue by 4 to
+  5 dB. Cues still feed the analyser, which passes them through unchanged.
+
+### Offline
+
+Give the engine an `OfflineAudioContext` and play cues at the times the
+render should hear them:
+
+```ts
+const context = new OfflineAudioContext(1, 48000, 48000);
+const engine = new AudioEngine({ context });
+await engine.initialize();
+engine.loadCues(document);
+engine.playCue('tick', 0.1);
+const buffer = await context.startRendering();
+```
+
+The engine never closes a context it was given.
 
 ## Examples
 

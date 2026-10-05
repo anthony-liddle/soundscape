@@ -1,5 +1,50 @@
 # Changelog
 
+## Unreleased
+
+Planned as 0.4.0. Everything here is additive: music, `previewNote`, the
+transport and the master chain sound exactly as they did in 0.3.0, held to
+sample-exact references recorded before any of it changed.
+
+### Added
+
+- **Cues**, short sound effects defined in a JSON cue document and played on
+  the audio clock. `loadCues(document)` validates and loads a document;
+  `playCue(name, when?)` schedules every note's start, release and stop at
+  once, one voice per note, so cues overlap freely and render offline.
+  `setCueVolume`, `setCuesMuted` and `getCueNames` go with them. Cues have
+  their own route past the master gain and the master compressor, and still
+  feed the analyser.
+- **The cue document format**: `format`, `version`, document-local
+  `instruments` by name, and `cues` by name, each a list of notes with a
+  stable `id`, an `instrument`, `start` and `duration` in seconds, a MIDI
+  `pitch` (fractional allowed) and an absolute `level`.
+  `parseCueDocument`, `validateCueDocument` and `CueDocumentError` reject
+  rather than repair, naming the path to every bad value;
+  `serializeCueDocument` writes the canonical form, so saving an unchanged
+  document reproduces its bytes.
+- **`envelopeCurve: 'exponential'` with `envelopeFloor`**, opt-in on
+  `InstrumentParams`: an envelope that ramps by a constant ratio, from and to
+  an absolute floor.
+- **`filterType: 'none'`**, which takes the filter out of the voice entirely.
+- **`AudioEngine` accepts a context**: `new AudioEngine({ context })` plays
+  into a context you supply, an `OfflineAudioContext` included. The engine
+  never closes a context it was given, and `resume()` leaves an offline one
+  alone.
+- `VoiceParams.peak` and `VoiceParams.setAsValues`, which cues use.
+
+### Changed
+
+- `VoiceSynthesizer` and `EffectsChain` take a `BaseAudioContext`. Every
+  existing caller still fits.
+- `FilterType` gains `'none'` and `EnvelopeCurve` is new. **A `switch` over
+  `FilterType` that was exhaustive is no longer**, at the type level.
+- `validateSoundscapeState` accepts the new fields, rejects an exponential
+  envelope without a floor between 0 and 1, a floor on any other curve, and
+  an LFO aimed at a filter that is not there, on presets and on the
+  instrument a track plays once its overrides are applied. No file from
+  0.3.0 can hold these fields, so none is newly rejected.
+
 ## 0.3.0
 
 ### Added

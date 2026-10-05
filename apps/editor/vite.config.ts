@@ -25,4 +25,14 @@ export default defineConfig({
       'soundscape-engine': path.resolve(__dirname, '../../packages/engine/src/index.ts'),
     },
   },
+  build: {
+    rollupOptions: {
+      // The editor, and the cue audition page beside the examples. Naming the
+      // inputs replaces the default of index.html alone, so it is listed too.
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        cues: path.resolve(__dirname, 'examples/cues.html'),
+      },
+    },
+  },
 })

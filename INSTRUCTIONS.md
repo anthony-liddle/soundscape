@@ -9,7 +9,7 @@ Visit `/examples/` when running the dev server to see the audio engine in action
 ## Use Cases
 
 - **Background Music**: Create adaptive soundtracks that respond to game state
-- **Sound Effects**: Design synthesized effects for actions and events
+- **Sound Effects**: Define short effects as cues in a cue document, each note scheduled on the audio clock and the same every time (see [Sound Effects](#sound-effects))
 - **Music Games**: Build rhythm games or music creation tools
 - **Procedural Audio**: Generate music programmatically based on game events
 
@@ -127,8 +127,14 @@ class AudioEngine {
   setTempo(bpm: number): void
   setLoop(enabled: boolean): void
 
-  // Preview a single note
+  // Preview a single note (for auditioning presets; for sound effects, use cues)
   previewNote(pitch: number, velocity: number, presetId: string, paramOverrides?: Partial<InstrumentParams>): void
+
+  // Sound effects: load a cue document, then play its cues by name
+  loadCues(document: CueDocument): void
+  playCue(name: string, when?: number): void
+  setCueVolume(volume: number): void
+  setCuesMuted(muted: boolean): void
 
   // Subscribe to beat updates
   onBeatUpdate(callback: (beat: number) => void): void
@@ -211,12 +217,40 @@ class GameMusicManager {
     });
   }
 
-  // Add notes dynamically
-  onCollectItem(pitch: number) {
-    this.engine.previewNote(pitch, 100, 'keys');
+  // A sound effect: a cue from the game's cue document
+  onCollectItem() {
+    this.engine.playCue('collect');
   }
 }
 ```
+
+## Sound Effects
+
+Define sound effects as cues: short recipes of notes at exact offsets in
+seconds, in a JSON cue document with its own instruments. Every note of a cue
+is scheduled on the audio clock when it is played, so it sounds the same every
+time, overlaps freely with other cues, skips the master compressor, and can be
+rendered offline into an `OfflineAudioContext`. `previewNote` is for
+auditioning a preset in an editor, not for effects: it releases on a timer and
+goes through the master chain.
+
+```typescript
+import { AudioEngine, parseCueDocument } from 'soundscape-engine';
+
+const engine = new AudioEngine();
+await engine.initialize();
+
+const parsed = parseCueDocument(await fetch('/sounds.cues.json').then(r => r.text()));
+if (!parsed.ok) throw new Error(parsed.problems.map(p => `${p.path}: ${p.message}`).join('\n'));
+engine.loadCues(parsed.document);
+
+// Later, on a game event:
+engine.playCue('collect');
+```
+
+The document format, the opt-in envelope and filter switches, and offline
+rendering are in the [engine README](packages/engine/README.md#cues). A worked
+document is [examples/cues/peach.cues.json](examples/cues/peach.cues.json).
 
 ## Browser Compatibility
 
