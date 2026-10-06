@@ -1,3 +1,8 @@
 packages:
   - 'packages/*'
   - 'apps/*'
+
+# source-map-js below 1.2.2 is GHSA-68fv-2mgg-jv7q. It arrives through postcss
+# under vite, and Dependabot's security update could not lift it on its own.
+overrides:
+  source-map-js: ^1.2.2
