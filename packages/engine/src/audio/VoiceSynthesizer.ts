@@ -59,8 +59,11 @@ export class VoiceSynthesizer {
    * by whoever wants to release the voice's nodes after its sound has ended.
    */
   onEnded: (() => void) | null = null;
-  /** The exponential envelope last scheduled, so a release can know its level. */
-  private exponentialEnvelope: ExponentialEnvelope | null = null;
+  /**
+   * The envelope noteOn last scheduled and when, so a release without
+   * cancelAndHoldAtTime knows its level without reading `gain.value`.
+   */
+  private scheduled: { shape: EnvelopeShape; start: number } | null = null;
 
   constructor(context: BaseAudioContext, outputNode: AudioNode) {
     this.context = context;
@@ -121,20 +124,13 @@ export class VoiceSynthesizer {
       // Exponential ramps cannot start from or reach zero, so the envelope runs
       // from the floor, to the peak, and back down toward the floor.
       const floor = envelopeFloorOf(instrument);
-      const envelope: ExponentialEnvelope = {
-        start: scheduleTime,
-        attackEnd: scheduleTime + attackTime,
-        decayEnd: scheduleTime + attackTime + decayTime,
-        floor,
-        peak: maxAmplitude,
-        sustain: Math.max(sustainLevel, floor),
-      };
-      this.gainNode.gain.setValueAtTime(floor, envelope.start);
-      this.gainNode.gain.exponentialRampToValueAtTime(envelope.peak, envelope.attackEnd);
-      this.gainNode.gain.exponentialRampToValueAtTime(envelope.sustain, envelope.decayEnd);
-      this.exponentialEnvelope = envelope;
+      this.gainNode.gain.setValueAtTime(floor, scheduleTime);
+      this.gainNode.gain.exponentialRampToValueAtTime(maxAmplitude, scheduleTime + attackTime);
+      this.gainNode.gain.exponentialRampToValueAtTime(
+        Math.max(sustainLevel, floor),
+        scheduleTime + attackTime + decayTime
+      );
     } else {
-      this.exponentialEnvelope = null;
       this.gainNode.gain.setValueAtTime(0, scheduleTime);
 
       // Attack
@@ -144,6 +140,7 @@ export class VoiceSynthesizer {
       this.gainNode.gain.linearRampToValueAtTime(sustainLevel, scheduleTime + attackTime + decayTime);
     }
 
+    this.scheduled = { shape: envelopeShapeOf(params), start: scheduleTime };
     this.isPlaying = true;
   }
 
@@ -303,25 +300,28 @@ export class VoiceSynthesizer {
       // exponential or linear.
       gain.cancelAndHoldAtTime(scheduleTime);
     } else {
-      // Firefox has no cancelAndHoldAtTime — approximate with the current
-      // value; mid-envelope releases may start from a slightly stale level.
-      const envelope = exponential ? this.exponentialEnvelope : null;
-      if (envelope) {
-        // An exponential envelope reads nothing: the voice scheduled it, so it
-        // knows the level at scheduleTime. Cancelling removes the ramp in
-        // progress, so mid-ramp it is ended again at that level, which traces
-        // exactly the curve it was on: what cancelAndHoldAtTime would hold.
-        const held = exponentialLevelAt(envelope, scheduleTime);
-        gain.cancelScheduledValues(scheduleTime);
-        if (scheduleTime > envelope.start && scheduleTime < envelope.decayEnd) {
-          gain.exponentialRampToValueAtTime(held, scheduleTime);
-        } else {
-          gain.setValueAtTime(held, scheduleTime);
-        }
+      // No cancelAndHoldAtTime, as in Firefox. The voice scheduled the
+      // envelope, so it knows the level at scheduleTime, where gain.value
+      // would be stale: noteOff runs ahead of time, and before rendering the
+      // value is the param's default.
+      //
+      // Cancelling at scheduleTime removes any ramp still in progress there,
+      // and Firefox also removes one that ended up to half a sample earlier.
+      // So the envelope is always ended again at that level, with a ramp of
+      // its own curve. Where the cancel removed a ramp, that traces the same
+      // curve to the same point; where it removed nothing, the new ramp is
+      // flat. A release before, at or after the decay's end comes out right,
+      // and no comparison with the decay's end decides which.
+      const scheduled = this.scheduled;
+      const start = scheduled ? scheduled.start : scheduleTime;
+      const held = scheduled ? envelopeLevelAt(scheduled.shape, scheduleTime - start) : 0;
+      gain.cancelScheduledValues(scheduleTime);
+      if (scheduled && scheduleTime > start) {
+        if (scheduled.shape.curve === 'exponential') gain.exponentialRampToValueAtTime(held, scheduleTime);
+        else gain.linearRampToValueAtTime(held, scheduleTime);
       } else {
-        const currentGain = gain.value;
-        gain.cancelScheduledValues(scheduleTime);
-        gain.setValueAtTime(currentGain, scheduleTime);
+        // At the note's start nothing has sounded yet
+        gain.setValueAtTime(held, scheduleTime);
       }
     }
 
@@ -550,25 +550,3 @@ export function noteEnvelope(shape: EnvelopeShape, releaseAt: number): EnvelopeE
   return events;
 }
 
-/** An exponential envelope as scheduled: floor, up to the peak, down to sustain. */
-interface ExponentialEnvelope {
-  start: number;
-  attackEnd: number;
-  decayEnd: number;
-  floor: number;
-  peak: number;
-  sustain: number;
-}
-
-/**
- * The level of an exponential envelope at time `t`, computed the way Web Audio
- * computes an exponential ramp: v0 * (v1 / v0) ^ ((t - t0) / (t1 - t0)).
- */
-function exponentialLevelAt(e: ExponentialEnvelope, t: number): number {
-  const ramp = (v0: number, v1: number, t0: number, t1: number) =>
-    t1 <= t0 ? v1 : v0 * Math.pow(v1 / v0, (t - t0) / (t1 - t0));
-  if (t <= e.start) return e.floor;
-  if (t < e.attackEnd) return ramp(e.floor, e.peak, e.start, e.attackEnd);
-  if (t < e.decayEnd) return ramp(e.peak, e.sustain, e.attackEnd, e.decayEnd);
-  return e.sustain;
-}

@@ -2,9 +2,11 @@
 
 ## Unreleased
 
-Planned as 0.4.0. Everything here is additive: music, `previewNote`, the
-transport and the master chain sound exactly as they did in 0.3.0, held to
-sample-exact references recorded before any of it changed.
+Planned as 0.4.0. Everything here is additive but one fix, to the release in
+browsers without `cancelAndHoldAtTime`, which means Firefox. Everywhere else
+music, `previewNote`, the transport and the master chain sound exactly as they
+did in 0.3.0, held to sample-exact references recorded before any of it
+changed.
 
 ### Added
 
@@ -55,6 +57,22 @@ sample-exact references recorded before any of it changed.
   an LFO aimed at a filter that is not there, on presets and on the
   instrument a track plays once its overrides are applied. No file from
   0.3.0 can hold these fields, so none is newly rejected.
+
+### Fixed
+
+- **A note's release where `cancelAndHoldAtTime` is missing, which means
+  Firefox.** The fallback read `gain.value` for a linear envelope, which is
+  stale: the release is scheduled ahead of time, and before rendering the
+  value is the param's default. For an exponential envelope it ended the
+  decay again only when the release fell strictly before the decay's end, so
+  a release exactly at the end held the peak and stopped in one sample, and
+  Firefox, which cancels a ramp that ended up to half a sample earlier, did
+  the same to every release just after it. The fallback now takes the level
+  from the envelope the voice scheduled, and always ends the envelope at the
+  release with a ramp of its own curve: where the cancel removed a ramp, that
+  retraces it, and where it removed nothing, the ramp is flat. No comparison
+  with the decay's end decides which. Browsers with `cancelAndHoldAtTime` are
+  unaffected.
 
 ## 0.3.0
 
