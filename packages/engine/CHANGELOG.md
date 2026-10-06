@@ -1,5 +1,79 @@
 # Changelog
 
+## Unreleased
+
+Planned as 0.4.0. Everything here is additive but one fix, to the release in
+browsers without `cancelAndHoldAtTime`, which means Firefox. Everywhere else
+music, `previewNote`, the transport and the master chain sound exactly as they
+did in 0.3.0, held to sample-exact references recorded before any of it
+changed.
+
+### Added
+
+- **Cues**, short sound effects defined in a JSON cue document and played on
+  the audio clock. `loadCues(document)` validates and loads a document;
+  `playCue(name, when?)` schedules every note whole, its start, envelope and
+  stop, at once, one voice per note, so cues overlap freely and render
+  offline. Nothing a cue schedules is ever cancelled, so a cue sounds the same
+  in every browser, Firefox included, which has no `cancelAndHoldAtTime`.
+  `setCueVolume`, `setCuesMuted` and `getCueNames` go with them. Cues have
+  their own route past the master gain and the master compressor, and still
+  feed the analyser.
+- **The cue document format**: `format`, `version`, document-local
+  `instruments` by name, and `cues` by name, each a list of notes with a
+  stable `id`, an `instrument`, `start` and `duration` in seconds, a MIDI
+  `pitch` (fractional allowed) and an absolute `level`.
+  `parseCueDocument`, `validateCueDocument` and `CueDocumentError` reject
+  rather than repair, naming the path to every bad value;
+  `serializeCueDocument` writes the canonical form, so saving an unchanged
+  document reproduces its bytes.
+- **`envelopeCurve: 'exponential'` with `envelopeFloor`**, opt-in on
+  `InstrumentParams`: an envelope that ramps by a constant ratio, from and to
+  an absolute floor.
+- **`filterType: 'none'`**, which takes the filter out of the voice entirely.
+- **`AudioEngine` accepts a context**: `new AudioEngine({ context })` plays
+  into a context you supply, an `OfflineAudioContext` included. The engine
+  never closes a context it was given, and `resume()` leaves an offline one
+  alone.
+- `VoiceParams.peak` and `VoiceParams.setAsValues`, which cues use.
+- `VoiceSynthesizer.playNote(params, startTime, duration)` plays a whole note,
+  scheduling its attack, decay, any hold, release and stop at once, with
+  nothing cancelled; `dispose()` releases an ended voice's nodes without
+  touching a param. Cues use both.
+- `EffectsChain` takes options, and `oversampleOnlyWhenDistorting` leaves the
+  waveshaper's oversampling off while there is no distortion. WebKit
+  oversamples even a null curve, delaying the signal 6 samples and filtering
+  it, where Chromium and Firefox pass it through. Cue chains use it, so cues
+  sound the same in every browser; track chains do not yet (#106).
+
+### Changed
+
+- `VoiceSynthesizer` and `EffectsChain` take a `BaseAudioContext`. Every
+  existing caller still fits.
+- `FilterType` gains `'none'` and `EnvelopeCurve` is new. **A `switch` over
+  `FilterType` that was exhaustive is no longer**, at the type level.
+- `validateSoundscapeState` accepts the new fields, rejects an exponential
+  envelope without a floor between 0 and 1, a floor on any other curve, and
+  an LFO aimed at a filter that is not there, on presets and on the
+  instrument a track plays once its overrides are applied. No file from
+  0.3.0 can hold these fields, so none is newly rejected.
+
+### Fixed
+
+- **A note's release where `cancelAndHoldAtTime` is missing, which means
+  Firefox.** The fallback read `gain.value` for a linear envelope, which is
+  stale: the release is scheduled ahead of time, and before rendering the
+  value is the param's default. For an exponential envelope it ended the
+  decay again only when the release fell strictly before the decay's end, so
+  a release exactly at the end held the peak and stopped in one sample, and
+  Firefox, which cancels a ramp that ended up to half a sample earlier, did
+  the same to every release just after it. The fallback now takes the level
+  from the envelope the voice scheduled, and always ends the envelope at the
+  release with a ramp of its own curve: where the cancel removed a ramp, that
+  retraces it, and where it removed nothing, the ramp is flat. No comparison
+  with the decay's end decides which. Browsers with `cancelAndHoldAtTime` are
+  unaffected.
+
 ## 0.3.0
 
 ### Added

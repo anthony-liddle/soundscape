@@ -126,6 +126,24 @@ export function repairSoundscapeState(input: unknown): RepairResult | null {
       if (cleaned.dropped > 0) {
         repairs.push(`Dropped ${cleaned.dropped} invalid parameter override${cleaned.dropped === 1 ? '' : 's'} on "${name}"`);
       }
+      // Each override can be valid alone and still not fit the preset, such as
+      // an exponential envelope with no floor, which would throw on every tick
+      // when played. The 0.4.0 fields that do not fit are dropped.
+      const preset = presets.find((p) => p.id === presetId)!;
+      const overrides = track.paramOverrides;
+      if (overrides && !isValidPreset({ ...preset, params: { ...preset.params, ...overrides } })) {
+        let removed = 0;
+        for (const key of ['envelopeCurve', 'envelopeFloor', 'filterType'] as const) {
+          if (key in overrides && (key !== 'filterType' || overrides.filterType === 'none')) {
+            delete overrides[key];
+            removed++;
+          }
+        }
+        if (Object.keys(overrides).length === 0) delete track.paramOverrides;
+        repairs.push(
+          `Dropped ${removed} envelope or filter override${removed === 1 ? '' : 's'} on "${name}" that did not fit its instrument`
+        );
+      }
     }
     tracks.push(track);
   }
@@ -206,11 +224,13 @@ const NUMERIC_OVERRIDE_KEYS = new Set([
   'pitchOffset', 'attack', 'decay', 'sustain', 'release', 'filterCutoff',
   'filterResonance', 'delayTime', 'delayFeedback', 'delayMix', 'distortion',
   'reverbMix', 'lfoRate', 'lfoDepth', 'unisonDetune', 'velocityResponse',
+  'envelopeFloor',
 ]);
 const ENUM_OVERRIDE_VALUES: Record<string, Set<string>> = {
   waveform: new Set(['sine', 'square', 'sawtooth', 'triangle']),
-  filterType: new Set(['lowpass', 'highpass', 'bandpass', 'notch']),
+  filterType: new Set(['lowpass', 'highpass', 'bandpass', 'notch', 'none']),
   lfoTarget: new Set(['filter', 'pitch']),
+  envelopeCurve: new Set(['linear', 'exponential']),
 };
 
 function cleanOverrides(raw: Record<string, unknown>): {

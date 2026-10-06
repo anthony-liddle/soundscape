@@ -184,22 +184,44 @@ describe('VoiceSynthesizer', () => {
       ])
     })
 
-    it('falls back to cancel + set-current-value when cancelAndHoldAtTime is unavailable (Firefox)', () => {
-      const params = makeParams({ release: 0.5 })
-      voice.noteOn({ pitch: 60, velocity: 100, instrument: params }, 0)
-      const gain = gainNode().gain
-      // Simulate an implementation without cancelAndHoldAtTime
-      ;(gain as { cancelAndHoldAtTime?: unknown }).cancelAndHoldAtTime = undefined
-      gain.value = 0.25
-      gain.calls.length = 0
-
-      voice.noteOff(params, 0.1)
+    describe('where cancelAndHoldAtTime is unavailable (Firefox)', () => {
+      // The defaults: peak 0.3 scaled by velocity 100 at velocityResponse 0.5,
+      // a 1.2 ms attack, a 39.9 ms decay to 0.7 of the peak
+      const peak = 0.3 * (1 - 0.5 + 0.5 * (100 / 127))
+      const attack = normalizedToADSR(0.01, 'attack')
+      const decay = normalizedToADSR(0.1, 'decay')
       const release = normalizedToADSR(0.5, 'release')
-      expect(gain.calls).toEqual([
-        { method: 'cancel', time: 0.1 },
-        { method: 'set', value: 0.25, time: 0.1 },
-        { method: 'ramp', value: 0, time: 0.1 + release },
-      ])
+
+      function releaseAt(t: number) {
+        const params = makeParams({ release: 0.5 })
+        voice.noteOn({ pitch: 60, velocity: 100, instrument: params }, 0)
+        const gain = gainNode().gain
+        ;(gain as { cancelAndHoldAtTime?: unknown }).cancelAndHoldAtTime = undefined
+        // A stale reading, which the release must not use
+        gain.value = 0.25
+        gain.calls.length = 0
+        voice.noteOff(params, t)
+        return gain.calls
+      }
+
+      it('ends the envelope with a ramp to the level it has at the release, then releases', () => {
+        const calls = releaseAt(0.1)
+        expect(calls.map((c) => [c.method, c.time])).toEqual([
+          ['cancel', 0.1],
+          ['ramp', 0.1],
+          ['ramp', 0.1 + release],
+        ])
+        // In the hold, after the decay: the sustain level, not the stale 0.25
+        expect(calls[1]!.value).toBeCloseTo(0.7 * peak, 12)
+        expect(calls[2]!.value).toBe(0)
+      })
+
+      it('mid-decay, ramps to the decay level at the release', () => {
+        const t = attack + decay / 2
+        const calls = releaseAt(t)
+        expect(calls[1]).toMatchObject({ method: 'ramp', time: t })
+        expect(calls[1]!.value).toBeCloseTo(peak + (0.7 * peak - peak) / 2, 12)
+      })
     })
 
     it('does nothing when the voice is not playing', () => {

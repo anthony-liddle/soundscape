@@ -37,3 +37,35 @@ jobs:
 
       - name: Check engine packaging
         run: pnpm --filter soundscape-engine check:package
+
+  # The committed cues held to the oracle in real browsers, each rendering
+  # both offline. One job per browser, so each installs only its own build.
+  browsers:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install ${{ matrix.browser }}
+        run: pnpm --filter soundscape-engine exec playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Cues against the oracle in ${{ matrix.browser }}
+        run: pnpm --filter soundscape-engine test:browser --browser=${{ matrix.browser }}

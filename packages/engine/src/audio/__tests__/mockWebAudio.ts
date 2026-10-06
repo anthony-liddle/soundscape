@@ -9,7 +9,7 @@ import { vi } from 'vitest';
  */
 
 export interface ParamCall {
-  method: 'set' | 'ramp' | 'cancel' | 'hold';
+  method: 'set' | 'ramp' | 'expRamp' | 'cancel' | 'hold';
   value?: number;
   time: number;
 }
@@ -19,6 +19,7 @@ export interface MockParam {
   calls: ParamCall[];
   setValueAtTime: ReturnType<typeof vi.fn>;
   linearRampToValueAtTime: ReturnType<typeof vi.fn>;
+  exponentialRampToValueAtTime: ReturnType<typeof vi.fn>;
   cancelScheduledValues: ReturnType<typeof vi.fn>;
   cancelAndHoldAtTime: ReturnType<typeof vi.fn>;
 }
@@ -34,6 +35,9 @@ export function createMockParam(initial = 0): MockParam {
     }),
     linearRampToValueAtTime: vi.fn((value: number, time: number) => {
       calls.push({ method: 'ramp', value, time });
+    }),
+    exponentialRampToValueAtTime: vi.fn((value: number, time: number) => {
+      calls.push({ method: 'expRamp', value, time });
     }),
     cancelScheduledValues: vi.fn((time: number) => {
       calls.push({ method: 'cancel', time });

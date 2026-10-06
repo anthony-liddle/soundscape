@@ -6,6 +6,9 @@ import type { VoiceParams } from './VoiceSynthesizer';
 import { EffectsChain } from './EffectsChain';
 import type { EffectsParams } from './EffectsChain';
 import { getPresetById } from '../presets';
+import { CueDocumentError } from '../cues/types';
+import type { CueDocument, CueInstrument } from '../cues/types';
+import { validateCueDocument } from '../cues/validate';
 
 const LOOKAHEAD_MS = 100;
 const SCHEDULE_INTERVAL_MS = 25;
@@ -51,6 +54,25 @@ function voiceKey(noteId: string, iteration: number): string {
   return `${noteId}|${iteration}`;
 }
 
+/** A loaded cue instrument's effects, and how many of its voices still sound. */
+interface CueChain {
+  effectsChain: EffectsChain;
+  voices: number;
+  /** True once a newer document replaced this one's instruments. */
+  retired: boolean;
+}
+
+/** A cue instrument's effect settings, in the form EffectsChain takes. */
+function cueEffects(instrument: CueInstrument): EffectsParams {
+  return {
+    delayTime: instrument.delayTime,
+    delayFeedback: instrument.delayFeedback,
+    delayMix: instrument.delayMix,
+    distortion: instrument.distortion,
+    reverbMix: instrument.reverbMix,
+  };
+}
+
 interface TrackChannel {
   gainNode: GainNode;
   effectsChain: EffectsChain;
@@ -81,8 +103,25 @@ interface TrackChannel {
  * Call {@link initialize} once before any playback methods — this creates the
  * `AudioContext` which requires a user gesture on most browsers.
  */
+/** Options for {@link AudioEngine}. All are optional. */
+export interface AudioEngineOptions {
+  /**
+   * A context to play into instead of the `AudioContext` the engine would
+   * create. Pass an `OfflineAudioContext` to render offline, or a context your
+   * application already owns to share it. The engine never closes a context it
+   * was given; the caller owns it.
+   */
+  context?: BaseAudioContext;
+}
+
+/** An OfflineAudioContext starts when it is rendered, and has no close(). */
+function isOffline(context: BaseAudioContext): boolean {
+  return 'startRendering' in context;
+}
+
 export class AudioEngine {
-  private context: AudioContext | null = null;
+  private context: BaseAudioContext | null = null;
+  private readonly givenContext: BaseAudioContext | null;
   private masterGain: GainNode | null = null;
   private compressorNode: DynamicsCompressorNode | null = null;
   private analyserNode: AnalyserNode | null = null;
@@ -108,12 +147,29 @@ export class AudioEngine {
 
   private currentState: SoundscapeState | null = null;
 
+  // Cues: created by the first loadCues, so an engine that never loads cues
+  // keeps exactly the graph it always had.
+  private cueBus: GainNode | null = null;
+  private cueVolume = 1;
+  private cuesMuted = false;
+  private cueDocument: CueDocument | null = null;
+  private cueChains: Map<string, CueChain> = new Map();
+
   // Held interactive voices for live MIDI input, keyed by pitch.
   // Independent of the transport: playback stop leaves them sounding.
   private midiVoices: Map<
     number,
     { voice: VoiceSynthesizer; tempGain: GainNode; params: InstrumentParams }
   > = new Map();
+
+  /**
+   * @param options - Optional. `context` plays into a context you supply; with
+   *   no options, {@link initialize} creates an `AudioContext`, exactly as it
+   *   always has.
+   */
+  constructor(options: AudioEngineOptions = {}) {
+    this.givenContext = options.context ?? null;
+  }
 
   /**
    * Creates the underlying `AudioContext` and master gain node, and registers
@@ -129,7 +185,7 @@ export class AudioEngine {
   async initialize(): Promise<void> {
     if (this.context) return;
 
-    this.context = new AudioContext();
+    this.context = this.givenContext ?? new AudioContext();
     this.masterGain = this.context.createGain();
     this.masterGain.gain.value = 0.8;
 
@@ -170,12 +226,14 @@ export class AudioEngine {
    * Call this on the next user interaction to restore audio output.
    */
   async resume(): Promise<void> {
-    if (this.context?.state === 'suspended') {
-      await this.context.resume();
+    const context = this.context;
+    // An offline context runs when it is rendered, and rejects a resume before.
+    if (context && context.state === 'suspended' && !isOffline(context)) {
+      await (context as AudioContext).resume();
     }
   }
 
-  private ensureContext(): AudioContext {
+  private ensureContext(): BaseAudioContext {
     if (!this.context) {
       throw new Error('AudioEngine not initialized');
     }
@@ -818,6 +876,118 @@ export class AudioEngine {
     }, releaseMs + 100);
   }
 
+  /**
+   * Loads a cue document, replacing any loaded before. Cues already ringing
+   * from the previous document play out on their own instruments.
+   *
+   * The first call creates the cues' own output: a gain with its own volume and
+   * mute, feeding the analyser directly, so cues bypass the master gain and the
+   * master compressor. (The compressor raises a lone cue by 4 to 5 dB.)
+   *
+   * @param document - A cue document, already parsed. Validated here; see
+   *   {@link parseCueDocument} for JSON text, which also catches duplicate keys.
+   * @throws {@link CueDocumentError} listing every problem, with its path.
+   */
+  loadCues(document: unknown): void {
+    const context = this.ensureContext();
+    const result = validateCueDocument(document);
+    if (!result.ok) throw new CueDocumentError(result.problems);
+
+    if (!this.cueBus) {
+      this.cueBus = context.createGain();
+      this.applyCueGain();
+      // Feed the analyser, which passes its input through unchanged, so cues
+      // still show on a visualizer without touching the music's path.
+      this.cueBus.connect(this.analyserNode ?? context.destination);
+    }
+
+    for (const chain of this.cueChains.values()) this.retireCueChain(chain);
+    this.cueChains = new Map();
+    for (const [name, instrument] of Object.entries(result.document.instruments)) {
+      // A cue with no distortion must not be oversampled: WebKit delays it 6 samples
+      const effectsChain = new EffectsChain(context, { oversampleOnlyWhenDistorting: true });
+      effectsChain.setParams(cueEffects(instrument));
+      effectsChain.getOutput().connect(this.cueBus);
+      this.cueChains.set(name, { effectsChain, voices: 0, retired: false });
+    }
+    this.cueDocument = result.document;
+  }
+
+  /** Names of the cues in the loaded document, in the order the document has them. */
+  getCueNames(): string[] {
+    return this.cueDocument ? Object.keys(this.cueDocument.cues) : [];
+  }
+
+  /**
+   * Plays a cue from the loaded document.
+   *
+   * Every note's start, envelope and stop is scheduled on the audio clock here,
+   * at once, and nothing scheduled is ever cancelled: no timer decides when
+   * anything sounds, and no release depends on `cancelAndHoldAtTime` or on how
+   * a browser cancels a ramp. Each note gets a voice of
+   * its own, so notes and cues overlap freely: a second cue fired while the
+   * first rings does not cut it off. Voices are disconnected when their
+   * oscillators end.
+   *
+   * @param name - The cue's name in the loaded document.
+   * @param when - Audio-clock time to start at, in seconds. Defaults to now;
+   *   a time already past starts now, keeping the cue's own timing.
+   */
+  playCue(name: string, when?: number): void {
+    const context = this.ensureContext();
+    const document = this.cueDocument;
+    if (!document) throw new Error('No cue document is loaded. Call loadCues first.');
+    if (!Object.prototype.hasOwnProperty.call(document.cues, name)) {
+      throw new Error(`No cue named "${name}" in the loaded cue document.`);
+    }
+    const base = Math.max(when ?? context.currentTime, context.currentTime);
+
+    for (const note of document.cues[name]!.notes) {
+      const chain = this.cueChains.get(note.instrument)!;
+      const instrument = document.instruments[note.instrument]!;
+      const voice = new VoiceSynthesizer(context, chain.effectsChain.getInput());
+      chain.voices++;
+      voice.onEnded = () => {
+        // Releases the nodes without touching a param: a cue never cancels
+        voice.dispose();
+        chain.voices--;
+        if (chain.retired && chain.voices === 0) chain.effectsChain.disconnect();
+      };
+      // The whole note at once, so no release depends on how a browser cancels
+      voice.playNote(
+        { pitch: note.pitch, velocity: 127, instrument, peak: note.level, setAsValues: true },
+        base + note.start,
+        note.duration
+      );
+    }
+  }
+
+  /** Volume of every cue, as a linear gain. 1, the default, leaves each note at its level. */
+  setCueVolume(volume: number): void {
+    if (!Number.isFinite(volume) || volume < 0) {
+      throw new RangeError(`Cue volume must be a finite number, 0 or more; got ${volume}`);
+    }
+    this.cueVolume = volume;
+    this.applyCueGain();
+  }
+
+  /** Mutes or unmutes every cue, including any ringing now. */
+  setCuesMuted(muted: boolean): void {
+    this.cuesMuted = muted;
+    this.applyCueGain();
+  }
+
+  private applyCueGain(): void {
+    if (!this.cueBus || !this.context) return;
+    this.cueBus.gain.setValueAtTime(this.cuesMuted ? 0 : this.cueVolume, this.context.currentTime);
+  }
+
+  /** Disconnect a replaced document's chain now, or once its last voice ends. */
+  private retireCueChain(chain: CueChain): void {
+    chain.retired = true;
+    if (chain.voices === 0) chain.effectsChain.disconnect();
+  }
+
   private stopAllMIDINotes(): void {
     for (const held of this.midiVoices.values()) {
       held.voice.stop();
@@ -854,8 +1024,20 @@ export class AudioEngine {
       this.removeTrackChannel(id, channel);
     }
 
+    for (const chain of this.cueChains.values()) chain.effectsChain.disconnect();
+    this.cueChains.clear();
+    this.cueDocument = null;
+    if (this.cueBus) {
+      this.cueBus.disconnect();
+      this.cueBus = null;
+    }
+
     if (this.context) {
-      this.context.close();
+      // Close only a context this engine created. A given one belongs to the
+      // caller, and an offline one has no close().
+      if (!this.givenContext && !isOffline(this.context)) {
+        void (this.context as AudioContext).close();
+      }
       this.context = null;
     }
 

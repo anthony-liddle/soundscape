@@ -1,0 +1,12 @@
+{
+  "about": "Peach of a Word's own game engine, rendered in node-web-audio-api, as the reference its cues are held to. Never re-record these from Soundscape: they are the game, not the port.",
+  "repository": "peach-of-a-word",
+  "commit": "dbe93d18c1f10b15f9a91a13fbce4ad4b6acfb0e",
+  "file": "src/audio/WebAudioEngine.ts",
+  "fileSha256": "58f02afa4914a5c1ef45bd9e6e17f032dc4aa01eef360e2c2a8295c4545178a5",
+  "renderer": "node-web-audio-api 2.2.0",
+  "platform": "darwin arm64, Node v24.21.0",
+  "sampleRate": 48000,
+  "start": 0.128,
+  "how": "new WebAudioEngine(offlineContext); at a suspend at 'start', tick() or playFound(8, 'mythic') with the root's theme set to cute; mono, one second, samples copied out of the AudioBuffer at once."
+}
