@@ -158,9 +158,10 @@ Access them via `builtInPresets` or individually (`bassPreset`, `leadPreset`, et
 ## Cues
 
 A cue is a short sound effect: a handful of notes at exact offsets in seconds,
-from a JSON document of its own. Every note's start and release is scheduled
-on the audio clock when the cue is played, so a cue sounds the same every
-time, overlaps freely with other cues, and renders offline.
+from a JSON document of its own. Every note is scheduled whole on the audio
+clock when the cue is played, its start, envelope and stop, and nothing is
+ever cancelled, so a cue sounds the same every time and in every browser,
+overlaps freely with other cues, and renders offline.
 
 ```ts
 import { AudioEngine, parseCueDocument } from 'soundscape-engine';

@@ -10,8 +10,10 @@ sample-exact references recorded before any of it changed.
 
 - **Cues**, short sound effects defined in a JSON cue document and played on
   the audio clock. `loadCues(document)` validates and loads a document;
-  `playCue(name, when?)` schedules every note's start, release and stop at
-  once, one voice per note, so cues overlap freely and render offline.
+  `playCue(name, when?)` schedules every note whole, its start, envelope and
+  stop, at once, one voice per note, so cues overlap freely and render
+  offline. Nothing a cue schedules is ever cancelled, so a cue sounds the same
+  in every browser, Firefox included, which has no `cancelAndHoldAtTime`.
   `setCueVolume`, `setCuesMuted` and `getCueNames` go with them. Cues have
   their own route past the master gain and the master compressor, and still
   feed the analyser.
@@ -32,6 +34,10 @@ sample-exact references recorded before any of it changed.
   never closes a context it was given, and `resume()` leaves an offline one
   alone.
 - `VoiceParams.peak` and `VoiceParams.setAsValues`, which cues use.
+- `VoiceSynthesizer.playNote(params, startTime, duration)` plays a whole note,
+  scheduling its attack, decay, any hold, release and stop at once, with
+  nothing cancelled; `dispose()` releases an ended voice's nodes without
+  touching a param. Cues use both.
 - `EffectsChain` takes options, and `oversampleOnlyWhenDistorting` leaves the
   waveshaper's oversampling off while there is no distortion. WebKit
   oversamples even a null curve, delaying the signal 6 samples and filtering

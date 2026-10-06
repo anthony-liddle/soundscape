@@ -921,8 +921,10 @@ export class AudioEngine {
   /**
    * Plays a cue from the loaded document.
    *
-   * Every note's start, release and stop is scheduled on the audio clock here,
-   * at once; no timer decides when anything sounds. Each note gets a voice of
+   * Every note's start, envelope and stop is scheduled on the audio clock here,
+   * at once, and nothing scheduled is ever cancelled: no timer decides when
+   * anything sounds, and no release depends on `cancelAndHoldAtTime` or on how
+   * a browser cancels a ramp. Each note gets a voice of
    * its own, so notes and cues overlap freely: a second cue fired while the
    * first rings does not cut it off. Voices are disconnected when their
    * oscillators end.
@@ -946,15 +948,17 @@ export class AudioEngine {
       const voice = new VoiceSynthesizer(context, chain.effectsChain.getInput());
       chain.voices++;
       voice.onEnded = () => {
-        voice.disconnect();
+        // Releases the nodes without touching a param: a cue never cancels
+        voice.dispose();
         chain.voices--;
         if (chain.retired && chain.voices === 0) chain.effectsChain.disconnect();
       };
-      voice.noteOn(
+      // The whole note at once, so no release depends on how a browser cancels
+      voice.playNote(
         { pitch: note.pitch, velocity: 127, instrument, peak: note.level, setAsValues: true },
-        base + note.start
+        base + note.start,
+        note.duration
       );
-      voice.noteOff(instrument, base + note.start + note.duration);
     }
   }
 

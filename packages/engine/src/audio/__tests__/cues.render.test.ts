@@ -252,3 +252,30 @@ describe("a cue note's settings are values, not events at its start", () => {
     expect(oscillator.frequency.setValueAtTime).toHaveBeenCalledWith(midiToFrequency(55), 0.09)
   })
 })
+
+describe('a cue never cancels a scheduled value', () => {
+  // Firefox has no cancelAndHoldAtTime, and cancels a ramp that ends up to half
+  // a sample before the cancel time, which is how its notes lost their decay.
+  // A cue that never cancels cannot depend on either.
+  it('calls no cancel on any param, through loadCues, playCue and every voice ending', async () => {
+    const ctx = createMockAudioContext()
+    const engine = new AudioEngine({ context: ctx as unknown as BaseAudioContext })
+    await engine.initialize()
+    const before = ctx.createdNodes.length
+    engine.loadCues(PAIR)
+    engine.playCue('pair', 0.128)
+    engine.playCue('pair', 9.749333333333333)
+    const nodes = ctx.createdNodes.slice(before)
+    const oscillators = nodes.filter((n) => n.kind === 'oscillator')
+    expect(oscillators).toHaveLength(4)
+    for (const osc of oscillators) (osc as unknown as { onended: () => void }).onended()
+    for (const node of nodes) {
+      for (const param of [node.gain, node.frequency, node.detune, node.Q, node.delayTime]) {
+        expect(param.cancelScheduledValues).not.toHaveBeenCalled()
+        expect(param.cancelAndHoldAtTime).not.toHaveBeenCalled()
+      }
+    }
+    // and the ended voices were released from the graph
+    for (const osc of oscillators) expect(osc.disconnect).toHaveBeenCalled()
+  })
+})
