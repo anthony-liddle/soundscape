@@ -30,7 +30,7 @@ export type { AudioEngineOptions } from './audio/AudioEngine';
 export { VoiceSynthesizer } from './audio';
 export type { VoiceParams } from './audio/VoiceSynthesizer';
 export { EffectsChain } from './audio';
-export type { EffectsParams } from './audio/EffectsChain';
+export type { EffectsChainOptions, EffectsParams } from './audio/EffectsChain';
 
 // Cues
 export {

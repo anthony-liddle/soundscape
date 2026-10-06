@@ -904,7 +904,8 @@ export class AudioEngine {
     for (const chain of this.cueChains.values()) this.retireCueChain(chain);
     this.cueChains = new Map();
     for (const [name, instrument] of Object.entries(result.document.instruments)) {
-      const effectsChain = new EffectsChain(context);
+      // A cue with no distortion must not be oversampled: WebKit delays it 6 samples
+      const effectsChain = new EffectsChain(context, { oversampleOnlyWhenDistorting: true });
       effectsChain.setParams(cueEffects(instrument));
       effectsChain.getOutput().connect(this.cueBus);
       this.cueChains.set(name, { effectsChain, voices: 0, retired: false });

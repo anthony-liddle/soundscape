@@ -1,5 +1,17 @@
 import { normalizedToDelayTime } from '../utils/time';
 
+export interface EffectsChainOptions {
+  /**
+   * Leave the waveshaper's oversampling off while there is no distortion.
+   * WebKit oversamples a WaveShaperNode even when its curve is null, which at
+   * 2x delays the signal by 6 samples and filters it, where Chromium and
+   * Firefox pass it through untouched. Cue chains set this, so a cue with no
+   * distortion sounds the same in every browser. Track chains do not, so
+   * music keeps the behaviour it has always had.
+   */
+  oversampleOnlyWhenDistorting?: boolean;
+}
+
 export interface EffectsParams {
   delayTime: number;
   delayFeedback: number;
@@ -33,9 +45,11 @@ export class EffectsChain {
   private convolverNode: ConvolverNode;
   private reverbWetGain: GainNode;
   private lastDistortionAmount: number | null = null;
+  private readonly oversampleOnlyWhenDistorting: boolean;
 
-  constructor(context: BaseAudioContext) {
+  constructor(context: BaseAudioContext, options: EffectsChainOptions = {}) {
     this.context = context;
+    this.oversampleOnlyWhenDistorting = options.oversampleOnlyWhenDistorting ?? false;
 
     // Create nodes
     this.input = context.createGain();
@@ -106,7 +120,8 @@ export class EffectsChain {
       this.lastDistortionAmount = params.distortion;
       this.distortionNode.curve =
         params.distortion === 0 ? null : this.makeDistortionCurve(params.distortion);
-      this.distortionNode.oversample = '2x';
+      this.distortionNode.oversample =
+        params.distortion === 0 && this.oversampleOnlyWhenDistorting ? 'none' : '2x';
     }
 
     // Reverb (additive send — independent of delay mix)

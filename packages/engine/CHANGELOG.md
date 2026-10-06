@@ -32,6 +32,11 @@ sample-exact references recorded before any of it changed.
   never closes a context it was given, and `resume()` leaves an offline one
   alone.
 - `VoiceParams.peak` and `VoiceParams.setAsValues`, which cues use.
+- `EffectsChain` takes options, and `oversampleOnlyWhenDistorting` leaves the
+  waveshaper's oversampling off while there is no distortion. WebKit
+  oversamples even a null curve, delaying the signal 6 samples and filtering
+  it, where Chromium and Firefox pass it through. Cue chains use it, so cues
+  sound the same in every browser; track chains do not yet (#106).
 
 ### Changed
 
