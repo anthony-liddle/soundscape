@@ -4,6 +4,7 @@ import { ViewSwitch } from '../components/ViewSwitch';
 import type { View } from '../components/ViewSwitch';
 import { useViewShortcuts } from '../shortcuts';
 import { CueList } from './CueList';
+import { NoteTable } from './NoteTable';
 import type { CueEditorApi } from './useCueEditor';
 import './CueView.css';
 
@@ -16,7 +17,7 @@ interface CueViewProps {
 
 /** Edits cue documents: short sound effects, played on the audio clock. Never the song. */
 export function CueView({ cues, active, onViewChange }: CueViewProps) {
-  const { editor, dispatch, dirty, refused, status, say, openText, save } = cues;
+  const { editor, dispatch, dirty, problems, refused, status, say, openText, save } = cues;
   const { doc } = editor;
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -37,8 +38,6 @@ export function CueView({ cues, active, onViewChange }: CueViewProps) {
     // So the same file can be opened again
     if (fileInput.current) fileInput.current.value = '';
   };
-
-  const notes = doc && editor.cue !== null ? doc.cues[editor.cue]!.notes : [];
 
   return (
     <div className="app cue-view">
@@ -97,30 +96,13 @@ export function CueView({ cues, active, onViewChange }: CueViewProps) {
           <main className="app-main">
             <section className="cue-panel" aria-labelledby="cue-notes-heading">
               <h2 id="cue-notes-heading">{editor.cue}</h2>
-              <table className="cue-notes">
-                <thead>
-                  <tr>
-                    <th scope="col">Note</th>
-                    <th scope="col">Instrument</th>
-                    <th scope="col">Start (s)</th>
-                    <th scope="col">Duration (s)</th>
-                    <th scope="col">Pitch (MIDI)</th>
-                    <th scope="col">Level</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {notes.map((n) => (
-                    <tr key={n.id}>
-                      <th scope="row">{n.id}</th>
-                      <td>{n.instrument}</td>
-                      <td>{String(n.start)}</td>
-                      <td>{String(n.duration)}</td>
-                      <td>{String(n.pitch)}</td>
-                      <td>{String(n.level)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <NoteTable
+                doc={doc}
+                cue={editor.cue!}
+                noteId={editor.noteId}
+                problems={problems}
+                dispatch={dispatch}
+              />
             </section>
           </main>
         </div>
