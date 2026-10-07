@@ -10,6 +10,14 @@ export interface EffectsChainOptions {
    * music keeps the behaviour it has always had.
    */
   oversampleOnlyWhenDistorting?: boolean;
+  /**
+   * Build the reverb send, as every chain does unless this is false. Cue
+   * chains set it false: a cue instrument's reverbMix must be 0, so its
+   * convolver could never be heard, and it would still run for as long as the
+   * context does. A chain without one refuses a reverbMix above 0 rather than
+   * ignore it.
+   */
+  reverb?: boolean;
 }
 
 export interface EffectsParams {
@@ -21,13 +29,26 @@ export interface EffectsParams {
 }
 
 /**
+ * True when `params` ask for no effect at all: every value the chain carries is
+ * exactly 0. Any other value, however small, asks for its effect.
+ *
+ * A cue chain with all of them at 0 passes its input through unchanged: the
+ * dry path at gain 1, the waveshaper with no curve and no oversampling, and
+ * the delay send at 0. Its delay and waveshaper still run, though, so a cue
+ * instrument like this gets no chain at all.
+ */
+export function asksForNoEffect(params: EffectsParams): boolean {
+  return Object.values(params).every((value) => value === 0);
+}
+
+/**
  * Effects chain: Distortion (main path) + Delay send + Reverb send.
  *
  * Signal flow:
  * ```
  * input → distortion → dryGain (1 - delayMix) → output
  *              ↘ delay ↻ feedback → delayWetGain (delayMix) → output
- * input → convolverNode → reverbWetGain (reverbMix) → output   [additive send]
+ * input → convolverNode → reverbWetGain (reverbMix) → output   [additive send, unless built without reverb]
  * ```
  *
  * Distortion sits on the main path so it is audible regardless of the delay
@@ -42,8 +63,8 @@ export class EffectsChain {
   private delayNode: DelayNode;
   private feedbackGain: GainNode;
   private distortionNode: WaveShaperNode;
-  private convolverNode: ConvolverNode;
-  private reverbWetGain: GainNode;
+  private convolverNode: ConvolverNode | null = null;
+  private reverbWetGain: GainNode | null = null;
   private lastDistortionAmount: number | null = null;
   private readonly oversampleOnlyWhenDistorting: boolean;
 
@@ -59,8 +80,6 @@ export class EffectsChain {
     this.delayNode = context.createDelay(2);
     this.feedbackGain = context.createGain();
     this.distortionNode = context.createWaveShaper();
-    this.convolverNode = context.createConvolver();
-    this.reverbWetGain = context.createGain();
 
     // Set up routing
     // Main path: input -> distortion -> dryGain -> output
@@ -78,10 +97,14 @@ export class EffectsChain {
     this.feedbackGain.connect(this.delayNode);
 
     // Reverb parallel send: input -> convolver -> reverbWetGain -> output
-    this.convolverNode.buffer = this.createReverbIR();
-    this.input.connect(this.convolverNode);
-    this.convolverNode.connect(this.reverbWetGain);
-    this.reverbWetGain.connect(this.output);
+    if (options.reverb ?? true) {
+      this.convolverNode = context.createConvolver();
+      this.reverbWetGain = context.createGain();
+      this.convolverNode.buffer = this.createReverbIR();
+      this.input.connect(this.convolverNode);
+      this.convolverNode.connect(this.reverbWetGain);
+      this.reverbWetGain.connect(this.output);
+    }
 
     // Initialize with default values
     this.setParams({
@@ -125,7 +148,10 @@ export class EffectsChain {
     }
 
     // Reverb (additive send — independent of delay mix)
-    this.reverbWetGain.gain.setValueAtTime(params.reverbMix, now);
+    if (this.reverbWetGain) this.reverbWetGain.gain.setValueAtTime(params.reverbMix, now);
+    else if (params.reverbMix !== 0) {
+      throw new RangeError(`This effects chain was built without reverb; reverbMix must be 0, got ${params.reverbMix}`);
+    }
   }
 
   /**
@@ -171,8 +197,8 @@ export class EffectsChain {
     this.delayNode.disconnect();
     this.feedbackGain.disconnect();
     this.distortionNode.disconnect();
-    this.convolverNode.disconnect();
-    this.reverbWetGain.disconnect();
+    this.convolverNode?.disconnect();
+    this.reverbWetGain?.disconnect();
     this.output.disconnect();
   }
 }

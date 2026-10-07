@@ -129,6 +129,48 @@ describe('rule: numbers must be finite and in range', () => {
   })
 })
 
+describe("rule: an instrument's decay is a fixed length or lasts until each note's release, never both", () => {
+  /** The valid document's instrument, its decay lasting until each note's release instead. */
+  const untilRelease = (d: Loose) => {
+    delete d.instruments.square.decay
+    d.instruments.square.decayUntilRelease = true
+  }
+
+  it('accepts decayUntilRelease: true in place of decay', () => {
+    expect(problems(withChange(untilRelease))).toEqual([])
+  })
+
+  it('rejects a decay beside it, at the decay, whose value nothing would read', () => {
+    const both = withChange((d) => {
+      untilRelease(d)
+      d.instruments.square.decay = 0.05172575
+    })
+    expect(problems(both)).toEqual([
+      {
+        path: 'instruments.square.decay',
+        message: "must be left out: decayUntilRelease makes the decay last until each note's release",
+      },
+    ])
+  })
+
+  for (const value of [false, 1, 'true', null]) {
+    it(`rejects decayUntilRelease: ${JSON.stringify(value)}, since only true means anything`, () => {
+      expect(problems(withChange((d) => (d.instruments.square.decayUntilRelease = value)))).toEqual([
+        {
+          path: 'instruments.square.decayUntilRelease',
+          message: 'must be true, or left out for a decay of fixed length',
+        },
+      ])
+    })
+  }
+
+  it('names the decay when there is neither, and the field that could stand in for it', () => {
+    expect(problems(withChange((d) => delete d.instruments.square.decay))).toEqual([
+      { path: 'instruments.square.decay', message: 'is required, unless decayUntilRelease is true' },
+    ])
+  })
+})
+
 describe('rule: a note may only use an instrument the document defines', () => {
   it('rejects an undefined instrument', () => {
     expect(paths(withChange((d) => (d.cues.tick.notes[0].instrument = 'sine')))).toEqual(['cues.tick.notes[0].instrument'])

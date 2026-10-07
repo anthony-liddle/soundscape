@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { VoiceSynthesizer } from '../VoiceSynthesizer'
 import { defaultInstrumentParams } from '../../types'
 import type { InstrumentParams } from '../../types'
+import type { CueInstrument } from '../../cues/types'
 import { midiToFrequency, normalizedToLfoFilterDepth, normalizedToLfoPitchDepth } from '../../utils/pitch'
 import { normalizedToADSR } from '../../utils/time'
 import { createMockAudioContext, isConnected } from './mockWebAudio'
@@ -274,5 +275,28 @@ describe('VoiceSynthesizer', () => {
       expect(filterNode().disconnect).toHaveBeenCalled()
       expect(voiceOutput().disconnect).toHaveBeenCalled()
     })
+  })
+})
+
+describe("a cue instrument whose decay lasts until each note's release", () => {
+  const untilRelease = {
+    ...Object.fromEntries(Object.entries(makeParams()).filter(([key]) => key !== 'decay')),
+    decayUntilRelease: true,
+  } as unknown as CueInstrument
+
+  it('cannot start a note with noteOn, which does not know when the release is, and starts nothing', () => {
+    const ctx = createMockAudioContext()
+    const voice = new VoiceSynthesizer(ctx as unknown as AudioContext, ctx.createGain() as unknown as AudioNode)
+    const before = ctx.createdNodes.length
+    expect(() => voice.noteOn({ pitch: 60, velocity: 100, instrument: untilRelease }, 0)).toThrow(/playNote/)
+    expect(ctx.createdNodes.slice(before).filter((n) => n.kind === 'oscillator')).toEqual([])
+  })
+
+  it('plays a whole note with playNote, its decay ending at the release', () => {
+    const ctx = createMockAudioContext()
+    const voice = new VoiceSynthesizer(ctx as unknown as AudioContext, ctx.createGain() as unknown as AudioNode)
+    const before = ctx.createdNodes.length
+    expect(() => voice.playNote({ pitch: 60, velocity: 100, instrument: untilRelease }, 0, 0.25)).not.toThrow()
+    expect(ctx.createdNodes.slice(before).filter((n) => n.kind === 'oscillator').length).toBeGreaterThan(0)
   })
 })

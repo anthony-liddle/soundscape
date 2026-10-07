@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { validateSoundscapeState } from '../validation'
+import { soundscapeInstrumentProblems, validateSoundscapeState } from '../validation'
 import { defaultInstrumentParams } from '../../types'
 import type { InstrumentParams, SoundscapeState } from '../../types'
 
@@ -81,5 +81,63 @@ describe('0.4.0 instrument fields in a state file', () => {
     it('leaves tracks without overrides, and overrides without the new fields, alone', () => {
       expect(validateSoundscapeState(withOverrides({}, { attack: 0.5, filterCutoff: 0.2 }))).toBe(true)
     })
+  })
+})
+
+describe('decayUntilRelease, which only a cue can play', () => {
+  const ONLY_CUES = 'is only for cue instruments: the transport starts a note without knowing when it will be released'
+
+  it('is refused on a preset at load, with the path to it, rather than failing the note at play', () => {
+    const state = stateWith({ decayUntilRelease: true })
+    expect(validateSoundscapeState(state)).toBe(false)
+    expect(soundscapeInstrumentProblems(state)).toEqual([{ path: 'presets[0].params.decayUntilRelease', message: ONLY_CUES }])
+  })
+
+  it("is refused in a track's overrides, with the path to it", () => {
+    const state = stateWith({})
+    state.tracks.push({ id: 't', name: 'T', presetId: 'p', notes: [], paramOverrides: { decayUntilRelease: true } as never })
+    expect(validateSoundscapeState(state)).toBe(false)
+    expect(soundscapeInstrumentProblems(state)).toEqual([
+      { path: 'tracks[0].paramOverrides.decayUntilRelease', message: ONLY_CUES },
+    ])
+  })
+
+  it('is refused whatever its value, since a preset has no such field', () => {
+    expect(soundscapeInstrumentProblems(stateWith({ decayUntilRelease: false }))).toEqual([
+      { path: 'presets[0].params.decayUntilRelease', message: ONLY_CUES },
+    ])
+  })
+})
+
+describe('soundscapeInstrumentProblems', () => {
+  it('names the path to a value the 0.4.0 instrument rules reject', () => {
+    expect(soundscapeInstrumentProblems(stateWith({ envelopeCurve: 'exponential' }))).toEqual([
+      { path: 'presets[0].params.envelopeFloor', message: 'an exponential envelope needs a floor between 0 and 1, exclusive' },
+    ])
+  })
+
+  it("names a track's override, or the overrides when the value at fault is the preset's", () => {
+    const withOverrides = (presetParams: Record<string, unknown>, overrides: Record<string, unknown>) => {
+      const state = stateWith(presetParams)
+      state.tracks.push({ id: 't', name: 'T', presetId: 'p', notes: [], paramOverrides: overrides as never })
+      return state
+    }
+    expect(soundscapeInstrumentProblems(withOverrides({}, { envelopeCurve: 'exponential', envelopeFloor: 0 }))).toEqual([
+      { path: 'tracks[0].paramOverrides.envelopeFloor', message: 'an exponential envelope needs a floor between 0 and 1, exclusive' },
+    ])
+    expect(soundscapeInstrumentProblems(withOverrides({ lfoDepth: 0.3 }, { filterType: 'none' }))).toEqual([
+      {
+        path: 'tracks[0].paramOverrides',
+        message: "with these overrides, lfoTarget: an LFO aimed at the filter does nothing when filterType is 'none'",
+      },
+    ])
+    // A problem the preset has on its own is named once, at the preset
+    expect(soundscapeInstrumentProblems(withOverrides({ envelopeCurve: 'exponential' }, { attack: 0.2 })).map((p) => p.path)).toEqual([
+      'presets[0].params.envelopeFloor',
+    ])
+  })
+
+  it('finds nothing in a state that validates', () => {
+    expect(soundscapeInstrumentProblems(stateWith({}))).toEqual([])
   })
 })

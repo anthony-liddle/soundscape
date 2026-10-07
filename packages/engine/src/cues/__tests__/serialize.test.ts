@@ -47,6 +47,9 @@ const doc: CueDocument = {
   },
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Loose = any
+
 /** The same document, every object's keys in reverse order. */
 function shuffled(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(shuffled)
@@ -79,6 +82,16 @@ describe('serializeCueDocument', () => {
     expect(text.indexOf('"a-first"')).toBeLessThan(text.indexOf('"sine"'))
     expect(text.indexOf('"blip"')).toBeLessThan(text.indexOf('"zap"'))
     expect(text.indexOf('"b2"')).toBeLessThan(text.indexOf('"b1"'))
+  })
+
+  it('writes decayUntilRelease where the decay would be, whatever order it was built in', () => {
+    const fading = Object.fromEntries(Object.entries(instrument).filter(([key]) => key !== 'decay'))
+    const untilRelease = { ...doc, instruments: { sine: { ...fading, decayUntilRelease: true } } } as unknown as CueDocument
+    const text = serializeCueDocument(untilRelease)
+    const keys = Object.keys((JSON.parse(text) as Loose).instruments.sine)
+    expect(keys.slice(0, 5)).toEqual(['waveform', 'pitchOffset', 'attack', 'decayUntilRelease', 'sustain'])
+    expect(keys).not.toContain('decay')
+    expect(serializeCueDocument(shuffled(untilRelease) as CueDocument)).toBe(text)
   })
 
   it('ends with a newline and writes -0 as 0', () => {

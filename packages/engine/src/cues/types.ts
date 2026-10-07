@@ -33,13 +33,32 @@ export const CUE_VERSION = 1;
  * default: a cue sounds the way its file says. `envelopeFloor` is present
  * exactly when `envelopeCurve` is `'exponential'`.
  *
+ * The decay is one of two things, and the instrument carries exactly one:
+ * `decay`, a fixed length, or `decayUntilRelease: true`, a decay that runs
+ * from the end of the attack to each note's release, however long the note
+ * is. So one instrument serves notes of any length, each fading over its own.
+ *
  * Two fields are fixed for now. `velocityResponse` must be 0, because a cue
  * note's level is its peak and velocity plays no part. `reverbMix` must be 0,
  * because the reverb's impulse response is random and a cue must sound the
  * same every time.
  */
-export type CueInstrument = Required<Omit<InstrumentParams, 'envelopeFloor'>> &
-  Pick<InstrumentParams, 'envelopeFloor'>;
+export type CueInstrument = Required<Omit<InstrumentParams, 'envelopeFloor' | 'decay'>> &
+  Pick<InstrumentParams, 'envelopeFloor'> &
+  CueDecay;
+
+/** A cue instrument's decay: a fixed length, or until each note's release. Never both. */
+export type CueDecay =
+  | { decay: number; decayUntilRelease?: never }
+  | {
+      /**
+       * The decay runs from the end of the attack to the note's release, and
+       * reaches the sustain level there. Only `true`; leave it out for a decay
+       * of fixed length.
+       */
+      decayUntilRelease: true;
+      decay?: never;
+    };
 
 /** One cue: its notes, in any order. */
 export interface Cue {

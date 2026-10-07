@@ -83,5 +83,7 @@ export {
 
 export {
   validateSoundscapeState,
+  soundscapeInstrumentProblems,
   clamp,
 } from './utils/validation';
+export type { InstrumentProblem } from './utils/validation';

@@ -44,21 +44,10 @@ export function validateSoundscapeState(state: unknown): state is SoundscapeStat
     if (!validatePreset(preset)) return false;
   }
 
-  // A track's overrides can switch on the 0.4.0 fields too, and an instrument
-  // that breaks their rules would throw on every scheduler tick when played.
-  // So the instrument a track actually plays, its preset with its overrides on
-  // top, follows the same rules. No file from before 0.4.0 can hold these
-  // fields, so this rejects nothing older.
-  const presetParams = new Map<unknown, Record<string, unknown>>();
-  for (const preset of s.presets as { id: unknown; params: Record<string, unknown> }[]) {
-    if (!presetParams.has(preset.id)) presetParams.set(preset.id, preset.params);
-  }
-  for (const track of s.tracks as Record<string, unknown>[]) {
-    const base = presetParams.get(track.presetId);
-    const overrides = track.paramOverrides;
-    if (!base || !overrides || typeof overrides !== 'object') continue;
-    if (envelopeAndFilterProblems({ ...base, ...overrides }).length > 0) return false;
-  }
+  // The 0.4.0 instrument rules, on every preset and on the instrument each
+  // track plays, and the fields only a cue instrument can have: anything that
+  // would throw when played is refused here, at load, with a path to it
+  if (soundscapeInstrumentProblems(s).length > 0) return false;
 
   // Check mixer
   if (!s.mixer || typeof s.mixer !== 'object') return false;
@@ -144,7 +133,78 @@ function validatePreset(preset: unknown): boolean {
     if (typeof params.lfoTarget !== 'string' || !LFO_TARGETS.has(params.lfoTarget)) return false;
   }
 
-  return envelopeAndFilterProblems(params).length === 0;
+  return true;
+}
+
+/** One value an instrument in a soundscape state cannot have, and the path to it. */
+export interface InstrumentProblem {
+  /** Where, for example `presets[0].params.envelopeFloor`. */
+  path: string;
+  message: string;
+}
+
+/** Instrument fields only a cue instrument can have, and why a preset cannot. */
+const CUE_ONLY_PARAMS: Record<string, string> = {
+  decayUntilRelease:
+    'is only for cue instruments: the transport starts a note without knowing when it will be released',
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** The fields only a cue can have, wherever `values` has one. */
+function cueOnlyProblems(values: Record<string, unknown>): { key: string; message: string }[] {
+  return Object.entries(CUE_ONLY_PARAMS)
+    .filter(([key]) => Object.prototype.hasOwnProperty.call(values, key))
+    .map(([key, message]) => ({ key, message }));
+}
+
+/**
+ * Every value that would stop an instrument in a soundscape state from
+ * playing, with the path to it: the 0.4.0 envelope and filter rules and the
+ * fields only a cue can have, on each preset's params and on the instrument
+ * each track plays, its preset with its overrides on top. A track's problem
+ * that its preset already has is reported once, at the preset.
+ *
+ * {@link validateSoundscapeState} refuses a state with any of these. This
+ * says where they are. It checks the instruments alone, not the rest of the
+ * state.
+ */
+export function soundscapeInstrumentProblems(state: unknown): InstrumentProblem[] {
+  const problems: InstrumentProblem[] = [];
+  if (!isRecord(state)) return problems;
+
+  const presets = new Map<unknown, Record<string, unknown>>();
+  (Array.isArray(state.presets) ? state.presets : []).forEach((preset: unknown, i) => {
+    if (!isRecord(preset) || !isRecord(preset.params)) return;
+    if (!presets.has(preset.id)) presets.set(preset.id, preset.params);
+    for (const p of [...cueOnlyProblems(preset.params), ...envelopeAndFilterProblems(preset.params)]) {
+      problems.push({ path: `presets[${i}].params.${p.key}`, message: p.message });
+    }
+  });
+
+  (Array.isArray(state.tracks) ? state.tracks : []).forEach((track: unknown, i) => {
+    if (!isRecord(track) || !isRecord(track.paramOverrides)) return;
+    const overrides = track.paramOverrides;
+    const base = `tracks[${i}].paramOverrides`;
+    for (const p of cueOnlyProblems(overrides)) problems.push({ path: `${base}.${p.key}`, message: p.message });
+    const preset = presets.get(track.presetId);
+    if (!preset) return;
+    const its = new Set(envelopeAndFilterProblems(preset).map((p) => `${p.key} ${p.message}`));
+    for (const p of envelopeAndFilterProblems({ ...preset, ...overrides })) {
+      if (its.has(`${p.key} ${p.message}`)) continue;
+      // An override can break a rule through a key it does not set, as taking
+      // the filter away breaks an LFO aimed at it: then the overrides are named
+      problems.push(
+        Object.prototype.hasOwnProperty.call(overrides, p.key)
+          ? { path: `${base}.${p.key}`, message: p.message }
+          : { path: base, message: `with these overrides, ${p.key}: ${p.message}` }
+      );
+    }
+  });
+
+  return problems;
 }
 
 /**
