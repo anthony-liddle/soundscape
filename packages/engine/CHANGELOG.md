@@ -65,7 +65,15 @@ changed.
   `reverbMix` must be 0, so its convolver could never be heard. Peach of a
   Word's eight cue instruments, none with an effect, cost 53 to 57 ms of
   render time per second of audio in Chromium, idle, and about 100 MB per
-  engine; now 0.55 ms and under 1 MB. Track chains are unchanged.
+  engine; now 0.55 ms and under 1 MB. Track chains are unchanged. The cues
+  with no effect and with delay are held to references recorded before the
+  change; the cue through distortion, whose oversampling rounds differently
+  by processor, to a chain built the old way in the same run, both to 1e-6.
+- `soundscapeInstrumentProblems(state)` names each value that would stop an
+  instrument in a soundscape state from playing, with the path to it, such
+  as `presets[0].params.decayUntilRelease`: the 0.4.0 envelope and filter
+  rules and the fields only a cue can have, on each preset and on the
+  instrument each track plays.
 
 ### Changed
 
@@ -81,6 +89,11 @@ changed.
   an LFO aimed at a filter that is not there, on presets and on the
   instrument a track plays once its overrides are applied. No file from
   0.3.0 can hold these fields, so none is newly rejected.
+- `validateSoundscapeState` refuses `decayUntilRelease` on a preset or in a
+  track's overrides, whatever its value, at load. Only a cue can play it: the
+  transport starts a note without knowing when it will be released, and
+  `noteOn` would refuse the note at play. `soundscapeInstrumentProblems`
+  gives the path. No earlier file can hold the field.
 
 ### Fixed
 
