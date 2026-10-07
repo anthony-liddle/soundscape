@@ -24,7 +24,7 @@ to play compositions without the editor.
 - **Live Editing**: Add and remove notes during playback with immediate effect
 - **Multiple Tracks**: Create, duplicate, and manage multiple instrument tracks
 - **Undo/Redo**: Step back and forward through edit history (Ctrl+Z / Ctrl+Shift+Z)
-- **Keyboard Shortcuts**: Space (play/stop), Ctrl+S (export), Ctrl+D (duplicate track)
+- **Keyboard Shortcuts**: Space (play/stop), Ctrl+S (export), Ctrl+D (duplicate track). A focused button or menu keeps Space, and a text field keeps every key, so Space presses the button you tabbed to rather than playing
 
 ### Synthesizer
 - **Oscillator**: Choose from sine, square, sawtooth, and triangle waveforms with pitch offset and unison detune

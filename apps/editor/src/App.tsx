@@ -10,9 +10,10 @@ import { MIDIStatus, RECORD_GRID } from './components/MIDIStatus';
 import type { RecordingPreview } from './components/MIDIStatus';
 
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { ShortcutsProvider } from './shortcuts';
 import './App.css';
 
-function SoundscapeApp() {
+export function SoundscapeApp() {
   const { state, dispatch, playback, play, stop, undo, redo, canUndo, canRedo, analyserNode } = useSoundscape();
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(
     state.tracks.length > 0 ? (state.tracks[0]?.id ?? null) : null
@@ -102,7 +103,9 @@ function SoundscapeApp() {
 function App() {
   return (
     <SoundscapeProvider>
-      <SoundscapeApp />
+      <ShortcutsProvider>
+        <SoundscapeApp />
+      </ShortcutsProvider>
     </SoundscapeProvider>
   );
 }
