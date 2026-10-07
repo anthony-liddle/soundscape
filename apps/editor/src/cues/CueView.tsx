@@ -5,6 +5,7 @@ import type { View } from '../components/ViewSwitch';
 import { useViewShortcuts } from '../shortcuts';
 import { CueList } from './CueList';
 import { NoteTable } from './NoteTable';
+import { CueInstrumentPanel } from './CueInstrumentPanel';
 import type { CueEditorApi } from './useCueEditor';
 import './CueView.css';
 
@@ -31,6 +32,9 @@ export function CueView({ cues, active, onViewChange }: CueViewProps) {
     },
     active
   );
+
+  const selectedInstrument =
+    doc && editor.cue !== null ? doc.cues[editor.cue]!.notes.find((n) => n.id === editor.noteId)?.instrument : undefined;
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
@@ -93,7 +97,7 @@ export function CueView({ cues, active, onViewChange }: CueViewProps) {
           <aside className="app-sidebar">
             <CueList doc={doc} selected={editor.cue} dispatch={dispatch} />
           </aside>
-          <main className="app-main">
+          <main className="app-main cue-main">
             <section className="cue-panel" aria-labelledby="cue-notes-heading">
               <h2 id="cue-notes-heading">{editor.cue}</h2>
               <NoteTable
@@ -104,6 +108,9 @@ export function CueView({ cues, active, onViewChange }: CueViewProps) {
                 dispatch={dispatch}
               />
             </section>
+            {selectedInstrument !== undefined && (
+              <CueInstrumentPanel doc={doc} name={selectedInstrument} problems={problems} dispatch={dispatch} />
+            )}
           </main>
         </div>
       ) : (

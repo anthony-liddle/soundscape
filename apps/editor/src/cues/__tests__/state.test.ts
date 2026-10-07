@@ -110,3 +110,55 @@ describe('the cue editor state', () => {
     expect(run(open, ...edits).past).toHaveLength(MAX_CUE_HISTORY)
   })
 })
+
+describe('adding and removing notes', () => {
+  it('adds a copy of a note right after it, with the next free id, and selects it', () => {
+    const editor = run(open, { type: 'ADD_NOTE', cue: 'blip', after: 'blip-1' })
+    expect(editor.doc!.cues.blip!.notes.map((n) => n.id)).toEqual(['blip-1', 'blip-3', 'blip-2'])
+    expect(editor.doc!.cues.blip!.notes[1]).toEqual({ ...doc.cues.blip!.notes[0], id: 'blip-3' })
+    expect(editor.noteId).toBe('blip-3')
+    expect(editor.past).toEqual([doc])
+  })
+
+  it('takes an id no other cue in the document uses either', () => {
+    const crowded: CueDocument = {
+      ...doc,
+      cues: { ...doc.cues, other: { notes: [{ ...doc.cues.chime!.notes[0]!, id: 'blip-3' }] } },
+    }
+    const editor = run({ type: 'OPEN', doc: crowded, fileName: 'f' }, { type: 'ADD_NOTE', cue: 'blip', after: 'blip-2' })
+    expect(editor.doc!.cues.blip!.notes.map((n) => n.id)).toEqual(['blip-1', 'blip-2', 'blip-4'])
+  })
+
+  it('removes a note, and selects the one after it, or before it when it was last', () => {
+    const middle = run(open, { type: 'REMOVE_NOTE', noteId: 'blip-1' })
+    expect(middle.doc!.cues.blip!.notes.map((n) => n.id)).toEqual(['blip-2'])
+    expect(middle.noteId).toBe('blip-2')
+    const last = run(open, { type: 'SELECT_NOTE', noteId: 'blip-2' }, { type: 'REMOVE_NOTE', noteId: 'blip-2' })
+    expect(last.noteId).toBe('blip-1')
+  })
+
+  it('can empty a cue, which the format allows, and then adds a note of its own', () => {
+    const empty = run(open, { type: 'SELECT_CUE', cue: 'chime' }, { type: 'REMOVE_NOTE', noteId: 'chime-1' })
+    expect(empty.doc!.cues.chime!.notes).toEqual([])
+    expect([empty.cue, empty.noteId]).toEqual(['chime', null])
+    const refilled = cueReducer(empty, { type: 'ADD_NOTE', cue: 'chime', after: null })
+    expect(refilled.doc!.cues.chime!.notes).toEqual([
+      { id: 'chime-1', instrument: 'sine', start: 0, duration: 0.1, pitch: 69, level: 0.5 },
+    ])
+  })
+})
+
+describe('changing an instrument', () => {
+  it('changes several fields as one edit, and leaves out what is set to undefined', () => {
+    const editor = run(open, { type: 'SET_INSTRUMENT', name: 'sine', changes: { decay: undefined, decayUntilRelease: true } })
+    const sine = editor.doc!.instruments.sine!
+    expect('decay' in sine).toBe(false)
+    expect(sine.decayUntilRelease).toBe(true)
+    expect(editor.past).toEqual([doc])
+  })
+
+  it('leaves the document alone when nothing changes', () => {
+    const editor = run(open, { type: 'SET_INSTRUMENT', name: 'sine', changes: { attack: 0.1 } })
+    expect(editor.doc).toBe(doc)
+  })
+})
