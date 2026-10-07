@@ -11,7 +11,7 @@ import type { RecordingPreview } from './components/MIDIStatus';
 
 import { ViewSwitch } from './components/ViewSwitch';
 import type { View } from './components/ViewSwitch';
-import { CueView } from './cues';
+import { CueView, useCueEditor } from './cues';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ShortcutsProvider } from './shortcuts';
 import { viewFromSearch, writeViewToAddress } from './view';
@@ -22,9 +22,11 @@ interface SoundscapeAppProps {
   active?: boolean;
   /** Shows the view switch in the header when given. */
   onViewChange?: (view: View) => void;
+  /** Where Import sends a cue file. */
+  onOpenCues?: (file: { name: string; text: string }) => void;
 }
 
-export function SoundscapeApp({ active = true, onViewChange }: SoundscapeAppProps = {}) {
+export function SoundscapeApp({ active = true, onViewChange, onOpenCues }: SoundscapeAppProps = {}) {
   const { state, dispatch, playback, play, stop, undo, redo, canUndo, canRedo, analyserNode } = useSoundscape();
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(
     state.tracks.length > 0 ? (state.tracks[0]?.id ?? null) : null
@@ -78,7 +80,7 @@ export function SoundscapeApp({ active = true, onViewChange }: SoundscapeAppProp
             onRecordingGrid={() => setSubdivision(RECORD_GRID)}
             onPreviewChange={setPreview}
           />
-          <ImportExport />
+          <ImportExport {...(onOpenCues && { onOpenCues })} />
         </div>
       </header>
 
@@ -123,6 +125,8 @@ export function SoundscapeApp({ active = true, onViewChange }: SoundscapeAppProp
 function App() {
   const [view, setView] = useState<View>(() => viewFromSearch(window.location.search));
   const [cuesShown, setCuesShown] = useState(view === 'cues');
+  const cues = useCueEditor();
+  const { openText } = cues;
 
   const show = useCallback((next: View) => {
     writeViewToAddress(next);
@@ -130,15 +134,22 @@ function App() {
     if (next === 'cues') setCuesShown(true);
   }, []);
 
+  const openCues = useCallback(
+    ({ name, text }: { name: string; text: string }) => {
+      if (openText(text, name)) show('cues');
+    },
+    [openText, show]
+  );
+
   return (
     <SoundscapeProvider>
       <ShortcutsProvider>
         <div className="app-view" hidden={view !== 'song'}>
-          <SoundscapeApp active={view === 'song'} onViewChange={show} />
+          <SoundscapeApp active={view === 'song'} onViewChange={show} onOpenCues={openCues} />
         </div>
         {cuesShown && (
           <div className="app-view" hidden={view !== 'cues'}>
-            <CueView active={view === 'cues'} onViewChange={show} />
+            <CueView cues={cues} active={view === 'cues'} onViewChange={show} />
           </div>
         )}
       </ShortcutsProvider>
