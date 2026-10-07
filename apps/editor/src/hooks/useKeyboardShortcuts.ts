@@ -3,6 +3,7 @@ import type { Dispatch } from 'react';
 import type { SoundscapeState } from 'soundscape-engine';
 import type { SoundscapeAction } from '../state/reducer';
 import { exportSoundscape } from '../utils/exportSoundscape';
+import { keepsEveryKey, keepsSpace } from '../shortcuts/focus';
 
 interface KeyboardShortcutOptions {
   isPlaying: boolean;
@@ -31,11 +32,14 @@ export function useKeyboardShortcuts({
 }: KeyboardShortcutOptions) {
   const handler = useCallback(
     (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      // Whatever handled the key first, or a field that keeps it, has it
+      if (e.defaultPrevented || keepsEveryKey(e.target)) return;
 
       const mod = e.ctrlKey || e.metaKey;
 
       if (e.code === 'Space') {
+        // A focused button, checkbox or other control takes its own Space
+        if (keepsSpace(e.target)) return;
         e.preventDefault();
         if (isPlaying) { stop(); } else { play(); }
         return;

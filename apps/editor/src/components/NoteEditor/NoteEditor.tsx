@@ -3,6 +3,7 @@ import { useSoundscape } from '../../state';
 import type { NoteInput } from '../../state';
 import type { Track, Note } from 'soundscape-engine';
 import { midiToNoteName } from 'soundscape-engine';
+import { keepsEveryKey } from '../../shortcuts/focus';
 import './NoteEditor.css';
 
 export type Subdivision = 1 | 0.5 | 0.25;
@@ -85,7 +86,7 @@ export function NoteEditor({
   // Keyboard handlers for selection operations
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (keepsEveryKey(e.target)) return;
       if (!track) return;
       const mod = e.ctrlKey || e.metaKey;
 
