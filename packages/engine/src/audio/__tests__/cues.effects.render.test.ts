@@ -8,7 +8,8 @@ import { SAMPLE_RATE, START, decodeWav, encodeWav, largestDifference } from './r
 
 /**
  * A cue instrument with no effect plays straight into the cue output, with no
- * effects chain, and one with any effect keeps its whole chain.
+ * effects chain, and one with any effect keeps its chain, less the convolver
+ * no cue can hear.
  *
  * Each cue here is compared sample by sample with a reference rendered in
  * node-web-audio-api before the change, when every cue instrument had a chain:
@@ -18,15 +19,25 @@ import { SAMPLE_RATE, START, decodeWav, encodeWav, largestDifference } from './r
  * cue instrument's reverbMix must be 0, so no cue can ask for it.
  *
  * TOLERANCE: the references were bit-identical across repeated runs on the
- * machine that recorded them, macOS on arm64. On Linux x64 in CI the
- * distortion cue, which goes through the waveshaper's curve, lands 1.2e-6
- * away, so the allowance is 1e-5, about -100 dBFS. Taking the delay away
+ * machine that recorded them, macOS on arm64, and every cue is held to 1e-6
+ * on any platform, as the other render tests are, but one. A waveshaper
+ * magnifies a difference at its input by its curve's slope, so the cue
+ * through distortion is held to 1e-6 times the steepest slope of the curve
+ * its waveshaper loads. At this cue's distortion of 0.6 that slope is 20.08,
+ * at the curve's centre, so its allowance is 2.0e-5. Taking the delay away
  * from its cue moves it by 0.13.
+ *
+ * On Linux x64 that cue lands 1.2e-6 from its reference, and the slope is not
+ * why. It is the waveshaper's 2x oversampling, which a distorting cue chain
+ * turns on: there the voice going in differs from macOS arm64 by at most
+ * 3e-8, in 42 samples of 16800; through the curve with no oversampling, by
+ * 1.2e-7, in 1; oversampled, by 1.2e-6, in 12106, wherever the curve is steep
+ * or flat. The resampling filters round differently on that processor.
  *
  * To record the references again, run with UPDATE_RENDER_REFERENCE=1. Only do
  * that for a change that is meant to be heard.
  */
-const TOLERANCE = 1e-5
+const TOLERANCE = 1e-6
 const DIR = resolve(__dirname, 'reference/effects')
 const UPDATE = process.env.UPDATE_RENDER_REFERENCE === '1'
 const SECONDS = 1.5
@@ -129,17 +140,52 @@ describe("a cue instrument's effects chain", () => {
   }
 })
 
+/**
+ * The steepest slope of a waveshaper's curve, as Web Audio reads one: its
+ * points spread evenly over inputs from -1 to 1.
+ */
+function steepestSlope(curve: Float32Array): number {
+  let steepest = 0
+  for (let i = 1; i < curve.length; i++) steepest = Math.max(steepest, Math.abs(curve[i]! - curve[i - 1]!))
+  return (steepest * (curve.length - 1)) / 2
+}
+
+/** The curve on the waveshaper the engine builds for `instrument`. */
+async function curveFor(instrument: CueInstrument): Promise<Float32Array> {
+  const { ctx, engine } = await engineOn()
+  const shapers = vi.spyOn(ctx, 'createWaveShaper')
+  engine.loadCues({ ...DOCUMENT, instruments: { one: instrument }, cues: { one: { notes: [note('one-1', 'one', 60, 0)] } } })
+  const curve = (shapers.mock.results[0]!.value as WaveShaperNode).curve
+  if (!curve) throw new Error('The waveshaper has no curve')
+  return Float32Array.from(curve)
+}
+
+async function render(document: CueDocument, name: string): Promise<Float32Array> {
+  const { ctx, engine } = await engineOn()
+  engine.loadCues(document)
+  engine.playCue(name, START)
+  return Float32Array.from((await ctx.startRendering()).getChannelData(0))
+}
+
+describe("the distortion cue's allowance", () => {
+  it("is 1e-6 times its curve's steepest slope, which is 1 + k/π at its centre", async () => {
+    // The curve is x(π + k) / (π + k|x|), with k 100 times the distortion
+    const k = DOCUMENT.instruments.grit!.distortion * 100
+    expect(steepestSlope(await curveFor(DOCUMENT.instruments.grit!))).toBeCloseTo(1 + k / Math.PI, 1)
+  })
+})
+
 describe('a cue sounds as it did when every instrument had a chain', () => {
   for (const name of Object.keys(DOCUMENT.cues)) {
     it(name, async () => {
-      const { ctx, engine } = await engineOn()
-      engine.loadCues(DOCUMENT)
-      engine.playCue(name, START)
-      const rendered = Float32Array.from((await ctx.startRendering()).getChannelData(0))
+      const rendered = await render(DOCUMENT, name)
       const file = resolve(DIR, `${name}.wav`)
       if (UPDATE) writeFileSync(file, encodeWav(rendered))
       const reference = decodeWav(readFileSync(file))
-      expect(largestDifference(rendered, reference, 0)).toBeLessThan(TOLERANCE)
+      // Only the cue through distortion has a curve to magnify a difference
+      const curve = name === 'grit' ? await curveFor(DOCUMENT.instruments.grit!) : null
+      const allowance = curve ? steepestSlope(curve) * TOLERANCE : TOLERANCE
+      expect(largestDifference(rendered, reference, 0)).toBeLessThan(allowance)
       // The effect is in the reference: the cue sounds well past its last note
       if (name === 'echo' || name === 'both') {
         const after = reference.subarray(Math.round((START + 0.5) * SAMPLE_RATE))
