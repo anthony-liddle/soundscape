@@ -136,7 +136,7 @@ export class EffectsChain {
     this.dryGain.gain.setValueAtTime(1 - params.delayMix, now);
     this.wetGain.gain.setValueAtTime(params.delayMix, now);
 
-    // Distortion. Only rebuild the 44100-sample curve when the amount
+    // Distortion. Only rebuild the 44101-point curve when the amount
     // actually changes — setParams runs on every state sync. A null curve is
     // spec-defined pass-through, equivalent to the identity curve at 0.
     if (params.distortion !== this.lastDistortionAmount) {
@@ -175,7 +175,10 @@ export class EffectsChain {
   }
 
   private makeDistortionCurve(amount: number): Float32Array<ArrayBuffer> {
-    const samples = 44100;
+    // Web Audio reads a curve of n points at index (n - 1)(v + 1)/2, so point
+    // i stands for the input 2i/(n - 1) - 1. With n odd, an input of exactly 0
+    // is read at the centre point, which holds 0: silence in, silence out.
+    const samples = 44101;
     const curve = new Float32Array(samples);
     const k = amount * 100;
 
@@ -183,7 +186,7 @@ export class EffectsChain {
     // curve(±1) = ±1 for every amount (no level jump when the knob leaves 0)
     // and the curve approaches the identity as k → 0.
     for (let i = 0; i < samples; i++) {
-      const x = (i * 2) / samples - 1;
+      const x = (i * 2) / (samples - 1) - 1;
       curve[i] = (x * (Math.PI + k)) / (Math.PI + k * Math.abs(x));
     }
 
