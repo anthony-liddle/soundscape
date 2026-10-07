@@ -1,4 +1,5 @@
 import type { InstrumentParams } from '../types';
+import type { CueInstrument } from '../cues/types';
 import {
   midiToFrequency,
   normalizedToFilterFreq,
@@ -16,8 +17,12 @@ export interface VoiceParams {
   pitch: number;
   /** Note velocity (0–127). Scales amplitude when `instrument.velocityResponse > 0`. */
   velocity: number;
-  /** The full instrument parameter set that defines the synthesis behaviour. */
-  instrument: InstrumentParams;
+  /**
+   * The full instrument parameter set that defines the synthesis behaviour. A
+   * cue instrument whose decay lasts until the release plays only through
+   * {@link VoiceSynthesizer.playNote}, which knows when the release is.
+   */
+  instrument: InstrumentParams | CueInstrument;
   /**
    * The envelope's peak as an absolute linear gain. When given, it replaces the
    * voice's 0.3 ceiling scaled by velocity, so neither `velocity` nor the
@@ -94,6 +99,8 @@ export class VoiceSynthesizer {
    *   Pass `context.currentTime` to start immediately.
    */
   noteOn(params: VoiceParams, startTime: number): void {
+    // Before anything starts: a decay until the release needs to know when that is
+    const decayTime = fixedDecayOf(params.instrument);
     if (this.releaseTimeout !== null) {
       clearTimeout(this.releaseTimeout);
       this.releaseTimeout = null;
@@ -114,7 +121,6 @@ export class VoiceSynthesizer {
 
     // ADSR envelope
     const attackTime = normalizedToADSR(instrument.attack, 'attack');
-    const decayTime = normalizedToADSR(instrument.decay, 'decay');
     const sustainLevel = instrument.sustain * maxAmplitude;
 
     // Cancel any scheduled values and set to 0
@@ -140,7 +146,7 @@ export class VoiceSynthesizer {
       this.gainNode.gain.linearRampToValueAtTime(sustainLevel, scheduleTime + attackTime + decayTime);
     }
 
-    this.scheduled = { shape: envelopeShapeOf(params), start: scheduleTime };
+    this.scheduled = { shape: envelopeShapeOf(params, null), start: scheduleTime };
     this.isPlaying = true;
   }
 
@@ -163,7 +169,7 @@ export class VoiceSynthesizer {
     const start = Math.max(this.context.currentTime, startTime);
     this.startSources(params, start);
 
-    const shape = envelopeShapeOf(params);
+    const shape = envelopeShapeOf(params, duration);
     const gain = this.gainNode.gain;
     // Every time is the start plus a time within the note, and the plan's are
     // in order, so their order survives rounding: addition never inverts two
@@ -455,7 +461,7 @@ export class VoiceSynthesizer {
  * file or a cue document is loaded; a caller building params in code without
  * one gets an error naming the problem, not a silent fallback.
  */
-function envelopeFloorOf(instrument: InstrumentParams): number {
+function envelopeFloorOf(instrument: Pick<InstrumentParams, 'envelopeFloor'>): number {
   const floor = instrument.envelopeFloor;
   if (typeof floor !== 'number' || !Number.isFinite(floor) || floor <= 0 || floor >= 1) {
     throw new RangeError(
@@ -476,6 +482,8 @@ export interface EnvelopeShape {
   peak: number;
   /** The level the decay reaches and holds until the release. */
   sustain: number;
+  /** The decay ends at the release, exactly, wherever that falls after the attack. */
+  decayEndsAtRelease?: boolean;
 }
 
 /** One automation event, its time in seconds from the note's start. */
@@ -485,22 +493,44 @@ export interface EnvelopeEvent {
   value: number;
 }
 
-/** The envelope a voice plays for these params, as noteOn shapes it. */
-export function envelopeShapeOf(params: VoiceParams): EnvelopeShape {
+/**
+ * An instrument's decay in seconds, for a voice that starts a note without
+ * knowing when it will be released.
+ */
+function fixedDecayOf(instrument: InstrumentParams | CueInstrument): number {
+  if ('decayUntilRelease' in instrument && instrument.decayUntilRelease) {
+    throw new RangeError(
+      "A decay that lasts until the note's release needs to know when that is: play the note whole, with playNote"
+    );
+  }
+  // Not a decay until the release, so a fixed one: every instrument has one or the other
+  return normalizedToADSR(instrument.decay as number, 'decay');
+}
+
+/**
+ * The envelope a voice plays for these params. `releaseAt`, seconds from the
+ * note's start to its release, is null for a note started without knowing it,
+ * as noteOn starts one.
+ */
+export function envelopeShapeOf(params: VoiceParams, releaseAt: number | null): EnvelopeShape {
   const { velocity, instrument } = params;
   const velocityScale = 1 - instrument.velocityResponse + instrument.velocityResponse * (velocity / 127);
   const peak = params.peak ?? 0.3 * velocityScale;
   const sustainLevel = instrument.sustain * peak;
   const exponential = instrument.envelopeCurve === 'exponential' && peak > 0;
   const floor = exponential ? envelopeFloorOf(instrument) : 0;
+  const attack = normalizedToADSR(instrument.attack, 'attack');
+  const untilRelease = 'decayUntilRelease' in instrument && instrument.decayUntilRelease === true;
   return {
     curve: exponential ? 'exponential' : 'linear',
-    attack: normalizedToADSR(instrument.attack, 'attack'),
-    decay: normalizedToADSR(instrument.decay, 'decay'),
+    attack,
+    // Until the release: whatever of the note is left after the attack
+    decay: untilRelease && releaseAt !== null ? Math.max(0, releaseAt - attack) : fixedDecayOf(instrument),
     release: normalizedToADSR(instrument.release, 'release'),
     floor,
     peak,
     sustain: exponential ? Math.max(sustainLevel, floor) : sustainLevel,
+    ...(untilRelease && { decayEndsAtRelease: true }),
   };
 }
 
@@ -531,7 +561,9 @@ export function envelopeLevelAt(shape: EnvelopeShape, t: number): number {
  * comparison of two nearly equal times changes what is heard.
  */
 export function noteEnvelope(shape: EnvelopeShape, releaseAt: number): EnvelopeEvent[] {
-  const decayEnd = shape.attack + shape.decay;
+  // A decay until the release ends there exactly, not at attack + decay, which
+  // can round to a sample either side of it
+  const decayEnd = shape.decayEndsAtRelease ? releaseAt : shape.attack + shape.decay;
   const events: EnvelopeEvent[] = [{ kind: 'set', at: 0, value: shape.floor }];
   if (releaseAt < shape.attack) {
     // Released during the attack: the attack ends there, at the level it reached

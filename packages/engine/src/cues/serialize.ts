@@ -21,6 +21,7 @@ const INSTRUMENT_ORDER: (keyof CueInstrument)[] = [
   'pitchOffset',
   'attack',
   'decay',
+  'decayUntilRelease',
   'sustain',
   'release',
   'envelopeCurve',

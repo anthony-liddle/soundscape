@@ -201,7 +201,7 @@ preset while editing.
       "waveform": "square",
       "pitchOffset": 0,
       "attack": 0.07418053232275866,
-      "decay": 0.05172606001118717,
+      "decayUntilRelease": true,
       "sustain": 0,
       "release": 0,
       "envelopeCurve": "exponential",
@@ -235,6 +235,13 @@ preset while editing.
   presets kept elsewhere. Every `InstrumentParams` field is spelled out, so
   nothing falls back to a default. `reverbMix` and `velocityResponse` must be 0:
   the reverb is random, and a note's level replaces velocity.
+- **The decay is a fixed length, or it lasts until each note's release.**
+  `decay` gives a fixed length. `decayUntilRelease: true`, in its place, runs
+  the decay from the end of the attack to the note's release, reaching the
+  sustain level there, so one instrument serves notes of any length, each
+  fading over its own. An instrument has exactly one of the two: both, or
+  neither, is rejected, and so is any value of `decayUntilRelease` but `true`.
+  It is for cues alone, which know each note's length when they start it.
 - **A note** has a stable `id`, unique in the document; the `instrument` it
   plays; `start` and `duration` in seconds from the cue's start; `pitch` as
   MIDI, fractional allowed; and `level`.

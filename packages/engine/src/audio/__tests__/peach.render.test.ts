@@ -73,11 +73,12 @@ describe("Peach of a Word's sounds as cues", () => {
         expect(instrument.envelopeCurve).toBe('exponential')
         expect(instrument.envelopeFloor).toBe(FLOOR * MASTER_GAIN)
         expect(instrument.filterType).toBe('none')
-        // The attack reaches its peak at 12 ms, and the decay its floor at the
-        // note's duration, to within the last bit or two of a double
+        // The attack reaches its peak at 12 ms, to within the last bit or two
+        // of a double, and the decay its floor at the note's release, which is
+        // its duration: one instrument serves every length
         const attack = normalizedToADSR(instrument.attack, 'attack')
         expect(Math.abs(attack - 0.012)).toBeLessThan(1e-15)
-        expect(Math.abs(attack + normalizedToADSR(instrument.decay, 'decay') - duration)).toBeLessThan(1e-15)
+        expect(instrument.decayUntilRelease).toBe(true)
         // Release plus the voice's 10 ms margin is the game's 20 ms tail
         expect(normalizedToADSR(instrument.release, 'release') + 0.01).toBe(0.02)
       })

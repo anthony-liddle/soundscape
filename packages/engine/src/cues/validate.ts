@@ -116,7 +116,23 @@ function checkInstrument(c: Checker, value: unknown, base: string): void {
     c.add(base, 'must be an object');
     return;
   }
-  c.keys(value, base, [...INSTRUMENT_KEYS, 'envelopeFloor'], INSTRUMENT_KEYS);
+  // decay is required unless decayUntilRelease stands in for it, and never
+  // beside it, where its value would go unread
+  const untilRelease = value.decayUntilRelease === true;
+  c.keys(
+    value,
+    base,
+    [...INSTRUMENT_KEYS, 'envelopeFloor', 'decayUntilRelease'],
+    INSTRUMENT_KEYS.filter((key) => key !== 'decay')
+  );
+  if (own(value, 'decayUntilRelease') && !untilRelease) {
+    c.add(join(base, 'decayUntilRelease'), 'must be true, or left out for a decay of fixed length');
+  }
+  if (untilRelease && own(value, 'decay')) {
+    c.add(join(base, 'decay'), "must be left out: decayUntilRelease makes the decay last until each note's release");
+  } else if (!untilRelease && !own(value, 'decay')) {
+    c.add(join(base, 'decay'), 'is required, unless decayUntilRelease is true');
+  }
   for (const [key, options] of Object.entries(ENUMS)) {
     if (own(value, key) && !options.includes(value[key] as string)) {
       c.add(join(base, key), `must be one of ${options.map((o) => `'${o}'`).join(', ')}`);
