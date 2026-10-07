@@ -1,0 +1,14 @@
+{
+  "about": "Cues rendered by the engine before an instrument with no effect lost its effects chain, when every cue instrument had one. A cue that renders differently from these sounds different from before.",
+  "repository": "soundscape",
+  "commit": "c3bbbbb7e97e3219526dc74a2b632e59b8119134",
+  "files": {
+    "packages/engine/src/audio/AudioEngine.ts": "9c6ebab6551d6528166503bf29f2a495ba955dcd2840d7eb5afa5b6c36a5c99e",
+    "packages/engine/src/audio/EffectsChain.ts": "faf160211a4a77795a48fe0716229db8b84c9d0affd6b1cc4c2d09ebcb0410f6"
+  },
+  "renderer": "node-web-audio-api 2.2.0",
+  "platform": "darwin arm64, Node v24.21.0",
+  "sampleRate": 48000,
+  "start": 0.128,
+  "how": "The document in cues.effects.render.test.ts loaded into an engine on a 1.5 s mono offline context, then playCue(name, 0.128), with UPDATE_RENDER_REFERENCE=1; samples copied out of the AudioBuffer at once."
+}
