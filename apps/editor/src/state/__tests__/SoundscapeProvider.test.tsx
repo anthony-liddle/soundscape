@@ -1,63 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { StrictMode } from 'react'
 import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { resetMockUuid } from '../../test/setup'
+import { installFakeAudio } from '../../test/fakeAudio'
 import { SoundscapeProvider } from '../SoundscapeContext'
 import { useSoundscape } from '../useSoundscape'
-
-// Minimal Web Audio stubs — jsdom has no AudioContext. The engine only needs
-// the node graph methods it calls during initialize/updateState.
-function makeNode() {
-  const param = {
-    value: 0,
-    setValueAtTime: vi.fn(),
-    linearRampToValueAtTime: vi.fn(),
-    cancelScheduledValues: vi.fn(),
-  }
-  return {
-    connect: vi.fn(),
-    disconnect: vi.fn(),
-    gain: param,
-    frequency: param,
-    detune: param,
-    Q: param,
-    threshold: param,
-    knee: param,
-    ratio: param,
-    attack: param,
-    release: param,
-    delayTime: param,
-    curve: null,
-    oversample: '',
-    buffer: null,
-    fftSize: 0,
-    smoothingTimeConstant: 0,
-    frequencyBinCount: 1024,
-    start: vi.fn(),
-    stop: vi.fn(),
-    port: { onmessage: null, postMessage: vi.fn() },
-  }
-}
-
-class FakeAudioContext {
-  currentTime = 0
-  sampleRate = 44100
-  state = 'running'
-  destination = makeNode()
-  audioWorklet = { addModule: vi.fn().mockResolvedValue(undefined) }
-  createGain = vi.fn(() => makeNode())
-  createDynamicsCompressor = vi.fn(() => makeNode())
-  createAnalyser = vi.fn(() => makeNode())
-  createBiquadFilter = vi.fn(() => makeNode())
-  createOscillator = vi.fn(() => makeNode())
-  createDelay = vi.fn(() => makeNode())
-  createWaveShaper = vi.fn(() => makeNode())
-  createConvolver = vi.fn(() => makeNode())
-  createBuffer = vi.fn(() => ({ getChannelData: () => new Float32Array(8) }))
-  resume = vi.fn().mockResolvedValue(undefined)
-  close = vi.fn().mockResolvedValue(undefined)
-}
 
 function Harness() {
   const { state, dispatch, undo, redo, canUndo, canRedo } = useSoundscape()
@@ -91,10 +39,7 @@ function renderApp() {
 describe('SoundscapeProvider integration (StrictMode)', () => {
   beforeEach(() => {
     resetMockUuid()
-    vi.stubGlobal('AudioContext', FakeAudioContext)
-    vi.stubGlobal('AudioWorkletNode', class { port = { onmessage: null }; connect() {}; disconnect() {} })
-    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => setTimeout(() => cb(0), 0) as unknown as number)
-    vi.stubGlobal('cancelAnimationFrame', (id: number) => clearTimeout(id))
+    installFakeAudio()
   })
 
   it('mounts and unmounts under StrictMode without unhandled errors', async () => {
