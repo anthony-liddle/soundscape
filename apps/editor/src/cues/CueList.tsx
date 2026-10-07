@@ -54,6 +54,8 @@ export function CueList({ doc, selected, problems, dispatch }: CueListProps) {
                   {current ? '▸' : ''}
                 </span>
                 <span className="cue-list-name">{name}</span>
+                {/* So a screen reader says "tick, 1 note", not "tick1 note" */}
+                <span className="visually-hidden">, </span>
                 <span className="cue-list-meta">
                   {plural(doc.cues[name]!.notes.length, 'note')}
                   {wrong > 0 && <span className="cue-list-problems">{`, ! ${plural(wrong, 'problem')}`}</span>}

@@ -38,32 +38,32 @@ export function NoteTable({ doc, cue, noteId, problems, dispatch, onPlayNote, pl
     focusNext.current = null;
   });
 
-  const selectedNote = notes.find((n) => n.id === noteId) ?? null;
-  const add = () => {
+  // Add sits in each row, so the note it follows is the row it is in. A
+  // single Add above the table would follow the selection, and Tab moving
+  // up to it through the rows would select each row it passed.
+  const add = (after: string | null) => {
     focusNext.current = `${nextNoteId(doc, cue)}-instrument`;
-    dispatch({ type: 'ADD_NOTE', cue, after: selectedNote?.id ?? notes[notes.length - 1]?.id ?? null });
+    dispatch({ type: 'ADD_NOTE', cue, after });
   };
   const remove = (index: number) => {
     const neighbour = notes[index + 1] ?? notes[index - 1];
     focusNext.current = neighbour ? `${neighbour.id}-instrument` : ADD_ID;
     dispatch({ type: 'REMOVE_NOTE', noteId: notes[index]!.id });
   };
-  const after = selectedNote ?? notes[notes.length - 1];
+
+  if (notes.length === 0) {
+    return (
+      <div className="cue-empty-notes">
+        <p className="cue-no-notes">This cue has no notes yet.</p>
+        <button id={ADD_ID} type="button" className="btn btn-secondary btn-small" onClick={() => add(null)}>
+          Add note
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
-    <div className="cue-table-actions">
-      <button
-        id={ADD_ID}
-        type="button"
-        className="btn btn-secondary btn-small"
-        aria-label={after ? `Add note after ${after.id}` : 'Add note'}
-        onClick={add}
-      >
-        Add note
-      </button>
-    </div>
-    {notes.length === 0 && <p className="cue-no-notes">This cue has no notes yet.</p>}
     <table className="cue-notes">
       <caption className="visually-hidden">The notes of {cue}, in file order</caption>
       <thead>
@@ -151,7 +151,10 @@ export function NoteTable({ doc, cue, noteId, problems, dispatch, onPlayNote, pl
                 />
                 {i > 0 && (
                   <details id={`${note.id}-harmonics`} className="cue-harmonics">
-                    <summary>{'Set to k \u00d7 note 1'}</summary>
+                    <summary>
+                      {'Set to k \u00d7 note 1'}
+                      <span className="visually-hidden"> for {note.id}</span>
+                    </summary>
                     <div role="group" aria-label={`Multiples of note 1 for ${note.id}`}>
                       {HARMONICS.map((k) => (
                         <button
@@ -191,6 +194,14 @@ export function NoteTable({ doc, cue, noteId, problems, dispatch, onPlayNote, pl
                   onClick={() => onPlayNote(note)}
                 >
                   Play
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-small"
+                  aria-label={`Add note after ${note.id}`}
+                  onClick={() => add(note.id)}
+                >
+                  Add note
                 </button>
                 <button
                   type="button"

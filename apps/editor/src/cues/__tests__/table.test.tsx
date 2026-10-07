@@ -126,7 +126,9 @@ describe('setting a pitch to a harmonic of note 1', () => {
   it('changes nothing until a multiple is pressed, then sets exactly that one', async () => {
     const { user } = await openExample()
     const pitch = screen.getByRole('textbox', { name: 'Pitch of found-8-sparkle, MIDI' }) as HTMLInputElement
-    await user.click(screen.getByText('Set to k × note 1', { selector: '#found-8-sparkle-harmonics summary' }))
+    const summary = document.querySelector('#found-8-sparkle-harmonics summary') as HTMLElement
+    expect(summary).toHaveTextContent('Set to k \u00d7 note 1 for found-8-sparkle')
+    await user.click(summary)
     expect(pitch.value).toBe('98.01953075366262')
     await user.click(screen.getByRole('button', { name: 'Set the pitch of found-8-sparkle to 2 × note 1' }))
     // Note 1 is 78.99998074500876, so 2 times it is 12 semitones above
