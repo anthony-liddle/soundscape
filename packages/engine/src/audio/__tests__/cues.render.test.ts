@@ -165,6 +165,18 @@ describe('playCue', () => {
     expect(largestDifference(kept, plain)).toBe(0)
   })
 
+  it('plays out a ringing cue through its effects chain when the document is replaced under it', async () => {
+    const echo = doc({ g: [note('g1', 55, 0)] }, sine({ delayTime: 0.1, delayFeedback: 0.5, delayMix: 0.4 }))
+    const kept = await render((e) => {
+      e.playCue('g', START)
+      e.loadCues(doc({ other: [note('o', 60, 0)] }))
+    }, echo)
+    const plain = await render((e) => e.playCue('g', START), echo)
+    // The echoes are there, and the same as if the document had stayed
+    expect(peakIn(plain, START + 0.3, START + 0.45)).toBeGreaterThan(0.01)
+    expect(largestDifference(kept, plain)).toBe(0)
+  })
+
   it('says what is wrong when it cannot play', async () => {
     const { engine } = await engineWith()
     expect(() => engine.playCue('g')).toThrow(/loadCues/)

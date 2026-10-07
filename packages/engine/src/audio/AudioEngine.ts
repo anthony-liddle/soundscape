@@ -3,7 +3,7 @@ import { defaultTrackMixerState } from '../types';
 import { beatsToSeconds, normalizedToADSR } from '../utils/time';
 import { VoiceSynthesizer } from './VoiceSynthesizer';
 import type { VoiceParams } from './VoiceSynthesizer';
-import { EffectsChain } from './EffectsChain';
+import { EffectsChain, asksForNoEffect } from './EffectsChain';
 import type { EffectsParams } from './EffectsChain';
 import { getPresetById } from '../presets';
 import { CueDocumentError } from '../cues/types';
@@ -56,7 +56,8 @@ function voiceKey(noteId: string, iteration: number): string {
 
 /** A loaded cue instrument's effects, and how many of its voices still sound. */
 interface CueChain {
-  effectsChain: EffectsChain;
+  /** Null for an instrument that asks for no effect: its voices play straight into the cue output. */
+  effectsChain: EffectsChain | null;
   voices: number;
   /** True once a newer document replaced this one's instruments. */
   retired: boolean;
@@ -904,9 +905,17 @@ export class AudioEngine {
     for (const chain of this.cueChains.values()) this.retireCueChain(chain);
     this.cueChains = new Map();
     for (const [name, instrument] of Object.entries(result.document.instruments)) {
+      // A chain with no effect to make sounds the same as none, but its
+      // convolver, delay and waveshaper would run for as long as the context
+      // does. A cue instrument's effects are fixed once loaded, so this holds.
+      const effects = cueEffects(instrument);
+      if (asksForNoEffect(effects)) {
+        this.cueChains.set(name, { effectsChain: null, voices: 0, retired: false });
+        continue;
+      }
       // A cue with no distortion must not be oversampled: WebKit delays it 6 samples
       const effectsChain = new EffectsChain(context, { oversampleOnlyWhenDistorting: true });
-      effectsChain.setParams(cueEffects(instrument));
+      effectsChain.setParams(effects);
       effectsChain.getOutput().connect(this.cueBus);
       this.cueChains.set(name, { effectsChain, voices: 0, retired: false });
     }
@@ -945,13 +954,13 @@ export class AudioEngine {
     for (const note of document.cues[name]!.notes) {
       const chain = this.cueChains.get(note.instrument)!;
       const instrument = document.instruments[note.instrument]!;
-      const voice = new VoiceSynthesizer(context, chain.effectsChain.getInput());
+      const voice = new VoiceSynthesizer(context, chain.effectsChain?.getInput() ?? this.cueBus!);
       chain.voices++;
       voice.onEnded = () => {
         // Releases the nodes without touching a param: a cue never cancels
         voice.dispose();
         chain.voices--;
-        if (chain.retired && chain.voices === 0) chain.effectsChain.disconnect();
+        if (chain.retired && chain.voices === 0) chain.effectsChain?.disconnect();
       };
       // The whole note at once, so no release depends on how a browser cancels
       voice.playNote(
@@ -985,7 +994,7 @@ export class AudioEngine {
   /** Disconnect a replaced document's chain now, or once its last voice ends. */
   private retireCueChain(chain: CueChain): void {
     chain.retired = true;
-    if (chain.voices === 0) chain.effectsChain.disconnect();
+    if (chain.voices === 0) chain.effectsChain?.disconnect();
   }
 
   private stopAllMIDINotes(): void {
@@ -1024,7 +1033,7 @@ export class AudioEngine {
       this.removeTrackChannel(id, channel);
     }
 
-    for (const chain of this.cueChains.values()) chain.effectsChain.disconnect();
+    for (const chain of this.cueChains.values()) chain.effectsChain?.disconnect();
     this.cueChains.clear();
     this.cueDocument = null;
     if (this.cueBus) {

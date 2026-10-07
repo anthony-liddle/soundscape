@@ -45,6 +45,11 @@ changed.
   oversamples even a null curve, delaying the signal 6 samples and filtering
   it, where Chromium and Firefox pass it through. Cue chains use it, so cues
   sound the same in every browser; track chains do not yet (#106).
+- A cue instrument whose effects are all exactly 0 gets no effects chain:
+  its voices play straight into the cue route. A chain at zero passes a cue
+  through unchanged, but its convolver, delay and waveshaper still ran for as
+  long as the context did. Any effect above 0 keeps the whole chain. Track
+  chains are unchanged.
 
 ### Changed
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { EffectsChain } from '../EffectsChain'
+import { EffectsChain, asksForNoEffect } from '../EffectsChain'
 import type { EffectsParams } from '../EffectsChain'
 import { createMockAudioContext, isConnected } from './mockWebAudio'
 import type { MockAudioContext, MockNode } from './mockWebAudio'
@@ -167,4 +167,20 @@ describe('EffectsChain', () => {
       }
     })
   })
+})
+
+describe('asksForNoEffect', () => {
+  const NONE: EffectsParams = { delayTime: 0, delayFeedback: 0, delayMix: 0, distortion: 0, reverbMix: 0 }
+
+  it('is true only when every value the chain carries is exactly 0', () => {
+    expect(asksForNoEffect(NONE)).toBe(true)
+    expect(asksForNoEffect({ ...NONE, delayMix: -0 })).toBe(true)
+  })
+
+  for (const key of Object.keys(NONE) as (keyof EffectsParams)[]) {
+    it(`is false with ${key} above 0, however little: any value asks for its effect`, () => {
+      expect(asksForNoEffect({ ...NONE, [key]: Number.MIN_VALUE })).toBe(false)
+      expect(asksForNoEffect({ ...NONE, [key]: 1 })).toBe(false)
+    })
+  }
 })

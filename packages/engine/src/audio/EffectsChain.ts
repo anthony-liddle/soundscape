@@ -21,6 +21,19 @@ export interface EffectsParams {
 }
 
 /**
+ * True when `params` ask for no effect at all: every value the chain carries is
+ * exactly 0. Any other value, however small, asks for its effect.
+ *
+ * A cue chain with all of them at 0 passes its input through unchanged: the
+ * dry path at gain 1, the waveshaper with no curve and no oversampling, and
+ * both sends at 0. Its convolver, delay and waveshaper still run, though, so
+ * a cue instrument like this gets no chain at all.
+ */
+export function asksForNoEffect(params: EffectsParams): boolean {
+  return Object.values(params).every((value) => value === 0);
+}
+
+/**
  * Effects chain: Distortion (main path) + Delay send + Reverb send.
  *
  * Signal flow:
