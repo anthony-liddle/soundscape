@@ -905,16 +905,17 @@ export class AudioEngine {
     for (const chain of this.cueChains.values()) this.retireCueChain(chain);
     this.cueChains = new Map();
     for (const [name, instrument] of Object.entries(result.document.instruments)) {
-      // A chain with no effect to make sounds the same as none, but its
-      // convolver, delay and waveshaper would run for as long as the context
-      // does. A cue instrument's effects are fixed once loaded, so this holds.
+      // A chain with no effect to make sounds the same as none, but its delay
+      // and waveshaper would run for as long as the context does. A cue
+      // instrument's effects are fixed once loaded, so this holds.
       const effects = cueEffects(instrument);
       if (asksForNoEffect(effects)) {
         this.cueChains.set(name, { effectsChain: null, voices: 0, retired: false });
         continue;
       }
-      // A cue with no distortion must not be oversampled: WebKit delays it 6 samples
-      const effectsChain = new EffectsChain(context, { oversampleOnlyWhenDistorting: true });
+      // A cue with no distortion must not be oversampled: WebKit delays it 6
+      // samples. And no cue can ask for reverb, so it gets no convolver.
+      const effectsChain = new EffectsChain(context, { oversampleOnlyWhenDistorting: true, reverb: false });
       effectsChain.setParams(effects);
       effectsChain.getOutput().connect(this.cueBus);
       this.cueChains.set(name, { effectsChain, voices: 0, retired: false });

@@ -119,9 +119,9 @@ describe("a cue instrument's effects chain", () => {
   })
 
   for (const name of ['echo', 'grit']) {
-    it(`is built whole for an instrument with an effect: ${name}`, async () => {
+    it(`is built for an instrument with an effect, without the convolver no cue can hear: ${name}`, async () => {
       expect(await effectNodesFor({ [name]: DOCUMENT.instruments[name]! })).toEqual({
-        convolver: 1,
+        convolver: 0,
         waveshaper: 1,
         delay: 1,
       })

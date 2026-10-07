@@ -169,6 +169,33 @@ describe('EffectsChain', () => {
   })
 })
 
+describe('an EffectsChain built without reverb', () => {
+  const NONE: EffectsParams = { delayTime: 0, delayFeedback: 0, delayMix: 0, distortion: 0, reverbMix: 0 }
+
+  it('has no convolver, and still routes the dry path and the delay', () => {
+    const ctx = createMockAudioContext()
+    const chain = new EffectsChain(ctx as unknown as AudioContext, { reverb: false })
+    const kinds = ctx.createdNodes.map((n) => n.kind)
+    expect(kinds).not.toContain('convolver')
+    expect(kinds.filter((k) => k === 'delay')).toHaveLength(1)
+    expect(kinds.filter((k) => k === 'waveshaper')).toHaveLength(1)
+    chain.setParams({ ...NONE, delayTime: 0.3, delayMix: 0.5, distortion: 0.2 })
+    chain.disconnect()
+  })
+
+  it('refuses a reverbMix above 0 rather than ignore it', () => {
+    const ctx = createMockAudioContext()
+    const chain = new EffectsChain(ctx as unknown as AudioContext, { reverb: false })
+    expect(() => chain.setParams({ ...NONE, reverbMix: 0.1 })).toThrow(/reverb/)
+  })
+
+  it('is not what a chain gets by default, which tracks use', () => {
+    const ctx = createMockAudioContext()
+    new EffectsChain(ctx as unknown as AudioContext)
+    expect(ctx.createdNodes.map((n) => n.kind)).toContain('convolver')
+  })
+})
+
 describe('asksForNoEffect', () => {
   const NONE: EffectsParams = { delayTime: 0, delayFeedback: 0, delayMix: 0, distortion: 0, reverbMix: 0 }
 
