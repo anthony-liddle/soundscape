@@ -1,9 +1,8 @@
-import { useEffect, useCallback } from 'react';
 import type { Dispatch } from 'react';
 import type { SoundscapeState } from 'soundscape-engine';
 import type { SoundscapeAction } from '../state/reducer';
 import { exportSoundscape } from '../utils/exportSoundscape';
-import { keepsEveryKey, keepsSpace } from '../shortcuts/focus';
+import { useViewShortcuts } from '../shortcuts';
 
 interface KeyboardShortcutOptions {
   isPlaying: boolean;
@@ -18,6 +17,7 @@ interface KeyboardShortcutOptions {
   dispatch: Dispatch<SoundscapeAction>;
 }
 
+/** The song view's shortcuts. They act on the song only while it is in front. */
 export function useKeyboardShortcuts({
   isPlaying,
   play,
@@ -30,50 +30,18 @@ export function useKeyboardShortcuts({
   selectedTrackId,
   dispatch,
 }: KeyboardShortcutOptions) {
-  const handler = useCallback(
-    (e: KeyboardEvent) => {
-      // Whatever handled the key first, or a field that keeps it, has it
-      if (e.defaultPrevented || keepsEveryKey(e.target)) return;
-
-      const mod = e.ctrlKey || e.metaKey;
-
-      if (e.code === 'Space') {
-        // A focused button, checkbox or other control takes its own Space
-        if (keepsSpace(e.target)) return;
-        e.preventDefault();
-        if (isPlaying) { stop(); } else { play(); }
-        return;
-      }
-
-      if (mod && e.code === 'KeyZ' && !e.shiftKey) {
-        e.preventDefault();
-        if (canUndo) undo();
-        return;
-      }
-
-      if (mod && (e.code === 'KeyY' || (e.code === 'KeyZ' && e.shiftKey))) {
-        e.preventDefault();
-        if (canRedo) redo();
-        return;
-      }
-
-      if (mod && e.code === 'KeyS') {
-        e.preventDefault();
-        exportSoundscape(state);
-        return;
-      }
-
-      if (mod && e.code === 'KeyD' && selectedTrackId) {
-        e.preventDefault();
-        dispatch({ type: 'DUPLICATE_TRACK', payload: { trackId: selectedTrackId } });
-        return;
-      }
+  useViewShortcuts({
+    togglePlay: () => (isPlaying ? stop() : play()),
+    undo: () => {
+      if (canUndo) undo();
     },
-    [isPlaying, play, stop, undo, redo, canUndo, canRedo, state, selectedTrackId, dispatch]
-  );
-
-  useEffect(() => {
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [handler]);
+    redo: () => {
+      if (canRedo) redo();
+    },
+    save: () => exportSoundscape(state),
+    // With no track selected, Ctrl+D is left to the browser
+    duplicate: selectedTrackId
+      ? () => dispatch({ type: 'DUPLICATE_TRACK', payload: { trackId: selectedTrackId } })
+      : undefined,
+  });
 }
