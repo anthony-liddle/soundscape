@@ -2,11 +2,13 @@
 
 ## Unreleased
 
-Planned as 0.4.0. Everything here is additive but one fix, to the release in
-browsers without `cancelAndHoldAtTime`, which means Firefox. Everywhere else
-music, `previewNote`, the transport and the master chain sound exactly as they
-did in 0.3.0, held to sample-exact references recorded before any of it
-changed.
+Planned as 0.4.0. Everything here is additive but two fixes: to the release
+in browsers without `cancelAndHoldAtTime`, which means Firefox, and to the
+distortion curve, which was centred half a point off. Everywhere else music,
+`previewNote`, the transport and the master chain sound exactly as they did in
+0.3.0, held to sample-exact references recorded before any of it changed. The
+transport's reference, whose bass and lead distort, was recorded again by the
+same engine with only the curve centred.
 
 ### Added
 
@@ -110,6 +112,24 @@ changed.
   retraces it, and where it removed nothing, the ramp is flat. No comparison
   with the decay's end decides which. Browsers with `cancelAndHoldAtTime` are
   unaffected.
+- **Distortion puts out nothing for nothing in** (#110). The curve had 44,100
+  points at x = 2i/44100 - 1, but Web Audio reads a curve of n points at
+  index (n - 1)(v + 1)/2, so an input of 0 fell halfway between two points
+  and read half of one: an offset of about -(1 + 100 × distortion / π) / 44100,
+  -4.554e-4 (-66.8 dBFS) at a distortion of 0.6 and -7.434e-4 at 1. Chromium
+  and WebKit run a waveshaper with nothing playing into it, so every chain
+  with distortion, a track's or a cue's, put that offset out for as long as
+  the context ran; Firefox put it out while anything played through the chain.
+  The curve now has 44,101 points, the old ones and the one at x = 1 it
+  lacked, so an input of 0 is read at the centre point, which holds 0. Every
+  distorted track and cue moves by that half point along the curve: a bass
+  note at 0.6, played by the transport, changes by 0.0006 dB in level and at
+  most 0.005 dB in any of its first twelve harmonics, and the difference is
+  61 dB below the note. A plain `WaveShaperNode` with a centred curve of its
+  own now holds the cue path and the track path to 1e-6 in Chromium, Firefox
+  and WebKit, and an engine with a distorting cue instrument loaded and
+  nothing playing puts out exactly 0 in all three. `previewNote`, which plays
+  through no effects chain, is unchanged.
 
 ## 0.3.0
 

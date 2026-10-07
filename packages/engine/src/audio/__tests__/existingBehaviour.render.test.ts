@@ -33,6 +33,11 @@ import {
  *   makes for a sound effect;
  *   the three voice configurations render.test.ts uses.
  *
+ * One change since was meant to be heard: #110 centred the distortion curve,
+ * which moved the transport, whose bass and lead distort. That reference was
+ * recorded again by the engine as it was before cues, with only the curve
+ * centred; reference/existing/provenance.json says how, and by how much.
+ *
  * The engine builds its own AudioContext, so a constructor that makes an
  * offline one stands in for it: this is the default path every consumer takes.
  *
@@ -43,7 +48,9 @@ import {
  * of magnitude more.
  *
  * To record the references again, run with UPDATE_RENDER_REFERENCE=1. Only do
- * that for a change that is meant to be heard.
+ * that for a change that is meant to be heard, and do it at the commit
+ * provenance.json names, with only that change applied, so the references
+ * still hold the engine as it was before cues.
  */
 const TOLERANCE = 1e-6
 const DIR = resolve(__dirname, 'reference/existing')

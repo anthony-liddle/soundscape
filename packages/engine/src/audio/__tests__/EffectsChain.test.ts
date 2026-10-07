@@ -94,9 +94,9 @@ describe('EffectsChain', () => {
       expect(reverbWet.gain.value).toBeCloseTo(0.2)
     })
 
-    it('installs a 44100-sample distortion curve with 2x oversampling', () => {
+    it('installs a 44101-point distortion curve with 2x oversampling', () => {
       chain.setParams(PARAMS)
-      expect(distortion.curve).toHaveLength(44100)
+      expect(distortion.curve).toHaveLength(44101)
       expect(distortion.oversample).toBe('2x')
     })
 
@@ -105,7 +105,7 @@ describe('EffectsChain', () => {
       expect(distortion.curve).toBeNull()
 
       chain.setParams({ ...PARAMS, distortion: 0.5 })
-      expect(distortion.curve).toHaveLength(44100)
+      expect(distortion.curve).toHaveLength(44101)
     })
 
     it('keeps unity peak level across all distortion amounts (continuous at 0)', () => {
@@ -115,17 +115,28 @@ describe('EffectsChain', () => {
       for (const amount of [0.001, 0.3, 1]) {
         chain.setParams({ ...PARAMS, distortion: amount })
         const curve = distortion.curve!
-        expect(curve[44099]!).toBeCloseTo(1, 2)
-        expect(curve[0]!).toBeCloseTo(-1, 2)
+        expect(curve[44100]!).toBe(1)
+        expect(curve[0]!).toBe(-1)
       }
       chain.setParams({ ...PARAMS, distortion: 0.001 })
       const nearIdentity = distortion.curve!
       expect(nearIdentity[33075]!).toBeCloseTo(0.5, 1) // x = 0.5 barely shaped (0.5078)
     })
 
+    it('maps 0 in to exactly 0 out: the centre of the curve, as Web Audio reads it, is a point at 0', () => {
+      // Web Audio reads a curve of n points at index (n - 1)(v + 1)/2, so an
+      // input of 0 lands on a point only when n is odd, and must find 0 there
+      for (const amount of [0.1, 0.6, 1]) {
+        chain.setParams({ ...PARAMS, distortion: amount })
+        const curve = distortion.curve as Float32Array
+        expect(curve.length % 2).toBe(1)
+        expect(curve[(curve.length - 1) / 2]).toBe(0)
+      }
+    })
+
     it('only rebuilds the distortion curve when the amount changes', () => {
       // setParams runs on every state sync (per dispatch, per track); the
-      // 44100-sample curve is rebuilt only when the distortion value moves
+      // 44101-point curve is rebuilt only when the distortion value moves
       chain.setParams(PARAMS)
       const first = distortion.curve
       chain.setParams(PARAMS)

@@ -1,0 +1,22 @@
+{
+  "about": "What music, previewNote and single voices sounded like before cues touched the engine: the references existingBehaviour.render.test.ts holds them to. transport-composition.wav is that sound with the distortion curve centred as #110 centres it; the other five are as first recorded.",
+  "repository": "soundscape",
+  "commit": "209a28da35ac0c0ec163f9b35f85495414fe29fe",
+  "renderer": "node-web-audio-api 2.2.0",
+  "platform": "darwin arm64, Node v24.21.0: where all six were reproduced and transport-composition.wav was recorded again",
+  "sampleRate": 48000,
+  "start": 0.128,
+  "how": "First recorded in #105, before any engine change, by existingBehaviour.render.test.ts with UPDATE_RENDER_REFERENCE=1. 209a28d, main as #105 found it, reproduces all six byte for byte when that test and renderHarness.ts, as #110 has them, are run against it.",
+  "moved": {
+    "transport-composition.wav": {
+      "patch": "EffectsChain.makeDistortionCurve as #110 has it: 44101 points at x = 2i/(n - 1) - 1, where 209a28d has 44100 at x = 2i/n - 1. Nothing else.",
+      "files": {
+        "packages/engine/src/audio/AudioEngine.ts": "8b14849ccf209bbbc75db885a5bb4ff9c3cfa631802dbf40c84c80d96dfac7e8",
+        "packages/engine/src/audio/EffectsChain.ts": "9d13427220f109027cfc8d9b11f2b5daeb764a5ea7ef11648112d4e5668f4877"
+      },
+      "how": "At 209a28d with the patch applied, run as above. With the patch the other five render byte for byte as before, so they were left alone.",
+      "why": "Re-recorded for #110. The composition's bass and lead play through track chains with distortion 0.1 and 0.05. Their waveshapers read a curve centred half a point off, so with nothing going in they put out an offset, which reached the output through the mixer, the master gain and the compressor as -5.0935e-4, about -65.9 dBFS, before a note played, and stayed under the music. Centring the curve takes the offset away, and moves each distorted note by the same half step along the curve.",
+      "by": "+5.0935e-4 before the music starts. The largest difference once it plays is that same offset, at the first note, and the largest anywhere is 5.5466e-4, while the oversamplers settle. The difference is 61 dB below the composition by RMS: -72.0 dBFS against -11.0."
+    }
+  }
+}

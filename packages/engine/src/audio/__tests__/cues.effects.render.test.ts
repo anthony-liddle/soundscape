@@ -15,7 +15,8 @@ import { SAMPLE_RATE, START, decodeWav, encodeWav, largestDifference } from './r
  *
  * The cues with no effect and with delay are compared sample by sample with
  * references rendered in node-web-audio-api before the change, when every cue
- * instrument had a chain: reference/effects/provenance.json says which commit.
+ * instrument had a chain, with the distortion curve centred as #110 centres
+ * it: reference/effects/provenance.json says which commit, and how.
  * So an instrument with no effect sounds the same without its chain as it did
  * through one, and an instrument with delay sounds as it did. Reverb is not
  * here: a cue instrument's reverbMix must be 0, so no cue can ask for it.

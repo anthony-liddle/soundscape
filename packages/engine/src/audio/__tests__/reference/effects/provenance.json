@@ -1,14 +1,21 @@
 {
-  "about": "Cues rendered by the engine before an instrument with no effect lost its effects chain, when every cue instrument had one. A cue that renders differently from these sounds different from before.",
+  "about": "Cues rendered by the engine before an instrument with no effect lost its effects chain, when every cue instrument had one, with the distortion curve centred as #110 centres it. A cue that renders differently from these sounds different from before.",
   "repository": "soundscape",
   "commit": "c3bbbbb7e97e3219526dc74a2b632e59b8119134",
+  "patch": "EffectsChain.makeDistortionCurve as #110 has it: 44101 points at x = 2i/(n - 1) - 1, where c3bbbbb has 44100 at x = 2i/n - 1. Nothing else.",
   "files": {
     "packages/engine/src/audio/AudioEngine.ts": "9c6ebab6551d6528166503bf29f2a495ba955dcd2840d7eb5afa5b6c36a5c99e",
-    "packages/engine/src/audio/EffectsChain.ts": "faf160211a4a77795a48fe0716229db8b84c9d0affd6b1cc4c2d09ebcb0410f6"
+    "packages/engine/src/audio/EffectsChain.ts": "16f027b5794b3e63aa1be8b51d7580af83f9618aabc4cf92105fecc99eec4914"
   },
   "renderer": "node-web-audio-api 2.2.0",
   "platform": "darwin arm64, Node v24.21.0",
   "sampleRate": 48000,
   "start": 0.128,
-  "how": "The document in cues.effects.render.test.ts loaded into an engine on a 1.5 s mono offline context, then playCue(name, 0.128), with UPDATE_RENDER_REFERENCE=1; samples copied out of the AudioBuffer at once."
+  "how": "At c3bbbbb with the patch applied, the reference cases of cues.effects.render.test.ts as #110 has it, run with UPDATE_RENDER_REFERENCE=1: the document loaded into an engine on a 1.5 s mono offline context, then playCue(name, 0.128); samples copied out of the AudioBuffer at once. Without the patch the same run reproduces the references it replaced byte for byte, and with it, two runs are byte-identical.",
+  "moved": {
+    "why": "Re-recorded for #110. The document loads grit, a sawtooth with distortion 0.6, beside these cues, and at c3bbbbb its chain is built and sits idle in every render. Its waveshaper read a curve centred half a point off, so with nothing going in it put out -4.5536e-4, about -66.8 dBFS, settled within 2 ms of the first frame and held to the last, and every reference recorded before #110 holds that offset under its cue. With the curve centred, nothing in comes out as nothing.",
+    "plain.wav": "Moved by +4.5536e-4, within 1e-7, from 2 ms to its last sample, and by up to 4.9587e-4 before that, while the idle chain's oversampler settles. The cue itself did not move: it has no distortion. Every frame before it starts at 128 ms, and every frame after it ends at 358 ms, is now exactly 0.",
+    "echo.wav": "Moved by +4.5536e-4, within 1e-7, from 2 ms to its last sample, and by up to 4.9587e-4 before that, while the idle chain's oversampler settles. The cue and its echoes did not move: they have no distortion. Every frame before the cue starts at 128 ms is now exactly 0; the echoes ring to the end of the render.",
+    "both.wav": "Moved by +4.5536e-4, within 1e-7, from 2 ms to its last sample, and by up to 4.9587e-4 before that, while the idle chain's oversampler settles. Neither note moved: neither has distortion. Every frame before the cue starts at 128 ms is now exactly 0; the echoes ring to the end of the render."
+  }
 }
