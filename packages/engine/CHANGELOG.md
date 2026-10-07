@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **`midiToNoteName` names a fractional pitch.** It returned `"undefined5"`
+  for a pitch such as 78.99998074500876, which a cue document allows. It now
+  gives the nearest note and the distance from it in cents, to two places:
+  `"B7 -13.69¢"` for 106.8631178836571, and `"G5 0.00¢"` for a pitch
+  that rounds to the note itself. The octave comes from the nearest note, so
+  59.99 is `"C4 -1.00¢"`. A whole number is named exactly as before.
+
 ## 0.4.0 - 2026-10-07
 
 Everything here is additive but two fixes: to the release in browsers
