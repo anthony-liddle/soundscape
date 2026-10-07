@@ -27,6 +27,16 @@ changed.
   rather than repair, naming the path to every bad value;
   `serializeCueDocument` writes the canonical form, so saving an unchanged
   document reproduces its bytes.
+- **`decayUntilRelease: true`** on a cue instrument, in place of `decay`: the
+  decay runs from the end of the attack to each note's release and reaches
+  the sustain level there, so one instrument serves notes of any length,
+  each fading over its own. An instrument has exactly one of the two. Both,
+  neither, or any value of `decayUntilRelease` but `true` is rejected, with
+  the path to the value at fault. 0.4.0-rc.1 rejects a document that uses
+  it, naming the field as unknown and the decay as missing.
+- **`loadCues` keeps its own copy of the document.** Changing the one passed
+  in afterwards, as an editor will, changes nothing that plays until it is
+  loaded again.
 - **`envelopeCurve: 'exponential'` with `envelopeFloor`**, opt-in on
   `InstrumentParams`: an envelope that ramps by a constant ratio, from and to
   an absolute floor.
@@ -40,21 +50,30 @@ changed.
   scheduling its attack, decay, any hold, release and stop at once, with
   nothing cancelled; `dispose()` releases an ended voice's nodes without
   touching a param. Cues use both.
-- `EffectsChain` takes options, and `oversampleOnlyWhenDistorting` leaves the
+- `EffectsChain` takes options. `oversampleOnlyWhenDistorting` leaves the
   waveshaper's oversampling off while there is no distortion. WebKit
   oversamples even a null curve, delaying the signal 6 samples and filtering
   it, where Chromium and Firefox pass it through. Cue chains use it, so cues
-  sound the same in every browser; track chains do not yet (#106).
-- A cue instrument whose effects are all exactly 0 gets no effects chain:
-  its voices play straight into the cue route. A chain at zero passes a cue
-  through unchanged, but its convolver, delay and waveshaper still ran for as
-  long as the context did. Any effect above 0 keeps the whole chain. Track
-  chains are unchanged.
+  sound the same in every browser; track chains do not yet (#106). And
+  `reverb: false` builds a chain with no reverb send, which refuses a
+  `reverbMix` above 0 rather than ignore it.
+- **No effects chain a cue cannot hear.** A cue instrument whose effects are
+  all exactly 0 gets no chain, and its voices play straight into the cue
+  route; a chain at zero passed a cue through unchanged, but its convolver,
+  delay and waveshaper ran for as long as the context did. An instrument
+  with any effect above 0 gets a chain with no reverb send, since a cue's
+  `reverbMix` must be 0, so its convolver could never be heard. Peach of a
+  Word's eight cue instruments, none with an effect, cost 53 to 57 ms of
+  render time per second of audio in Chromium, idle, and about 100 MB per
+  engine; now 0.55 ms and under 1 MB. Track chains are unchanged.
 
 ### Changed
 
 - `VoiceSynthesizer` and `EffectsChain` take a `BaseAudioContext`. Every
   existing caller still fits.
+- `VoiceParams.instrument` also takes a `CueInstrument`. `noteOn` refuses one
+  whose decay lasts until the release, since it starts a note without
+  knowing when it will be released; `playNote` plays it.
 - `FilterType` gains `'none'` and `EnvelopeCurve` is new. **A `switch` over
   `FilterType` that was exhaustive is no longer**, at the type level.
 - `validateSoundscapeState` accepts the new fields, rejects an exponential
