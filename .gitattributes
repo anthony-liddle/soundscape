@@ -1,0 +1,2 @@
+# The cue fixture is compared byte for byte; never convert its line endings
+apps/editor/src/cues/__fixtures__/*.json -text
