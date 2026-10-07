@@ -885,6 +885,10 @@ export class AudioEngine {
    * mute, feeding the analyser directly, so cues bypass the master gain and the
    * master compressor. (The compressor raises a lone cue by 4 to 5 dB.)
    *
+   * The engine keeps its own copy of the document. Changing the one passed in
+   * afterwards, as an editor will, changes nothing that plays until it is
+   * loaded again.
+   *
    * @param document - A cue document, already parsed. Validated here; see
    *   {@link parseCueDocument} for JSON text, which also catches duplicate keys.
    * @throws {@link CueDocumentError} listing every problem, with its path.
@@ -893,6 +897,7 @@ export class AudioEngine {
     const context = this.ensureContext();
     const result = validateCueDocument(document);
     if (!result.ok) throw new CueDocumentError(result.problems);
+    const own = structuredClone(result.document);
 
     if (!this.cueBus) {
       this.cueBus = context.createGain();
@@ -904,7 +909,7 @@ export class AudioEngine {
 
     for (const chain of this.cueChains.values()) this.retireCueChain(chain);
     this.cueChains = new Map();
-    for (const [name, instrument] of Object.entries(result.document.instruments)) {
+    for (const [name, instrument] of Object.entries(own.instruments)) {
       // A chain with no effect to make sounds the same as none, but its delay
       // and waveshaper would run for as long as the context does. A cue
       // instrument's effects are fixed once loaded, so this holds.
@@ -920,7 +925,7 @@ export class AudioEngine {
       effectsChain.getOutput().connect(this.cueBus);
       this.cueChains.set(name, { effectsChain, voices: 0, retired: false });
     }
-    this.cueDocument = result.document;
+    this.cueDocument = own;
   }
 
   /** Names of the cues in the loaded document, in the order the document has them. */

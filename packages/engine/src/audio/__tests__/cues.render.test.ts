@@ -187,6 +187,31 @@ describe('playCue', () => {
   })
 })
 
+describe('the engine keeps its own copy of a loaded document', () => {
+  it('plays a cue as loaded after the document is changed', async () => {
+    const asLoaded = await render((e) => e.playCue('g', START), doc({ g: [note('g1', 55, 0)] }))
+    const edited = doc({ g: [note('g1', 55, 0)] })
+    const after = await render((e) => {
+      // An editor changing the document it loaded: an envelope and a pitch
+      edited.instruments.sine!.attack = 0.5
+      edited.cues.g!.notes[0]!.pitch = 67
+      e.playCue('g', START)
+    }, edited)
+    expect(largestDifference(after, asLoaded)).toBe(0)
+  })
+
+  it('keeps the cues it loaded when cues are added to or removed from the document', async () => {
+    const edited = doc({ g: [note('g1', 55, 0)] })
+    const { engine } = await engineWith()
+    engine.loadCues(edited)
+    delete edited.cues.g
+    edited.cues.added = { notes: [note('a1', 60, 0)] }
+    expect(engine.getCueNames()).toEqual(['g'])
+    expect(() => engine.playCue('g', START)).not.toThrow()
+    expect(() => engine.playCue('added', START)).toThrow(/No cue named "added"/)
+  })
+})
+
 describe('the analyser', () => {
   for (const channels of [1, 2]) {
     it(`passes cues through unchanged, in ${channels === 1 ? 'mono' : 'stereo'}`, async () => {
