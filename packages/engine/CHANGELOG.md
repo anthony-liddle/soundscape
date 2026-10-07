@@ -1,9 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 - 2026-10-07
 
-Planned as 0.4.0. Everything here is additive but two fixes: to the release
-in browsers without `cancelAndHoldAtTime`, which means Firefox, and to the
+Everything here is additive but two fixes: to the release in browsers
+without `cancelAndHoldAtTime`, which means Firefox, and to the
 distortion curve, which was centred half a point off. Everywhere else music,
 `previewNote`, the transport and the master chain sound exactly as they did in
 0.3.0, held to sample-exact references recorded before any of it changed. The
