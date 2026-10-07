@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import type { Dispatch } from 'react';
-import type { CueDocument } from 'soundscape-engine';
+import type { CueDocument, CueProblem } from 'soundscape-engine';
+import { problemsInCue } from './problems';
 import type { CueAction } from './state';
 
 interface CueListProps {
   doc: CueDocument;
   selected: string | null;
+  problems: CueProblem[];
   dispatch: Dispatch<CueAction>;
 }
 
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 
 /** The document's cues, in file order. The selected one is marked in text, not colour alone. */
-export function CueList({ doc, selected, dispatch }: CueListProps) {
+export function CueList({ doc, selected, problems, dispatch }: CueListProps) {
   const [filter, setFilter] = useState('');
   const all = Object.keys(doc.cues);
   const names = all.filter((name) => name.toLowerCase().includes(filter.trim().toLowerCase()));
@@ -39,6 +41,7 @@ export function CueList({ doc, selected, dispatch }: CueListProps) {
       <ul className="cue-list-items">
         {names.map((name) => {
           const current = name === selected;
+          const wrong = problemsInCue(problems, name);
           return (
             <li key={name}>
               <button
@@ -51,7 +54,10 @@ export function CueList({ doc, selected, dispatch }: CueListProps) {
                   {current ? '▸' : ''}
                 </span>
                 <span className="cue-list-name">{name}</span>
-                <span className="cue-list-meta">{plural(doc.cues[name]!.notes.length, 'note')}</span>
+                <span className="cue-list-meta">
+                  {plural(doc.cues[name]!.notes.length, 'note')}
+                  {wrong > 0 && <span className="cue-list-problems">{`, ! ${plural(wrong, 'problem')}`}</span>}
+                </span>
               </button>
             </li>
           );

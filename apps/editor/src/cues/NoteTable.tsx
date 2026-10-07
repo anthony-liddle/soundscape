@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { Dispatch } from 'react';
-import type { CueDocument, CueProblem } from 'soundscape-engine';
+import type { CueDocument, CueNote, CueProblem } from 'soundscape-engine';
 import { ExactField } from './ExactField';
 import { dbfs, pitchReadout, storedSeconds } from './readouts';
 import { nextNoteId } from './state';
@@ -15,10 +15,14 @@ interface NoteTableProps {
   noteId: string | null;
   problems: CueProblem[];
   dispatch: Dispatch<CueAction>;
+  /** Plays one note alone. */
+  onPlayNote: (note: CueNote) => void;
+  /** The id of the text saying why Play is off, or null while it is on. */
+  playOffId: string | null;
 }
 
 /** One row per note, in the order the file keeps them, every value in a field of its own. */
-export function NoteTable({ doc, cue, noteId, problems, dispatch }: NoteTableProps) {
+export function NoteTable({ doc, cue, noteId, problems, dispatch, onPlayNote, playOffId }: NoteTableProps) {
   const notes = doc.cues[cue]!.notes;
   const firstPitch = notes[0]?.pitch ?? 0;
   const problemsAt = (index: number, field: string) =>
@@ -178,6 +182,16 @@ export function NoteTable({ doc, cue, noteId, problems, dispatch }: NoteTablePro
                 />
               </td>
               <td className="cue-row-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary btn-small"
+                  aria-label={`Play ${note.id} alone`}
+                  aria-describedby={playOffId ?? undefined}
+                  disabled={playOffId !== null}
+                  onClick={() => onPlayNote(note)}
+                >
+                  Play
+                </button>
                 <button
                   type="button"
                   className="btn btn-secondary btn-small"

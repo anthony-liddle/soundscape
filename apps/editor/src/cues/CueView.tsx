@@ -6,6 +6,9 @@ import { useViewShortcuts } from '../shortcuts';
 import { CueList } from './CueList';
 import { NoteTable } from './NoteTable';
 import { CueInstrumentPanel } from './CueInstrumentPanel';
+import { CueWaveform } from './CueWaveform';
+import { playOffReason } from './problems';
+import { useCueAudition } from './useCueAudition';
 import type { CueEditorApi } from './useCueEditor';
 import './CueView.css';
 
@@ -21,11 +24,19 @@ export function CueView({ cues, active, onViewChange }: CueViewProps) {
   const { editor, dispatch, dirty, problems, refused, status, say, openText, save } = cues;
   const { doc } = editor;
   const fileInput = useRef<HTMLInputElement>(null);
+  const audition = useCueAudition(say);
+  const offReason = playOffReason(problems);
+
+  const playSelected = () => {
+    if (!doc || editor.cue === null) say('Open a cue file to play its cues.');
+    else if (offReason) say(offReason);
+    else void audition.playCue(doc, editor.cue);
+  };
 
   // While this view is in front, its keys never reach the song
   useViewShortcuts(
     {
-      togglePlay: () => say(doc ? '' : 'Open a cue file to play its cues.'),
+      togglePlay: playSelected,
       undo: () => dispatch({ type: 'UNDO' }),
       redo: () => dispatch({ type: 'REDO' }),
       save,
@@ -95,17 +106,38 @@ export function CueView({ cues, active, onViewChange }: CueViewProps) {
       {doc ? (
         <div className="app-content">
           <aside className="app-sidebar">
-            <CueList doc={doc} selected={editor.cue} dispatch={dispatch} />
+            <CueList doc={doc} selected={editor.cue} problems={problems} dispatch={dispatch} />
           </aside>
           <main className="app-main cue-main">
             <section className="cue-panel" aria-labelledby="cue-notes-heading">
-              <h2 id="cue-notes-heading">{editor.cue}</h2>
+              <div className="cue-toolbar">
+                <h2 id="cue-notes-heading">{editor.cue}</h2>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-medium"
+                  aria-label={`Play ${editor.cue}`}
+                  aria-describedby={offReason ? 'cue-play-off' : undefined}
+                  disabled={offReason !== null}
+                  onClick={playSelected}
+                >
+                  Play
+                </button>
+                {offReason && (
+                  <p id="cue-play-off" className="cue-play-off">
+                    <span aria-hidden="true">! </span>
+                    {offReason}
+                  </p>
+                )}
+              </div>
+              <CueWaveform doc={doc} cue={editor.cue!} valid={offReason === null} />
               <NoteTable
                 doc={doc}
                 cue={editor.cue!}
                 noteId={editor.noteId}
                 problems={problems}
                 dispatch={dispatch}
+                onPlayNote={(note) => void audition.playNote(doc, note)}
+                playOffId={offReason ? 'cue-play-off' : null}
               />
             </section>
             {selectedInstrument !== undefined && (
