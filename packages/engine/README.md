@@ -153,6 +153,11 @@ Access them via `builtInPresets` or individually (`bassPreset`, `leadPreset`, et
 **Validation**
 
 - `validateSoundscapeState(state)` — Type-guard that validates a `SoundscapeState`
+- `soundscapeInstrumentProblems(state)` - Where a state's instruments break the
+  0.4.0 rules or carry a field only a cue can have, such as `decayUntilRelease`:
+  each problem with the path to the bad value, like
+  `presets[0].params.decayUntilRelease`. `validateSoundscapeState` refuses a
+  state with any of them.
 - `clamp(value, min, max)` — Clamp a number
 
 ## Cues
