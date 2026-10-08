@@ -170,6 +170,9 @@
       }
     ]
   },
+  "inclusive-limits": {
+    "ok": true
+  },
   "level-written-as-exponent-at-floor": {
     "ok": false,
     "problems": [

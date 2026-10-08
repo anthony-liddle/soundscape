@@ -143,5 +143,17 @@ write('level-written-as-exponent-at-floor', pretty.replace('"level": 0.0216', '"
 write('top-level-array', '[]\n');
 write('byte-order-mark', '﻿' + pretty + '\n');
 
+// Written by hand after the planted red in the build that added the generator:
+// a level of exactly 1, refused in Swift alone, passed the corpus and was
+// found only by the generator. Every inclusive limit, at its edge, accepted.
+write('inclusive-limits', withChange((d) => {
+  Object.assign(d.instruments.square, { pitchOffset: 24, attack: 1, sustain: 1, release: 1, filterCutoff: 0, filterResonance: 1 });
+  d.instruments.low = { ...d.instruments.square, pitchOffset: -24, attack: 0, sustain: 0, filterCutoff: 1, filterResonance: 0 };
+  d.cues.tick.notes = [
+    { id: 'top', instrument: 'square', start: 0, duration: 5e-324, pitch: 127, level: 1 },
+    { id: 'bottom', instrument: 'low', start: 0, duration: 0.03, pitch: 0, level: 0.5 },
+  ];
+}));
+
 // Peach of a Word's cue file, accepted
 write('peach-of-a-word', readFileSync(values.peach, 'utf8'));
