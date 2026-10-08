@@ -38,6 +38,43 @@ jobs:
       - name: Check engine packaging
         run: pnpm --filter soundscape-engine check:package
 
+  # The Swift library on Linux: its own tests, the shared cue corpus, the
+  # generator held against the engine, and a check that the corpus's recorded
+  # answers are still the engine's. Node runs the engine's TypeScript source
+  # directly, so nothing is installed for it. A macOS job waits for the player,
+  # the first code to touch Apple's frameworks.
+  #
+  # No paths filter, here or on the workflow: test is a required check, and a
+  # workflow skipped by a filter leaves it pending, which blocks the merge.
+  swift:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build
+        run: swift build
+
+      - name: Test, the corpus included
+        run: swift test
+
+      - name: The corpus's recorded answers are the engine's
+        run: node conformance/cues/expect.mjs --check
+
+      - name: The generator, against the engine
+        run: |
+          node conformance/cues/generate.mjs --seed 1 --count 3000 --out .build/generated.jsonl
+          CUE_GENERATED=.build/generated.jsonl swift test --filter GeneratedTests
+
   # The committed cues held to the oracle in real browsers, each rendering
   # both offline, and the editor's Cues view driven in each. One job per
   # browser, so each installs only its own build.
