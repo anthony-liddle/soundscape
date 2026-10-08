@@ -1,0 +1,585 @@
+{
+  "byte-order-mark": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "",
+        "message": "is not valid JSON"
+      }
+    ]
+  },
+  "foundation-decay-until-release-1": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.decayUntilRelease",
+        "message": "must be true, or left out for a decay of fixed length"
+      },
+      {
+        "path": "instruments.square.decay",
+        "message": "is required, unless decayUntilRelease is true"
+      }
+    ]
+  },
+  "foundation-integer-like-names": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.2.notes[0].id",
+        "message": "is required"
+      },
+      {
+        "path": "cues.2.notes[0].instrument",
+        "message": "is required"
+      },
+      {
+        "path": "cues.2.notes[0].start",
+        "message": "is required"
+      },
+      {
+        "path": "cues.2.notes[0].duration",
+        "message": "is required"
+      },
+      {
+        "path": "cues.2.notes[0].pitch",
+        "message": "is required"
+      },
+      {
+        "path": "cues.2.notes[0].level",
+        "message": "is required"
+      },
+      {
+        "path": "cues.b.notes[0].id",
+        "message": "is required"
+      },
+      {
+        "path": "cues.b.notes[0].instrument",
+        "message": "is required"
+      },
+      {
+        "path": "cues.b.notes[0].start",
+        "message": "is required"
+      },
+      {
+        "path": "cues.b.notes[0].duration",
+        "message": "is required"
+      },
+      {
+        "path": "cues.b.notes[0].pitch",
+        "message": "is required"
+      },
+      {
+        "path": "cues.b.notes[0].level",
+        "message": "is required"
+      }
+    ]
+  },
+  "foundation-lone-surrogate-name": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.\ud800",
+        "message": "must be letters, digits, dash or underscore, starting with a letter or digit"
+      }
+    ]
+  },
+  "foundation-repeated-key": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].level",
+        "message": "appears more than once in its object; JSON would keep only the last"
+      }
+    ]
+  },
+  "foundation-repeated-key-escaped": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].level",
+        "message": "appears more than once in its object; JSON would keep only the last"
+      },
+      {
+        "path": "cues.tick.notes[0].level",
+        "message": "must be a linear gain above 0 and at most 1"
+      }
+    ]
+  },
+  "foundation-trailing-comma": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "",
+        "message": "is not valid JSON"
+      }
+    ]
+  },
+  "hand-infinite-start": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].start",
+        "message": "must be seconds, 0 or more"
+      }
+    ]
+  },
+  "hand-level-1e400": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].level",
+        "message": "must be a linear gain above 0 and at most 1"
+      }
+    ]
+  },
+  "ids-differing-only-in-lone-surrogates": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].id",
+        "message": "must be letters, digits, dash or underscore, starting with a letter or digit"
+      },
+      {
+        "path": "cues.tick.notes[1].id",
+        "message": "must be letters, digits, dash or underscore, starting with a letter or digit"
+      },
+      {
+        "path": "cues.tick.notes[2].id",
+        "message": "must be letters, digits, dash or underscore, starting with a letter or digit"
+      },
+      {
+        "path": "cues.tick.notes[2].id",
+        "message": "duplicates the id at cues.tick.notes[0].id"
+      }
+    ]
+  },
+  "level-written-as-exponent-at-floor": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].level",
+        "message": "must be above its instrument's envelopeFloor of 0.000018"
+      }
+    ]
+  },
+  "number-forms": {
+    "ok": true
+  },
+  "peach-of-a-word": {
+    "ok": true
+  },
+  "test-collects-all": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "version",
+        "message": "2 is not a version this engine reads; it reads 1"
+      },
+      {
+        "path": "cues.tick.notes[0].instrument",
+        "message": "must name an instrument this document defines"
+      },
+      {
+        "path": "cues.tick.notes[0].level",
+        "message": "must be a linear gain above 0 and at most 1"
+      }
+    ]
+  },
+  "test-decay-until-release": {
+    "ok": true
+  },
+  "test-decay-until-release-1": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.decayUntilRelease",
+        "message": "must be true, or left out for a decay of fixed length"
+      }
+    ]
+  },
+  "test-decay-until-release-and-decay": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.decay",
+        "message": "must be left out: decayUntilRelease makes the decay last until each note's release"
+      }
+    ]
+  },
+  "test-decay-until-release-false": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.decayUntilRelease",
+        "message": "must be true, or left out for a decay of fixed length"
+      }
+    ]
+  },
+  "test-decay-until-release-null": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.decayUntilRelease",
+        "message": "must be true, or left out for a decay of fixed length"
+      }
+    ]
+  },
+  "test-decay-until-release-string": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.decayUntilRelease",
+        "message": "must be true, or left out for a decay of fixed length"
+      }
+    ]
+  },
+  "test-duplicate-note-id": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tock.notes[0].id",
+        "message": "duplicates the id at cues.tick.notes[0].id"
+      }
+    ]
+  },
+  "test-empty-id": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].id",
+        "message": "must be letters, digits, dash or underscore, starting with a letter or digit"
+      }
+    ]
+  },
+  "test-floor-of-1": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.envelopeFloor",
+        "message": "an exponential envelope needs a floor between 0 and 1, exclusive"
+      },
+      {
+        "path": "cues.tick.notes[0].level",
+        "message": "must be above its instrument's envelopeFloor of 1"
+      }
+    ]
+  },
+  "test-format-soundscape": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "format",
+        "message": "must be 'soundscape-cues'"
+      }
+    ]
+  },
+  "test-instrument-to-string": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].instrument",
+        "message": "must name an instrument this document defines"
+      }
+    ]
+  },
+  "test-level-0": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].level",
+        "message": "must be a linear gain above 0 and at most 1"
+      }
+    ]
+  },
+  "test-level-above-1": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].level",
+        "message": "must be a linear gain above 0 and at most 1"
+      }
+    ]
+  },
+  "test-level-at-floor": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].level",
+        "message": "must be above its instrument's envelopeFloor of 0.000018"
+      }
+    ]
+  },
+  "test-lfo-on-missing-filter": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.lfoTarget",
+        "message": "an LFO aimed at the filter does nothing when filterType is 'none'"
+      }
+    ]
+  },
+  "test-linear-with-floor": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.envelopeFloor",
+        "message": "applies only to an exponential envelope"
+      }
+    ]
+  },
+  "test-name-two-words": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.two words",
+        "message": "must be letters, digits, dash or underscore, starting with a letter or digit"
+      }
+    ]
+  },
+  "test-negative-start": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].start",
+        "message": "must be seconds, 0 or more"
+      }
+    ]
+  },
+  "test-no-decay": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.decay",
+        "message": "is required, unless decayUntilRelease is true"
+      }
+    ]
+  },
+  "test-no-floor": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.envelopeFloor",
+        "message": "an exponential envelope needs a floor between 0 and 1, exclusive"
+      }
+    ]
+  },
+  "test-normalized-over-1": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.attack",
+        "message": "must be from 0 to 1"
+      }
+    ]
+  },
+  "test-not-json": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "",
+        "message": "is not valid JSON"
+      }
+    ]
+  },
+  "test-null": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "",
+        "message": "must be a JSON object"
+      }
+    ]
+  },
+  "test-pitch-offset-past-two-octaves": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.pitchOffset",
+        "message": "must be a number of semitones from -24 to 24"
+      }
+    ]
+  },
+  "test-pitch-over-127": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].pitch",
+        "message": "must be a MIDI pitch from 0 to 127"
+      }
+    ]
+  },
+  "test-proto-cue-name": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.__proto__",
+        "message": "must be letters, digits, dash or underscore, starting with a letter or digit"
+      }
+    ]
+  },
+  "test-required-instruments": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments",
+        "message": "is required"
+      }
+    ]
+  },
+  "test-required-level": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].level",
+        "message": "is required"
+      }
+    ]
+  },
+  "test-required-reverb-mix": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.reverbMix",
+        "message": "is required"
+      }
+    ]
+  },
+  "test-reverb-mix": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.reverbMix",
+        "message": "must be 0: the reverb's impulse response is random, and a cue must sound the same every time"
+      }
+    ]
+  },
+  "test-string-pitch": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].pitch",
+        "message": "must be a number"
+      }
+    ]
+  },
+  "test-two-squares": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square",
+        "message": "appears more than once in its object; JSON would keep only the last"
+      }
+    ]
+  },
+  "test-two-ticks": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick",
+        "message": "appears more than once in its object; JSON would keep only the last"
+      }
+    ]
+  },
+  "test-undefined-instrument": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].instrument",
+        "message": "must name an instrument this document defines"
+      }
+    ]
+  },
+  "test-unknown-key-cue": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.loop",
+        "message": "is not a key a cue document can have"
+      }
+    ]
+  },
+  "test-unknown-key-instrument": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.volume",
+        "message": "is not a key a cue document can have"
+      }
+    ]
+  },
+  "test-unknown-key-note": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].velocity",
+        "message": "is not a key a cue document can have"
+      }
+    ]
+  },
+  "test-unknown-key-top": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "extra",
+        "message": "is not a key a cue document can have"
+      }
+    ]
+  },
+  "test-valid": {
+    "ok": true
+  },
+  "test-velocity-response": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.velocityResponse",
+        "message": "must be 0: a cue note's level is its peak, and velocity plays no part"
+      }
+    ]
+  },
+  "test-version-2": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "version",
+        "message": "2 is not a version this engine reads; it reads 1"
+      }
+    ]
+  },
+  "test-waveform-noise": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "instruments.square.waveform",
+        "message": "must be one of 'sine', 'square', 'sawtooth', 'triangle'"
+      }
+    ]
+  },
+  "test-zero-duration": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.tick.notes[0].duration",
+        "message": "must be seconds, more than 0"
+      }
+    ]
+  },
+  "top-level-array": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "",
+        "message": "must be a JSON object"
+      }
+    ]
+  },
+  "version-nested": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "version",
+        "message": "[1,{\"1\":\"\\ud800\\n\",\"b\":0,\"a\":null}] is not a version this engine reads; it reads 1"
+      }
+    ]
+  }
+}
