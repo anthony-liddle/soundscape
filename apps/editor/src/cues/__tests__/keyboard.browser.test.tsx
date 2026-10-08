@@ -59,12 +59,20 @@ const describe_ = (el: Element) => `${el.tagName.toLowerCase()} "${nameOf(el)}"`
 const visited: string[] = []
 const unseen: string[] = []
 
-function noteFocus() {
+/**
+ * Firefox can report a just-focused element's style before :focus-visible
+ * applies, so the outline gets 200 ms to appear before it counts as unseen.
+ */
+async function noteFocus() {
   const el = active()
   if (el === document.body) return
   visited.push(describe_(el))
-  const style = getComputedStyle(el)
-  if (style.outlineStyle === 'none' || parseFloat(style.outlineWidth) < 2) unseen.push(describe_(el))
+  const outlined = () => {
+    const style = getComputedStyle(el)
+    return style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) >= 2
+  }
+  for (let i = 0; i < 10 && !outlined(); i++) await new Promise((r) => setTimeout(r, 20))
+  if (!outlined()) unseen.push(describe_(el))
 }
 
 /** Presses Tab, or Shift+Tab, until focus reaches what `wanted` names. */
@@ -72,7 +80,7 @@ async function tabTo(wanted: string | RegExp, backwards = false) {
   const matches = (el: Element) => (typeof wanted === 'string' ? nameOf(el) === wanted : wanted.test(nameOf(el)))
   for (let i = 0; i < 400; i++) {
     await userEvent.tab({ shift: backwards })
-    noteFocus()
+    await noteFocus()
     if (matches(active())) return active()
   }
   throw new Error(`Tab never reached ${wanted}; visited: ${visited.filter((v) => /found|ilter|edition|tick/.test(v)).slice(0, 14).join(" | ")}`)
@@ -87,6 +95,7 @@ async function waitFor(check: () => boolean, what: string) {
 }
 
 const status = () => document.querySelector('.cue-view [role=status]')!.textContent ?? ''
+const heading = () => document.querySelector('#cue-notes-heading')?.textContent
 const rowIds = () => [...document.querySelectorAll('.cue-notes tbody th')].map((th) => th.textContent!.replace('▸', '').replace(' (selected)', ''))
 
 describe('the Cues view, by keyboard alone', () => {
@@ -106,12 +115,12 @@ describe('the Cues view, by keyboard alone', () => {
     await userEvent.keyboard('tick')
     await tabTo(/^tick/)
     await userEvent.keyboard('{Enter}')
-    expect(document.querySelector('#cue-notes-heading')!.textContent).toBe('tick')
+    await waitFor(() => heading() === 'tick', 'tick to be chosen')
     await tabTo('Filter cues', true)
     await userEvent.keyboard('{Backspace}{Backspace}{Backspace}{Backspace}mythic')
     await tabTo(/^found-8-mythic-cute/)
     await userEvent.keyboard('{Enter}')
-    expect(document.querySelector('#cue-notes-heading')!.textContent).toBe('found-8-mythic-cute')
+    await waitFor(() => heading() === 'found-8-mythic-cute', 'found-8-mythic-cute to be chosen')
 
     // Choose a note: focus into its row selects it, shown in text, not colour alone
     const level = await tabTo('Level of found-8-sparkle, linear')
@@ -121,20 +130,20 @@ describe('the Cues view, by keyboard alone', () => {
 
     // Edit a value
     await userEvent.keyboard(`{End}${'{Backspace}'.repeat(5)}0.02{Enter}`)
-    expect((level as HTMLInputElement).value).toBe('0.02')
+    await waitFor(() => (level as HTMLInputElement).value === '0.02', 'the level to change')
 
     // Add a note after it, from its own row: focus lands on the new note's first field
     await tabTo('Add note after found-8-sparkle')
     await userEvent.keyboard('{Enter}')
-    expect(nameOf(active())).toBe('Instrument of found-8-mythic-cute-6')
-    noteFocus()
+    await waitFor(() => nameOf(active()) === 'Instrument of found-8-mythic-cute-6', 'focus on the added note')
+    await noteFocus()
 
     // Delete it again
     await tabTo('Remove found-8-mythic-cute-6')
     await userEvent.keyboard('{Enter}')
-    expect(rowIds()).not.toContain('found-8-mythic-cute-6')
-    expect(nameOf(active())).toBe('Instrument of found-8-mythic-glint')
-    noteFocus()
+    await waitFor(() => !rowIds().includes('found-8-mythic-cute-6'), 'the note to go')
+    await waitFor(() => nameOf(active()) === 'Instrument of found-8-mythic-glint', 'focus on the next note')
+    await noteFocus()
 
     // Play the cue
     await tabTo('Play found-8-mythic-cute', true)
@@ -143,15 +152,15 @@ describe('the Cues view, by keyboard alone', () => {
 
     // Undo twice, from the Play button: the delete, then the add
     await userEvent.keyboard('{Control>}z{/Control}')
-    expect(rowIds()).toContain('found-8-mythic-cute-6')
+    await waitFor(() => rowIds().includes('found-8-mythic-cute-6'), 'the delete to be undone')
     await userEvent.keyboard('{Control>}z{/Control}')
-    expect(rowIds()).not.toContain('found-8-mythic-cute-6')
+    await waitFor(() => !rowIds().includes('found-8-mythic-cute-6'), 'the add to be undone')
 
     // Redo twice, once with each key: the add, then the delete
     await userEvent.keyboard('{Control>}{Shift>}Z{/Shift}{/Control}')
-    expect(rowIds()).toContain('found-8-mythic-cute-6')
+    await waitFor(() => rowIds().includes('found-8-mythic-cute-6'), 'the add to be redone')
     await userEvent.keyboard('{Control>}y{/Control}')
-    expect(rowIds()).not.toContain('found-8-mythic-cute-6')
+    await waitFor(() => !rowIds().includes('found-8-mythic-cute-6'), 'the delete to be redone')
 
     // Save: only the edited level differs from the file opened
     await userEvent.keyboard('{Control>}s{/Control}')

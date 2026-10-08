@@ -136,10 +136,10 @@ describe("Peach of a Word's cue file", () => {
     const level = view().querySelector<HTMLInputElement>('input[aria-label="Level of found-8-mythic-cute-3, linear"]')!
     await userEvent.fill(level, '0.02')
     await userEvent.keyboard('{Enter}')
-    expect(view().querySelector('header')!.textContent).toContain('(unsaved)')
+    await waitFor(() => view().querySelector('header')!.textContent!.includes('(unsaved)'), 'the edit')
     cueButton('found-8-mythic-cute').focus()
     await userEvent.keyboard('{Control>}z{/Control}')
-    expect(level.value).toBe('0.018')
+    await waitFor(() => level.value === '0.018', 'the undo')
     const blob = await saveWithKeys()
     expect(blob.size).toBe(BYTES)
     expect((await sha256(blob)).startsWith(SHA256_START)).toBe(true)
@@ -155,7 +155,7 @@ describe("Peach of a Word's cue file", () => {
     const level = view().querySelector<HTMLInputElement>('input[aria-label="Level of found-8-mythic-cute-3, linear"]')!
     await userEvent.fill(level, '2')
     await userEvent.keyboard('{Enter}')
-    expect(view().querySelector('.cue-waveform-label')!.textContent).toBe('Not drawn until the problems are fixed.')
+    await waitFor(() => view().querySelector('.cue-waveform-label')!.textContent === 'Not drawn until the problems are fixed.', 'the label to change')
     expect(getComputedStyle(canvas).display).toBe('none')
   })
 
