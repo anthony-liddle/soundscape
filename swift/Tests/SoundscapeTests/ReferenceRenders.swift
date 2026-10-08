@@ -38,7 +38,47 @@ import Testing
         }
         print("wrote \(written) renders to \(Self.out!)")
     }
+
+    /// The positive controls, for judge.mjs --controls: the discovery's three
+    /// cues, at 48 kHz from 0, each made wrong on purpose. Each must miss the
+    /// bar, but 0.05 dB louder must pass, which places the bar's resolution.
+    @Test(.enabled(if: out != nil, "set CUE_RENDER_OUT to a directory for judge.mjs"))
+    func writesThePositiveControls() throws {
+        let peach = Corpus.caseText("peach-of-a-word")
+        // Every waveform swapped for another, so each cue's changes
+        let rotated = peach.replacing(#""waveform": "sine""#, with: #""waveform": "SWAP-triangle""#)
+            .replacing(#""waveform": "square""#, with: #""waveform": "sine""#)
+            .replacing(#""waveform": "triangle""#, with: #""waveform": "square""#)
+            .replacing("SWAP-triangle", with: "triangle")
+        let documents: [(String, String)] = [
+            ("semitone-sharp", peach.replacing(#""pitchOffset": 0,"#, with: #""pitchOffset": 1,"#)),
+            ("cent-sharp", peach.replacing(#""pitchOffset": 0,"#, with: #""pitchOffset": 0.01,"#)),
+            ("wrong-waveform", rotated),
+        ]
+        let gain = { (db: Float) in { (s: [Float]) in s.map { $0 * Float(pow10(db / 20)) } } }
+        let transforms: [(String, ([Float]) -> [Float])] = [
+            ("frame-late", { [0] + $0 }),
+            ("louder-0.1dB", gain(0.1)),
+            ("louder-0.05dB", gain(0.05)),
+        ]
+        let right = try CueRenderer(parsing: peach, sampleRate: 48000)
+        for cue in ["tick", "found-8-mythic-cute", "edition"] {
+            for (control, text) in documents {
+                let dir = "\(Self.out!)/controls/\(control)"
+                Files.makeDirectory(dir)
+                Files.write(try CueRenderer(parsing: text, sampleRate: 48000).render(cue), to: "\(dir)/\(cue).f32")
+            }
+            for (control, transform) in transforms {
+                let dir = "\(Self.out!)/controls/\(control)"
+                Files.makeDirectory(dir)
+                Files.write(transform(try right.render(cue)), to: "\(dir)/\(cue).f32")
+            }
+        }
+    }
 }
+
+/// 10 to a power, in float, without Foundation.
+private func pow10(_ x: Float) -> Float { Float(pow(10.0, Double(x))) }
 
 /// Writing files with the C library, as Corpus reads them.
 enum Files {
