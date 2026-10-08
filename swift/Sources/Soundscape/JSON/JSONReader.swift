@@ -125,7 +125,6 @@ private struct Parser {
                     // JSON.parse keeps the first place and the last value
                     let kept = frame.members[place]
                     frame.members[place] = JSONTree.Member(key: kept.key, keyUnits: kept.keyUnits, value: produced)
-                    repeatedKeys.append(repeatPath(frame))
                 } else {
                     frame.places[frame.key] = frame.members.count
                     frame.members.append(JSONTree.Member(key: frame.keyText, keyUnits: lossy(frame.key), value: produced))
@@ -134,6 +133,9 @@ private struct Parser {
                 if peek(0x2C) {  // ,
                     i += 1
                     (frame.key, frame.keyText) = try memberName()
+                    // A repeat is reported where its name stands in the text,
+                    // before anything repeated inside its value
+                    if frame.places[frame.key] != nil { repeatedKeys.append(repeatPath(frame)) }
                     produced = try value()
                 } else if peek(0x7D) {  // }
                     i += 1

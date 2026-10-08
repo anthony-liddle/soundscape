@@ -114,6 +114,23 @@
       }
     ]
   },
+  "generated-seed-1-case-202": {
+    "ok": false,
+    "problems": [
+      {
+        "path": "cues.found.notes[0].level",
+        "message": "appears more than once in its object; JSON would keep only the last"
+      },
+      {
+        "path": "cues",
+        "message": "appears more than once in its object; JSON would keep only the last"
+      },
+      {
+        "path": "cues.found.notes[0].level",
+        "message": "appears more than once in its object; JSON would keep only the last"
+      }
+    ]
+  },
   "hand-infinite-start": {
     "ok": false,
     "problems": [

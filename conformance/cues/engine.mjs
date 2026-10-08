@@ -19,3 +19,21 @@ registerHooks({
 });
 
 export const { parseCueDocument } = await import('../../packages/engine/src/cues/index.ts');
+
+export const NOT_JSON = 'is not valid JSON';
+
+/**
+ * The engine's answer for a text, as the corpus records it: `{ ok: true }`, or
+ * the whole ordered list of problems. A text that is not JSON is recorded with
+ * the message "is not valid JSON" alone: what follows it is the JavaScript
+ * engine's own JSON.parse wording, which differs between engines and Node
+ * releases, so both suites compare only the path "" and that prefix.
+ */
+export function answerFor(text) {
+  const result = parseCueDocument(text);
+  if (result.ok) return { ok: true };
+  const problems = result.problems.map(({ path, message }) =>
+    path === '' && message.startsWith(NOT_JSON) ? { path, message: NOT_JSON } : { path, message },
+  );
+  return { ok: false, problems };
+}

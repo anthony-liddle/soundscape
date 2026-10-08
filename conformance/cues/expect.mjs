@@ -4,33 +4,20 @@
 //   node conformance/cues/expect.mjs --write    rewrite expected.json and numbers.json
 //   node conformance/cues/expect.mjs --check    exit 1 if either is out of date
 //
-// expected.json holds, for each case, `{ "ok": true }` or the whole ordered
-// list of problems. A text that is not JSON is recorded with the message
-// "is not valid JSON" alone: what follows it is the JavaScript engine's own
-// JSON.parse wording, which differs between engines and Node releases, so
-// both suites compare only the path "" and that prefix.
+// expected.json holds, for each case, the engine's answer: see answerFor in
+// engine.mjs.
 //
 // numbers.json holds every number literal in every case JSON.parse accepts,
 // with the bits of the double JavaScript reads and the way String() writes it
 // back, so the Swift reader is proven on each one.
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
-import { parseCueDocument } from './engine.mjs';
+import { answerFor } from './engine.mjs';
 
 const { values } = parseArgs({ options: { write: { type: 'boolean' }, check: { type: 'boolean' } } });
 if (values.write === values.check) throw new Error('pass exactly one of --write and --check');
 
 const here = new URL('./', import.meta.url);
-const NOT_JSON = 'is not valid JSON';
-
-export function expectedFor(text) {
-  const result = parseCueDocument(text);
-  if (result.ok) return { ok: true };
-  const problems = result.problems.map(({ path, message }) =>
-    path === '' && message.startsWith(NOT_JSON) ? { path, message: NOT_JSON } : { path, message },
-  );
-  return { ok: false, problems };
-}
 
 /** Every number literal in the text, by its source, as JSON.parse reads it. */
 function numbersIn(text, into) {
@@ -56,7 +43,7 @@ const expected = {};
 const numbers = {};
 for (const name of cases) {
   const text = readFileSync(new URL(`cases/${name}.json`, here), 'utf8');
-  expected[name] = expectedFor(text);
+  expected[name] = answerFor(text);
   numbersIn(text, numbers);
 }
 const sortedNumbers = Object.fromEntries(Object.keys(numbers).sort().map((k) => [k, numbers[k]]));

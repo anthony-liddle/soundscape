@@ -1,0 +1,143 @@
+{
+  "format": "soundscape-cues",
+  "version": 1,
+  "instruments": {
+    "sine": {
+      "waveform": "sine",
+      "pitchOffset": 0,
+      "attack": 0.07418049,
+      "sustain": 0,
+      "release": 0,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "none",
+      "filterCutoff": 1,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0,
+      "decayUntilRelease": true
+    },
+    "keys": {
+      "waveform": "triangle",
+      "pitchOffset": 0,
+      "attack": 0.07418049,
+      "decay": 1.00,
+      "sustain": 0.4,
+      "release": 0.2,
+      "envelopeCurve": "linear",
+      "filterType": "lowpass",
+      "filterCutoff": 0.6,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0.5,
+      "lfoDepth": 0.2,
+      "lfoTarget": "filter",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    }
+  },
+  "cues": {
+    "found": {
+      "notes": [
+        {
+          "id": "found-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 78.99998074500876,
+          "level": 0.162,
+          "\u006c\u0065\u0076\u0065\u006c": 0.162
+        },
+        {
+          "id": "found-2",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 98.01953075366262,
+          "level": 0.018
+        }
+      ]
+    },
+    "chord": {
+      "notes": [
+        {
+          "id": "chord-1",
+          "instrument": "keys",
+          "start": 0,
+          "duration": 0.5,
+          "pitch": 72,
+          "level": 0.15
+        },
+        {
+          "id": "chord-2",
+          "instrument": "keys",
+          "start": 0.1,
+          "duration": 0.5,
+          "pitch": 76,
+          "level": 0.15
+        }
+      ]
+    },
+    "quiet": {
+      "notes": []
+    }
+  },
+  "cues": {
+    "found": {
+      "notes": [
+        {
+          "id": "found-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 78.99998074500876,
+          "level": 0.162,
+          "\u006c\u0065\u0076\u0065\u006c": 0.162
+        },
+        {
+          "id": "found-2",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 98.01953075366262,
+          "level": 0.018
+        }
+      ]
+    },
+    "chord": {
+      "notes": [
+        {
+          "id": "chord-1",
+          "instrument": "keys",
+          "start": 0,
+          "duration": 0.5,
+          "pitch": 72,
+          "level": 0.15
+        },
+        {
+          "id": "chord-2",
+          "instrument": "keys",
+          "start": 0.1,
+          "duration": 0.5,
+          "pitch": 76,
+          "level": 0.15
+        }
+      ]
+    },
+    "quiet": {
+      "notes": []
+    }
+  }
+}

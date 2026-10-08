@@ -50,6 +50,14 @@ import Testing
         #expect(try JSONReader.read(text).repeatedKeys == ["cues.tick", "x[0].a", "x[1][0].b", "x"])
     }
 
+    /// Found by the generator: a repeat is reported where its name stands,
+    /// before anything repeated inside its value, as the engine's scan of the
+    /// text reports it.
+    @Test func reportsARepeatBeforeTheRepeatsInsideItsValue() throws {
+        let text = #"{"a":{"b":1,"b":2},"a":{"b":1,"b":2}}"#
+        #expect(try JSONReader.read(text).repeatedKeys == ["a.b", "a", "a.b"])
+    }
+
     /// Each literal and the bits of the double `JSON.parse` reads it as.
     static let numbers: [(String, UInt64)] = [
         ("0", 0x0000_0000_0000_0000), ("-0", 0x8000_0000_0000_0000), ("1", 0x3FF0_0000_0000_0000),
