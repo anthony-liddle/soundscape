@@ -12,6 +12,8 @@ public struct CueDocument: Equatable, Sendable {
     /// The cue names in the document's order, as the engine's `getCueNames`
     /// gives them: names that are array indices first, then the rest as written.
     public let cueNames: [String]
+    /// The instrument names in the document's order, in the same way.
+    public let instrumentNames: [String]
 
     /// `parseCueDocument`: reads JSON text and validates it, reporting every
     /// problem, each with its path, in the order the engine reports them,
@@ -55,6 +57,7 @@ public struct CueDocument: Equatable, Sendable {
         self.instruments = Dictionary(uniqueKeysWithValues: instruments.map { ($0.key, CueInstrument(valid: $0.value)) })
         self.cues = Dictionary(uniqueKeysWithValues: cues.map { ($0.key, Cue(valid: $0.value)) })
         cueNames = cues.map(\.key)
+        instrumentNames = instruments.map(\.key)
     }
 }
 

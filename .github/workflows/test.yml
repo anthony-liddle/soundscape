@@ -39,8 +39,9 @@ jobs:
         run: pnpm --filter soundscape-engine check:package
 
   # The Swift library on Linux: its own tests, the shared cue corpus, the
-  # generator held against the engine, and a check that the corpus's recorded
-  # answers are still the engine's. Node runs the engine's TypeScript source
+  # generator held against the engine, a check that the corpus's recorded
+  # answers are still the engine's, and every reference cue rendered and held
+  # to the bar. Node runs the engine's TypeScript source
   # directly, so nothing is installed for it. A macOS job waits for the player,
   # the first code to touch Apple's frameworks.
   #
@@ -74,6 +75,18 @@ jobs:
         run: |
           node conformance/cues/generate.mjs --seed 1 --count 3000 --out .build/generated.jsonl
           CUE_GENERATED=.build/generated.jsonl swift test --filter GeneratedTests
+
+      # Linux renders are held to the bar, not to macOS's hashes: glibc computes
+      # sin, cos and pow differently from Darwin. The determinism test in swift
+      # test above counts how many match.
+      - name: Render every reference cue, and the positive controls
+        run: CUE_RENDER_OUT=.build/renders swift test --filter ReferenceRenders
+
+      - name: Every render within the bar, measured by Peach's measure()
+        run: node conformance/cues/render/judge.mjs .build/renders
+
+      - name: Every positive control misses the bar, and 0.05 dB louder passes
+        run: node conformance/cues/render/judge.mjs .build/renders --controls
 
   # The committed cues held to the oracle in real browsers, each rendering
   # both offline, and the editor's Cues view driven in each. One job per
