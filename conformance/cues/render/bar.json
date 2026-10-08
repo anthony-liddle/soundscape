@@ -1,0 +1,325 @@
+{
+  "about": "How far a Swift render may sit from each reference. For each set, rate and start, the widest spread between the references' measurements, rounded up to the step each value is recorded to, plus one step: Peach's fixture rule. A render passes when, against every reference listed, every gap is within the bar and no partial is gained, lost or made strongest.",
+  "engine": {
+    "name": "soundscape-engine",
+    "version": "0.4.0",
+    "commit": "1e29c9b8218b74d082c8f1ea7200ac0ae0badcc0",
+    "sourceChangedSinceCommit": false,
+    "built": "from source by this script, packages/engine/dist"
+  },
+  "fixture": {
+    "source": "anthony-liddle/peach-of-a-word src/audio/baseline/sounds.json at 442ceb43282ddc96b7333cf428f917cabb2682ba",
+    "sha256": "601f047565df55022c03c3e12bc8c7afc166bf881f5c533ec1962faad26ce056"
+  },
+  "conditions": {
+    "peach-48000-0": {
+      "set": "peach",
+      "rate": 48000,
+      "start": 0,
+      "references": [
+        "chromium",
+        "firefox",
+        "webkit",
+        "fixture"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0.0800000000000125,
+        "hz": 0,
+        "windowDbfs": 0.0800000000000125,
+        "partialHz": 0.010000000000218279,
+        "partialDb": 0.010000000000005116,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.09,
+        "hz": 0.01,
+        "partialHz": 0.02,
+        "partialDb": 0.02
+      }
+    },
+    "peach-48000-8.0027": {
+      "set": "peach",
+      "rate": 48000,
+      "start": 8.002666666666666,
+      "references": [
+        "chromium",
+        "firefox",
+        "webkit",
+        "fixture"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0.0800000000000125,
+        "hz": 0,
+        "windowDbfs": 0.0800000000000125,
+        "partialHz": 0.010000000000218279,
+        "partialDb": 0.010000000000005116,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.09,
+        "hz": 0.01,
+        "partialHz": 0.02,
+        "partialDb": 0.02
+      }
+    },
+    "peach-44100-0": {
+      "set": "peach",
+      "rate": 44100,
+      "start": 0,
+      "references": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0.10000000000000853,
+        "hz": 0.010000000000104592,
+        "windowDbfs": 0.08999999999999986,
+        "partialHz": 0.20000000000004547,
+        "partialDb": 0.030000000000001137,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.11,
+        "hz": 0.02,
+        "partialHz": 0.21,
+        "partialDb": 0.04
+      }
+    },
+    "peach-44100-8.0027": {
+      "set": "peach",
+      "rate": 44100,
+      "start": 8.002666666666666,
+      "references": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "spread": {
+        "seconds": 0.0012699999999999934,
+        "db": 0.2700000000000031,
+        "hz": 0.010000000000104592,
+        "windowDbfs": 0.09000000000000341,
+        "partialHz": 0.15000000000009095,
+        "partialDb": 0.03999999999999915,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00128,
+        "db": 0.28,
+        "hz": 0.02,
+        "partialHz": 0.16,
+        "partialDb": 0.05
+      }
+    },
+    "features-48000-0": {
+      "set": "features",
+      "rate": 48000,
+      "start": 0,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0,
+        "partialDb": 0,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.01,
+        "partialDb": 0.01
+      }
+    },
+    "features-48000-8.0027": {
+      "set": "features",
+      "rate": 48000,
+      "start": 8.002666666666666,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0,
+        "partialDb": 0,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.01,
+        "partialDb": 0.01
+      }
+    },
+    "features-44100-0": {
+      "set": "features",
+      "rate": 44100,
+      "start": 0,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0,
+        "partialDb": 0,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.01,
+        "partialDb": 0.01
+      }
+    },
+    "features-44100-8.0027": {
+      "set": "features",
+      "rate": 44100,
+      "start": 8.002666666666666,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0,
+        "partialDb": 0,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.01,
+        "partialDb": 0.01
+      }
+    }
+  },
+  "knockouts": {
+    "sawtooth": {
+      "change": "square for sawtooth",
+      "failsAgainst": {
+        "chromium": [
+          "2.27 ms",
+          "8.12 dB",
+          "0.10 Hz",
+          "a partial 0.57 Hz off",
+          "a partial 0.08 dB off",
+          "40 partials gained or lost"
+        ],
+        "webkit": [
+          "2.27 ms",
+          "8.12 dB",
+          "0.10 Hz",
+          "a partial 0.57 Hz off",
+          "a partial 0.08 dB off",
+          "40 partials gained or lost"
+        ]
+      }
+    },
+    "linear-envelope": {
+      "change": "exponential for linear",
+      "failsAgainst": {
+        "chromium": [
+          "133.52 ms",
+          "52.59 dB",
+          "a partial 0.47 Hz off",
+          "4 partials gained or lost"
+        ],
+        "webkit": [
+          "133.52 ms",
+          "52.59 dB",
+          "a partial 0.47 Hz off",
+          "4 partials gained or lost"
+        ]
+      }
+    },
+    "fixed-decay-sustain": {
+      "change": "sustain 0",
+      "failsAgainst": {
+        "chromium": [
+          "494.55 ms",
+          "72.96 dB",
+          "a partial 0.48 Hz off",
+          "a partial 0.51 dB off",
+          "6 partials gained or lost"
+        ],
+        "webkit": [
+          "494.55 ms",
+          "72.96 dB",
+          "a partial 0.48 Hz off",
+          "a partial 0.51 dB off",
+          "6 partials gained or lost"
+        ]
+      }
+    },
+    "release": {
+      "change": "release 0",
+      "failsAgainst": {
+        "chromium": [
+          "449.10 ms",
+          "11.07 dB",
+          "a partial 0.12 Hz off",
+          "5 partials gained or lost"
+        ],
+        "webkit": [
+          "449.10 ms",
+          "11.07 dB",
+          "a partial 0.12 Hz off",
+          "5 partials gained or lost"
+        ]
+      }
+    },
+    "pitch-offset": {
+      "change": "pitch offset 0",
+      "failsAgainst": {
+        "chromium": [
+          "0.39 ms",
+          "0.21 dB",
+          "452.54 Hz",
+          "10 partials gained or lost",
+          "5 windows' strongest changed"
+        ],
+        "webkit": [
+          "0.39 ms",
+          "0.21 dB",
+          "452.54 Hz",
+          "10 partials gained or lost",
+          "5 windows' strongest changed"
+        ]
+      }
+    }
+  }
+}
