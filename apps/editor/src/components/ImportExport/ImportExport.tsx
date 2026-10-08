@@ -34,9 +34,12 @@ export function ImportExport({ onOpenCues }: ImportExportProps = {}) {
         const parsed = JSON.parse(content);
 
         // A cue file is not a song: offer it to the Cues view, as its text,
-        // so the cue parser sees it exactly as it is on disk
-        if (onOpenCues && parsed?.format === 'soundscape-cues') {
-          if (confirm(`${file.name} is a cue file, not a song. Open it in the Cues view?`)) {
+        // so the cue parser sees it exactly as it is on disk. Where the Cues
+        // view is hidden, say what the file is rather than call it invalid
+        if (parsed?.format === 'soundscape-cues') {
+          if (!onOpenCues) {
+            alert(`${file.name} is a cue file, and this editor cannot open cue files yet.`);
+          } else if (confirm(`${file.name} is a cue file, not a song. Open it in the Cues view?`)) {
             onOpenCues({ name: file.name, text: content });
           }
           return;

@@ -14,6 +14,7 @@ import type { View } from './components/ViewSwitch';
 import { CueView, useCueEditor } from './cues';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ShortcutsProvider } from './shortcuts';
+import { cuesViewOn } from './features';
 import { viewFromSearch, writeViewToAddress } from './view';
 import './App.css';
 
@@ -123,7 +124,10 @@ export function SoundscapeApp({ active = true, onViewChange, onOpenCues }: Sound
  * progress. The cue view mounts the first time it is shown, then stays.
  */
 function App() {
-  const [view, setView] = useState<View>(() => viewFromSearch(window.location.search));
+  // Hidden in public builds: then there is no switch, ?view=cues is ignored,
+  // and the Cues view never mounts
+  const cuesOn = cuesViewOn();
+  const [view, setView] = useState<View>(() => (cuesOn ? viewFromSearch(window.location.search) : 'song'));
   const [cuesShown, setCuesShown] = useState(view === 'cues');
   const cues = useCueEditor();
   const { openText } = cues;
@@ -145,9 +149,9 @@ function App() {
     <SoundscapeProvider>
       <ShortcutsProvider>
         <div className="app-view" hidden={view !== 'song'}>
-          <SoundscapeApp active={view === 'song'} onViewChange={show} onOpenCues={openCues} />
+          <SoundscapeApp active={view === 'song'} {...(cuesOn && { onViewChange: show, onOpenCues: openCues })} />
         </div>
-        {cuesShown && (
+        {cuesOn && cuesShown && (
           <div className="app-view" hidden={view !== 'cues'}>
             <CueView cues={cues} active={view === 'cues'} onViewChange={show} />
           </div>
