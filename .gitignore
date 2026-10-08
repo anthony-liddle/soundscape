@@ -27,3 +27,7 @@ dist-ssr
 # Vitest browser mode
 .vitest-attachments
 __screenshots__
+
+# Swift
+.build/
+.swiftpm/
