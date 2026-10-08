@@ -10,6 +10,8 @@ export type Subdivision = 1 | 0.5 | 0.25;
 
 interface NoteEditorProps {
   track: Track | null;
+  /** Whether its view is in front. Behind another view, its keys do nothing. */
+  active?: boolean;
   /** Grid resolution, owned by the parent so MIDI recording can widen it. */
   subdivision: Subdivision;
   onSubdivisionChange: (subdivision: Subdivision) => void;
@@ -47,6 +49,7 @@ interface RectDrag {
 
 export function NoteEditor({
   track,
+  active = true,
   subdivision,
   onSubdivisionChange,
   previewNotes,
@@ -86,7 +89,7 @@ export function NoteEditor({
   // Keyboard handlers for selection operations
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (keepsEveryKey(e.target)) return;
+      if (!active || keepsEveryKey(e.target)) return;
       if (!track) return;
       const mod = e.ctrlKey || e.metaKey;
 
@@ -138,7 +141,7 @@ export function NoteEditor({
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [tool, track, selectedNoteIds, clipboard, dispatch, playback.currentBeat, subdivision]);
+  }, [active, tool, track, selectedNoteIds, clipboard, dispatch, playback.currentBeat, subdivision]);
 
   const cellWidth = subdivision === 0.25 ? 20 : 30;
 

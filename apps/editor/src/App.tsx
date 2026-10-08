@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { SoundscapeProvider, useSoundscape } from './state';
 import { Transport } from './components/Transport';
 import { TrackList } from './components/TrackList';
@@ -9,11 +9,25 @@ import { ImportExport } from './components/ImportExport';
 import { MIDIStatus, RECORD_GRID } from './components/MIDIStatus';
 import type { RecordingPreview } from './components/MIDIStatus';
 
+import { ViewSwitch } from './components/ViewSwitch';
+import type { View } from './components/ViewSwitch';
+import { CueView, useCueEditor } from './cues';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { ShortcutsProvider } from './shortcuts';
+import { cuesViewOn } from './features';
+import { viewFromSearch, writeViewToAddress } from './view';
 import './App.css';
 
-export function SoundscapeApp() {
+interface SoundscapeAppProps {
+  /** In front: its shortcuts, and the piano roll's, are the ones that fire. */
+  active?: boolean;
+  /** Shows the view switch in the header when given. */
+  onViewChange?: (view: View) => void;
+  /** Where Import sends a cue file. */
+  onOpenCues?: (file: { name: string; text: string }) => void;
+}
+
+export function SoundscapeApp({ active = true, onViewChange, onOpenCues }: SoundscapeAppProps = {}) {
   const { state, dispatch, playback, play, stop, undo, redo, canUndo, canRedo, analyserNode } = useSoundscape();
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(
     state.tracks.length > 0 ? (state.tracks[0]?.id ?? null) : null
@@ -39,6 +53,7 @@ export function SoundscapeApp() {
     state,
     selectedTrackId,
     dispatch,
+    active,
   });
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,7 +65,8 @@ export function SoundscapeApp() {
       <header className="app-header">
         <div className="app-header-left">
           <h1>Soundscape</h1>
-          <span className="app-title-separator">—</span>
+          {onViewChange && <ViewSwitch view="song" onChange={onViewChange} />}
+          <span className="app-title-separator" aria-hidden="true">/</span>
           <input
             type="text"
             className="app-title-input"
@@ -65,7 +81,7 @@ export function SoundscapeApp() {
             onRecordingGrid={() => setSubdivision(RECORD_GRID)}
             onPreviewChange={setPreview}
           />
-          <ImportExport />
+          <ImportExport {...(onOpenCues && { onOpenCues })} />
         </div>
       </header>
 
@@ -85,6 +101,7 @@ export function SoundscapeApp() {
           <NoteEditor
             key={selectedTrack?.id ?? 'empty'}
             track={selectedTrack}
+            active={active}
             subdivision={subdivision}
             onSubdivisionChange={setSubdivision}
             previewNotes={
@@ -100,11 +117,45 @@ export function SoundscapeApp() {
   );
 }
 
+/**
+ * The song and the cues, one view in front at a time, named in the address as
+ * `?view=cues`. The song view stays mounted while hidden, so it comes back
+ * exactly as it was: its track, its piano roll's resolution, any take in
+ * progress. The cue view mounts the first time it is shown, then stays.
+ */
 function App() {
+  // Hidden in public builds: then there is no switch, ?view=cues is ignored,
+  // and the Cues view never mounts
+  const cuesOn = cuesViewOn();
+  const [view, setView] = useState<View>(() => (cuesOn ? viewFromSearch(window.location.search) : 'song'));
+  const [cuesShown, setCuesShown] = useState(view === 'cues');
+  const cues = useCueEditor();
+  const { openText } = cues;
+
+  const show = useCallback((next: View) => {
+    writeViewToAddress(next);
+    setView(next);
+    if (next === 'cues') setCuesShown(true);
+  }, []);
+
+  const openCues = useCallback(
+    ({ name, text }: { name: string; text: string }) => {
+      if (openText(text, name)) show('cues');
+    },
+    [openText, show]
+  );
+
   return (
     <SoundscapeProvider>
       <ShortcutsProvider>
-        <SoundscapeApp />
+        <div className="app-view" hidden={view !== 'song'}>
+          <SoundscapeApp active={view === 'song'} {...(cuesOn && { onViewChange: show, onOpenCues: openCues })} />
+        </div>
+        {cuesOn && cuesShown && (
+          <div className="app-view" hidden={view !== 'cues'}>
+            <CueView cues={cues} active={view === 'cues'} onViewChange={show} />
+          </div>
+        )}
       </ShortcutsProvider>
     </SoundscapeProvider>
   );

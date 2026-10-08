@@ -66,6 +66,26 @@ describe('pitch utilities', () => {
       expect(midiToNoteName(108)).toBe('C8')
       expect(midiToNoteName(127)).toBe('G9')
     })
+
+    it('names a fractional pitch by its nearest note and its cents', () => {
+      // The 5th and 3rd harmonics of G5, from a Peach of a Word cue
+      expect(midiToNoteName(106.8631178836571)).toBe('B7 -13.69\u00a2')
+      expect(midiToNoteName(98.01953075366262)).toBe('D7 +1.95\u00a2')
+      expect(midiToNoteName(69.25)).toBe('A4 +25.00\u00a2')
+    })
+
+    it('takes the octave from the nearest note, not the one below', () => {
+      expect(midiToNoteName(59.99)).toBe('C4 -1.00\u00a2')
+    })
+
+    it('rounds half a semitone up', () => {
+      expect(midiToNoteName(69.5)).toBe('A#4 -50.00\u00a2')
+    })
+
+    it('shows a fractional pitch within a two-hundredth of a cent as 0.00, unsigned', () => {
+      expect(midiToNoteName(78.99998074500876)).toBe('G5 0.00\u00a2')
+      expect(midiToNoteName(60.00004)).toBe('C4 0.00\u00a2')
+    })
   })
 
   describe('applyPitchOffset', () => {

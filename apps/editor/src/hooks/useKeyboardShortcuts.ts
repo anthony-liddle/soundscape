@@ -15,6 +15,8 @@ interface KeyboardShortcutOptions {
   state: SoundscapeState;
   selectedTrackId: string | null;
   dispatch: Dispatch<SoundscapeAction>;
+  /** Whether the song view is in front. */
+  active?: boolean;
 }
 
 /** The song view's shortcuts. They act on the song only while it is in front. */
@@ -29,6 +31,7 @@ export function useKeyboardShortcuts({
   state,
   selectedTrackId,
   dispatch,
+  active = true,
 }: KeyboardShortcutOptions) {
   useViewShortcuts({
     togglePlay: () => (isPlaying ? stop() : play()),
@@ -43,5 +46,5 @@ export function useKeyboardShortcuts({
     duplicate: selectedTrackId
       ? () => dispatch({ type: 'DUPLICATE_TRACK', payload: { trackId: selectedTrackId } })
       : undefined,
-  });
+  }, active);
 }

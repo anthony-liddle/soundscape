@@ -17,13 +17,21 @@ export function frequencyToMidi(frequency: number): number {
 }
 
 /**
- * Get note name from MIDI number (e.g., 60 -> "C4")
+ * Get note name from MIDI number (e.g., 60 -> "C4").
+ *
+ * A fractional pitch is named by its nearest note and its distance from it
+ * in cents, to two places: 106.8631178836571 -> "B7 -13.69¢". A distance
+ * that rounds to zero is written unsigned, as "G5 0.00¢". A whole number
+ * is named as it always was, with no cents.
  */
 export function midiToNoteName(midiNote: number): string {
   const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const octave = Math.floor(midiNote / 12) - 1;
-  const noteName = noteNames[midiNote % 12];
-  return `${noteName}${octave}`;
+  const nearest = Math.round(midiNote);
+  const name = `${noteNames[((nearest % 12) + 12) % 12]}${Math.floor(nearest / 12) - 1}`;
+  if (nearest === midiNote) return name;
+  const cents = Math.round((midiNote - nearest) * 10000) / 100;
+  const sign = cents > 0 ? '+' : cents < 0 ? '-' : '';
+  return `${name} ${sign}${Math.abs(cents).toFixed(2)}\u00a2`;
 }
 
 /**

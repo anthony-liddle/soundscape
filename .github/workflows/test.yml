@@ -39,7 +39,8 @@ jobs:
         run: pnpm --filter soundscape-engine check:package
 
   # The committed cues held to the oracle in real browsers, each rendering
-  # both offline. One job per browser, so each installs only its own build.
+  # both offline, and the editor's Cues view driven in each. One job per
+  # browser, so each installs only its own build.
   browsers:
     runs-on: ubuntu-latest
 
@@ -69,3 +70,6 @@ jobs:
 
       - name: Cues against the oracle in ${{ matrix.browser }}
         run: pnpm --filter soundscape-engine test:browser --browser=${{ matrix.browser }}
+
+      - name: The Cues view in ${{ matrix.browser }}
+        run: pnpm --filter editor test:browser --browser=${{ matrix.browser }}

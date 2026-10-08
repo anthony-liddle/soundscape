@@ -1,0 +1,37 @@
+.view-switch {
+  display: flex;
+  gap: 0.25rem;
+  align-self: center;
+}
+
+.view-switch-btn {
+  background: transparent;
+  border: 1px solid #374151;
+  border-radius: 4px;
+  color: #9ca3af;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+}
+
+.view-switch-btn:hover {
+  background: #1f2937;
+  color: #f3f4f6;
+}
+
+/* The current view: bold, underlined and bordered, so colour is not the only sign */
+.view-switch-current {
+  background: #1f2937;
+  border-color: #6b7280;
+  color: #f3f4f6;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.view-switch-btn:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 2px;
+}

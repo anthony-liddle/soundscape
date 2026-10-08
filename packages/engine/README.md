@@ -134,31 +134,31 @@ Access them via `builtInPresets` or individually (`bassPreset`, `leadPreset`, et
 
 **Pitch**
 
-- `midiToFrequency(midi)` — MIDI note number to Hz
-- `frequencyToMidi(hz)` — Hz to MIDI note number
-- `midiToNoteName(midi)` — MIDI note number to name (e.g. `60` → `"C4"`)
-- `applyPitchOffset(midi, semitones)` — Transpose a MIDI note
-- `normalizedToFilterFreq(n)` — Map 0–1 to 20 Hz–20 kHz (exponential)
-- `normalizedToQ(n)` — Map 0–1 to filter Q 0.5–20
+- `midiToFrequency(midi)`: MIDI note number to Hz
+- `frequencyToMidi(hz)`: Hz to MIDI note number
+- `midiToNoteName(midi)`: MIDI note number to name (e.g. `60` → `"C4"`). A fractional pitch is named by its nearest note and its cents, e.g. `106.8631178836571` → `"B7 -13.69¢"`
+- `applyPitchOffset(midi, semitones)`: Transpose a MIDI note
+- `normalizedToFilterFreq(n)`: Map 0–1 to 20 Hz–20 kHz (exponential)
+- `normalizedToQ(n)`: Map 0–1 to filter Q 0.5–20
 
 **Time**
 
-- `beatsToSeconds(beats, bpm)` — Convert beats to seconds
-- `secondsToBeats(seconds, bpm)` — Convert seconds to beats
-- `normalizedToADSR(n, type)` — Map 0–1 to ADSR seconds
-- `normalizedToDelayTime(n)` — Map 0–1 to delay time in seconds
-- `formatTime(seconds)` — Format as `mm:ss.ms`
-- `formatBeats(beats, beatsPerBar?)` — Format as `bar.beat`
+- `beatsToSeconds(beats, bpm)`: Convert beats to seconds
+- `secondsToBeats(seconds, bpm)`: Convert seconds to beats
+- `normalizedToADSR(n, type)`: Map 0–1 to ADSR seconds
+- `normalizedToDelayTime(n)`: Map 0–1 to delay time in seconds
+- `formatTime(seconds)`: Format as `mm:ss.ms`
+- `formatBeats(beats, beatsPerBar?)`: Format as `bar.beat`
 
 **Validation**
 
-- `validateSoundscapeState(state)` — Type-guard that validates a `SoundscapeState`
-- `soundscapeInstrumentProblems(state)` - Where a state's instruments break the
+- `validateSoundscapeState(state)`: Type-guard that validates a `SoundscapeState`
+- `soundscapeInstrumentProblems(state)`: Where a state's instruments break the
   0.4.0 rules or carry a field only a cue can have, such as `decayUntilRelease`:
   each problem with the path to the bad value, like
   `presets[0].params.decayUntilRelease`. `validateSoundscapeState` refuses a
   state with any of them.
-- `clamp(value, min, max)` — Clamp a number
+- `clamp(value, min, max)`: Clamp a number
 
 ## Cues
 
