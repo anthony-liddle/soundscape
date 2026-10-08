@@ -1,0 +1,18 @@
+{
+  "format": "soundscape-cues",
+  "version": 1,
+  "cues": {
+    "tick": {
+      "notes": [
+        {
+          "id": "tick-1",
+          "instrument": "square",
+          "start": 0,
+          "duration": 0.03,
+          "pitch": 81,
+          "level": 0.0216
+        }
+      ]
+    }
+  }
+}

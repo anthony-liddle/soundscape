@@ -1,0 +1,74 @@
+{
+  "format": "soundscape-cues",
+  "version": 1,
+  "instruments": {
+    "square": {
+      "waveform": "square",
+      "pitchOffset": 24,
+      "attack": 1,
+      "decay": 0.05172575,
+      "sustain": 1,
+      "release": 1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "none",
+      "filterCutoff": 0,
+      "filterResonance": 1,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "low": {
+      "waveform": "square",
+      "pitchOffset": -24,
+      "attack": 0,
+      "decay": 0.05172575,
+      "sustain": 0,
+      "release": 1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "none",
+      "filterCutoff": 1,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    }
+  },
+  "cues": {
+    "tick": {
+      "notes": [
+        {
+          "id": "top",
+          "instrument": "square",
+          "start": 0,
+          "duration": 5e-324,
+          "pitch": 127,
+          "level": 1
+        },
+        {
+          "id": "bottom",
+          "instrument": "low",
+          "start": 0,
+          "duration": 0.03,
+          "pitch": 0,
+          "level": 0.5
+        }
+      ]
+    }
+  }
+}

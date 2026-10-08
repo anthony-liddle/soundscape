@@ -1,0 +1,22 @@
+[
+  {
+    "name": "nan",
+    "where": "validate.test.ts, the NaN level",
+    "reason": "JSON has no text for NaN, so JSON.parse never produces one. Only a value built in JavaScript and handed to validateCueDocument or loadCues can carry it, and the Swift library reads only text. The case stays in validate.test.ts."
+  },
+  {
+    "name": "lone-surrogate-in-a-path",
+    "where": "the case foundation-lone-surrogate-name",
+    "reason": "A Swift String cannot hold a lone surrogate. Where JavaScript's path holds one, Swift's holds U+FFFD in its place. The Swift suite reads expected.json with its own reader, which reads the recorded \\ud800 as U+FFFD too, so the paths compare equal. The verdict, every problem, their order and every other character match, and ids and names are still told apart by their UTF-16 code units, as JavaScript tells them apart: see ids-differing-only-in-lone-surrogates. The case runs in both suites."
+  },
+  {
+    "name": "not-json-message",
+    "where": "every case whose text is not JSON",
+    "reason": "The engine's message is \"is not valid JSON: \" followed by the JavaScript engine's own JSON.parse error, which V8, SpiderMonkey and JavaScriptCore word differently and Node releases change. expected.json records only \"is not valid JSON\", and both suites compare the path \"\" and that prefix."
+  },
+  {
+    "name": "version-nested-past-the-stack",
+    "where": "no case",
+    "reason": "validateCueDocument writes a wrong version into its message with JSON.stringify, which V8 gives up on past about 6,000 levels of nesting, throwing a RangeError out of the validator. The engine has no answer to record. Swift writes the message, however deep."
+  }
+]

@@ -1,0 +1,44 @@
+{
+  "format": "soundscape-cues",
+  "version": 1,
+  "instruments": {
+    "square": {
+      "waveform": "square",
+      "pitchOffset": 0,
+      "attack": 0.07418049,
+      "decay": 0.05172575,
+      "sustain": 0,
+      "release": 0,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "none",
+      "filterCutoff": 1,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0,
+      "volume": 1
+    }
+  },
+  "cues": {
+    "tick": {
+      "notes": [
+        {
+          "id": "tick-1",
+          "instrument": "square",
+          "start": 0,
+          "duration": 0.03,
+          "pitch": 81,
+          "level": 0.0216
+        }
+      ]
+    }
+  }
+}
