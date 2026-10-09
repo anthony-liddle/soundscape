@@ -10,6 +10,7 @@ import {
   normalizedToLfoPitchDepth,
 } from '../utils/pitch';
 import { normalizedToADSR } from '../utils/time';
+import { RUNG_OUT } from './EffectsChain';
 
 /** Parameters passed to a voice when triggering a note-on event. */
 export interface VoiceParams {
@@ -59,9 +60,13 @@ export class VoiceSynthesizer {
   private releaseTimeout: ReturnType<typeof setTimeout> | null = null;
   /** True while the gain feeds the output directly, with no filter between. */
   private filterBypassed = false;
+  /** For a note played whole: a silent source that ends when its filter has rung out. */
+  private ringClock: ConstantSourceNode | null = null;
   /**
-   * Called once the voice's oscillators have stopped, on the audio clock. Set
-   * by whoever wants to release the voice's nodes after its sound has ended.
+   * Called once the voice has fallen silent, on the audio clock. Set by
+   * whoever wants to release the voice's nodes after its sound has ended.
+   * After {@link playNote}, that is once its oscillators have stopped and its
+   * filter has rung out; after {@link noteOff}, once its oscillators have stopped.
    */
   onEnded: (() => void) | null = null;
   /**
@@ -160,11 +165,13 @@ export class VoiceSynthesizer {
    * their decay's end lost the decay.
    *
    * For a fresh voice, as cues use: it neither stops nor clears anything
-   * first. Release its nodes with {@link dispose} once it has ended.
+   * first. Release its nodes with {@link dispose} once it has ended, which
+   * {@link onEnded} reports once its filter has rung out too: see {@link filterTail}.
    *
    * @param startTime - Audio-clock time the note starts; a time already past starts now.
    * @param duration - Seconds from the start to the release.
-   * @returns Audio-clock time the voice's sources stop.
+   * @returns Audio-clock time the voice falls silent: its sources' stop, and
+   *   after that its filter's ring, see {@link filterTail}.
    */
   playNote(params: VoiceParams, startTime: number, duration: number): number {
     const start = Math.max(this.context.currentTime, startTime);
@@ -184,13 +191,28 @@ export class VoiceSynthesizer {
 
     const stopAt = start + duration + shape.release + 0.01;
     for (const osc of this.oscillators) osc.stop(stopAt);
-    if (this.onEnded && this.oscillators[0]) {
-      const notify = this.onEnded;
-      this.oscillators[0].onended = () => notify();
-    }
     this.lfoNode?.stop(stopAt);
+    // A filter rings on once its input stops. The voice has ended when that
+    // ring has rung out, on the audio clock: when a silent source stopped then
+    // ends. A voice with no ring ends with its oscillators, needing no source.
+    const ring = this.filterBypassed ? 0 : filterTail(params.instrument, this.context.sampleRate);
+    if (this.onEnded) {
+      const notify = this.onEnded;
+      if (ring === 0) {
+        if (this.oscillators[0]) this.oscillators[0].onended = () => notify();
+      } else {
+        const clock = this.context.createConstantSource();
+        clock.offset.value = 0;
+        // After the filter, so the filter's input still falls silent; it adds exact zeros
+        clock.connect(this.output);
+        clock.onended = () => notify();
+        clock.start(start);
+        clock.stop(stopAt + ring);
+        this.ringClock = clock;
+      }
+    }
     this.isPlaying = true;
-    return stopAt;
+    return stopAt + ring;
   }
 
   /**
@@ -442,9 +464,11 @@ export class VoiceSynthesizer {
   /**
    * Disconnects every node of a voice whose note has ended, touching no param:
    * nothing is stopped, cancelled or rescheduled. For a voice played with
-   * {@link playNote}, once its oscillators have stopped.
+   * {@link playNote}, once it has ended, as {@link onEnded} reports.
    */
   dispose(): void {
+    this.ringClock?.disconnect();
+    this.ringClock = null;
     for (const osc of this.oscillators) osc.disconnect();
     this.lfoNode?.disconnect();
     this.lfoGainNode?.disconnect();
@@ -455,6 +479,70 @@ export class VoiceSynthesizer {
     this.lfoNode = null;
     this.lfoGainNode = null;
     this.isPlaying = false;
+  }
+}
+
+/** A filter's settings, as an instrument holds them. */
+type FilterSettings = Pick<InstrumentParams, 'filterType' | 'filterCutoff' | 'filterResonance'>;
+
+/**
+ * Seconds a voice's filter goes on sounding once its input stops, until its
+ * ring has fallen to {@link RUNG_OUT} of its level when the input stopped. 0
+ * for no filter.
+ *
+ * The filter is the Web Audio spec's biquad. The four types a voice uses share
+ * its poles, the roots of z^2 - (2 cos w0 / (1 + alpha)) z + (1 - alpha) / (1 + alpha),
+ * where w0 is the cutoff as an angle, pi at Nyquist, and alpha is sin(w0)
+ * over twice the Q: read in dB for a lowpass or highpass, as it is for a
+ * bandpass or notch. With nothing coming in, what the filter sounds is those
+ * poles' free response.
+ *
+ * - Complex poles, at radius r and angle theta, make a ring whose level falls
+ *   by r every sample. It is counted until the level is RUNG_OUT, less the
+ *   cos(theta / 2) a sampled peak can miss by, and one cycle more, so the
+ *   RUNG_OUT is of a peak the ring reached in its first cycle. Every lowpass
+ *   and highpass rings this way: their Q, 0.5 to 20 dB, is a ratio of at
+ *   least 1.06, above the 0.5 a ring needs.
+ * - A ring that fades before it completes a cycle, as a bandpass or notch
+ *   does near its least resonance, and a repeated real pole, as one at that
+ *   resonance has, can grow with the sample count before it falls: with the
+ *   input stopped, y[n] = y[0] U(n) - r^2 y[-1] U(n - 1), where U(n) is at
+ *   most (n + 1) r^n, so no sample after n is above (2n + 1) r^n of the
+ *   filter's last level. Those are counted until that is RUNG_OUT.
+ *
+ * A cutoff at 0 or at Nyquist leaves the filter nothing to ring with. One
+ * render quantum after the count, as for the delay.
+ *
+ * The longest: a bandpass or notch at the lowest cutoff, 20 Hz, and the most
+ * resonance, a Q of 20, rings 5.35 s.
+ */
+export function filterTail(filter: FilterSettings, sampleRate: number): number {
+  if (filter.filterType === 'none') return 0;
+  const cutoff = normalizedToFilterFreq(filter.filterCutoff) / (sampleRate / 2);
+  if (!(cutoff > 0 && cutoff < 1)) return 0;
+  const w0 = Math.PI * cutoff;
+  const q = normalizedToQ(filter.filterResonance);
+  const alpha = Math.sin(w0) / (2 * (filter.filterType === 'lowpass' || filter.filterType === 'highpass' ? 10 ** (q / 20) : q));
+  const quantum = 128 / sampleRate;
+  if (alpha < Math.sin(w0)) {
+    const radius = Math.sqrt((1 - alpha) / (1 + alpha));
+    const theta = Math.acos(Math.min(1, Math.cos(w0) / ((1 + alpha) * radius)));
+    const cycle = (2 * Math.PI) / theta;
+    const fading = Math.log(RUNG_OUT * Math.cos(theta / 2)) / Math.log(radius);
+    if (cycle < fading) return Math.ceil(fading + cycle) / sampleRate + quantum;
+    return growingRing(radius) / sampleRate + quantum;
+  }
+  const largest = (Math.abs(Math.cos(w0)) + Math.sqrt(alpha * alpha - Math.sin(w0) ** 2)) / (1 + alpha);
+  return growingRing(largest) / sampleRate + quantum;
+}
+
+/** The fewest samples n with (2n + 1) r^n at most RUNG_OUT. */
+function growingRing(radius: number): number {
+  let n = Math.ceil(Math.log(RUNG_OUT) / Math.log(radius));
+  for (;;) {
+    const next = Math.ceil((Math.log(RUNG_OUT) - Math.log(2 * n + 1)) / Math.log(radius));
+    if (next <= n) return n;
+    n = next;
   }
 }
 
