@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { OfflineAudioContext } from 'node-web-audio-api'
 import { AudioEngine } from '../AudioEngine'
-import { EffectsChain, delayTail } from '../EffectsChain'
-import { VoiceSynthesizer } from '../VoiceSynthesizer'
+import { EffectsChain, RUNG_OUT, delayTail } from '../EffectsChain'
+import { VoiceSynthesizer, filterTail } from '../VoiceSynthesizer'
 import { createMockAudioContext } from './mockWebAudio'
 import type { MockAudioContext, MockNode } from './mockWebAudio'
 import { midiToFrequency } from '../../utils/pitch'
@@ -108,18 +108,21 @@ const peakIn = (x: Float32Array, from: number, to: number) => {
 /** One short note through a delay, and a document to replace it with. */
 const ECHO = doc({ g: [note('g1', 55, 0)] }, sine({ delayTime: 0.1, delayFeedback: 0.5, delayMix: 0.4 }))
 const OTHER = doc({ other: [note('o', 60, 0)] })
+/** One short note through a lowpass at 28 Hz with 20 dB of resonance, which rings for nearly 2 s. */
+const FILTERED = doc({ g: [note('g1', 55, 0)] }, sine({ filterType: 'lowpass', filterCutoff: 0.05, filterResonance: 1 }))
 
 /** After ECHO's note has stopped, at START + 0.17 s, and while its echoes ring. */
 const ENDS_REPORTED_AT = 0.4
 
 /**
- * Render with every voice's end reported to the engine when the test says,
+ * Render with every source's end reported to the engine when the test says,
  * not when node-web-audio-api delivers it. It usually delivers one after the
  * render has finished, but once delivered one first, and only then were a
- * replaced cue's echoes cut (#123). Each end is held, then reported at a
- * suspension at ENDS_REPORTED_AT, after every note has stopped, or once the
- * render has finished: both times a renderer may report it. `atSuspension`
- * runs at the suspension, after the ends are reported.
+ * replaced cue's echoes cut (#123). Each end is held with the time its source
+ * stops, then reported at a suspension at ENDS_REPORTED_AT if the source has
+ * stopped by then, or once the render has finished: both times a renderer may
+ * report it. Oscillators and the engine's silent clocks are held alike.
+ * `atSuspension` runs at the suspension, after the ends are reported.
  */
 async function renderReportingEnds(
   reported: 'mid-render' | 'after the render',
@@ -129,15 +132,31 @@ async function renderReportingEnds(
 ): Promise<Float32Array> {
   return retryRefused(async () => {
     const { ctx, engine } = await engineWith()
-    const held: Array<() => void> = []
-    const createOscillator = ctx.createOscillator.bind(ctx)
-    ctx.createOscillator = () => {
-      const osc = createOscillator()
-      Object.defineProperty(osc, 'onended', { set: (report: () => void) => held.push(report) })
-      return osc
+    const held: Array<{ stopsAt: number; report: () => void }> = []
+    const hold = <T extends { stop(when?: number): void }>(source: T): T => {
+      const end = { stopsAt: Infinity, report: () => {} }
+      const stop = source.stop.bind(source)
+      source.stop = (when = 0) => {
+        end.stopsAt = when
+        stop(when)
+      }
+      Object.defineProperty(source, 'onended', {
+        set: (report: () => void) => {
+          end.report = report
+          held.push(end)
+        },
+      })
+      return source
     }
-    const reportEnds = () => {
-      for (const report of held.splice(0)) report()
+    const createOscillator = ctx.createOscillator.bind(ctx)
+    ctx.createOscillator = () => hold(createOscillator())
+    const createConstantSource = ctx.createConstantSource.bind(ctx)
+    ctx.createConstantSource = () => hold(createConstantSource())
+    const reportEnds = (by: number) => {
+      for (const end of held.filter((e) => e.stopsAt <= by)) {
+        held.splice(held.indexOf(end), 1)
+        end.report()
+      }
     }
     engine.loadCues(cues)
     play(engine)
@@ -145,7 +164,7 @@ async function renderReportingEnds(
     if (reported === 'mid-render') {
       ctx.suspend(ENDS_REPORTED_AT).then(
         () => {
-          reportEnds()
+          reportEnds(ENDS_REPORTED_AT)
           atSuspension?.(engine)
           void ctx.resume()
         },
@@ -158,7 +177,7 @@ async function renderReportingEnds(
     if (refused !== null) {
       throw new LockstepRefused([`frame ${Math.round(ENDS_REPORTED_AT * SAMPLE_RATE)} of ${ctx.length}: ${String(refused)}`])
     }
-    reportEnds()
+    reportEnds(ctx.length / SAMPLE_RATE)
     return Float32Array.from(buffer.getChannelData(0))
   })
 }
@@ -249,6 +268,32 @@ describe('playCue', () => {
       (e) => e.loadCues(OTHER)
     )
     const plain = await render((e) => e.playCue('g', START), ECHO)
+    expect(largestDifference(kept, plain)).toBe(0)
+  })
+
+  it("plays a filtered cue's ring out whole, its oscillator's end reported mid-render", async () => {
+    // A reference in which no voice is ever disconnected
+    const kept = vi.spyOn(VoiceSynthesizer.prototype, 'dispose').mockImplementation(() => {})
+    const whole = await render((e) => e.playCue('g', START), FILTERED)
+    kept.mockRestore()
+    const reported = await renderReportingEnds('mid-render', FILTERED, (e) => e.playCue('g', START))
+    expect(peakIn(whole, ENDS_REPORTED_AT, ENDS_REPORTED_AT + 0.1)).toBeGreaterThan(1e-4)
+    expect(largestDifference(reported, whole)).toBe(0)
+  })
+
+  it("plays a filtered cue's ring out whole through its echo when the document is replaced under it", async () => {
+    // A ring of nearly 2 s through one echo, whose delay alone would let the
+    // replaced chain go 55 ms after the note stops
+    const ringing = doc(
+      { g: [note('g1', 55, 0)] },
+      sine({ filterType: 'lowpass', filterCutoff: 0.05, filterResonance: 1, delayTime: 0.05, delayMix: 0.4 })
+    )
+    const kept = await renderReportingEnds('mid-render', ringing, (e) => {
+      e.playCue('g', START)
+      e.loadCues(OTHER)
+    })
+    const plain = await render((e) => e.playCue('g', START), ringing)
+    expect(peakIn(plain, ENDS_REPORTED_AT, ENDS_REPORTED_AT + 0.1)).toBeGreaterThan(1e-4)
     expect(largestDifference(kept, plain)).toBe(0)
   })
 
@@ -491,4 +536,88 @@ describe('a replaced cue chain', () => {
     expect(new Set(disconnect.mock.contexts).size).toBe(50)
     expect(retired(engine).size).toBe(0)
   })
+})
+
+describe('cue voices', () => {
+  const voices = (engine: AudioEngine) => (engine as unknown as { cueVoices: Set<unknown> }).cueVoices
+  const end = (source: MockNode) => (source as unknown as { onended?: () => void }).onended?.()
+  async function mocked() {
+    const ctx = createMockAudioContext()
+    const engine = new AudioEngine({ context: ctx as unknown as BaseAudioContext })
+    await engine.initialize()
+    const dispose = vi.spyOn(VoiceSynthesizer.prototype, 'dispose')
+    return { ctx, engine, dispose }
+  }
+
+  it('are every one disconnected once they have ended, filtered or not, through 100 plays and replacements', async () => {
+    const { ctx, engine, dispose } = await mocked()
+    for (let i = 0; i < 100; i++) {
+      engine.loadCues(i % 2 === 0 ? FILTERED : ECHO)
+      engine.playCue('g', 0.5 + i * 0.01)
+    }
+    engine.loadCues(OTHER)
+    expect(voices(engine).size).toBe(100)
+    const sources = ctx.createdNodes.filter((n) => n.kind === 'oscillator' || n.kind === 'constant')
+    // 50 filtered voices end by their clocks, 50 echo chains by theirs
+    expect(sources.filter((n) => n.kind === 'constant')).toHaveLength(100)
+    for (const source of sources) end(source)
+    expect(dispose).toHaveBeenCalledTimes(100)
+    expect(new Set(dispose.mock.contexts).size).toBe(100)
+    for (const clock of sources.filter((n) => n.kind === 'constant')) expect(clock.disconnect).toHaveBeenCalled()
+    expect(voices(engine).size).toBe(0)
+  })
+
+  it('still ringing are disconnected when the engine is destroyed', async () => {
+    const { ctx, engine, dispose } = await mocked()
+    engine.loadCues(FILTERED)
+    engine.playCue('g', 0.5)
+    engine.destroy()
+    expect(dispose).toHaveBeenCalledTimes(1)
+    expect(ctx.createdNodes.find((n) => n.kind === 'constant')!.disconnect).toHaveBeenCalled()
+    expect(voices(engine).size).toBe(0)
+  })
+
+  it('are every one disconnected by their own clocks, rendered, after 50 filtered plays', async () => {
+    // Each voice's filter rings out within about 0.03 s of its note's stop
+    const short = doc({ g: [note('g1', 55, 0)] }, sine({ filterType: 'lowpass', filterCutoff: 0.5, filterResonance: 0.5 }))
+    const dispose = vi.spyOn(VoiceSynthesizer.prototype, 'dispose')
+    const ctx = new OfflineAudioContext(1, Math.round(2 * SAMPLE_RATE), SAMPLE_RATE)
+    const engine = new AudioEngine({ context: ctx as unknown as BaseAudioContext })
+    await engine.initialize()
+    for (let i = 0; i < 50; i++) {
+      engine.loadCues(short)
+      engine.playCue('g', START + i * 0.02)
+    }
+    await ctx.startRendering()
+    await vi.waitFor(() => expect(dispose).toHaveBeenCalledTimes(50), { timeout: 5000 })
+    expect(new Set(dispose.mock.contexts).size).toBe(50)
+    expect(voices(engine).size).toBe(0)
+  })
+})
+
+describe("a filter's ring, rendered", () => {
+  // Each type a voice has: the longest ring of all, rings that fade before a
+  // cycle, and a repeated pole, at a bandpass's least resonance
+  const FILTERS: Record<string, Pick<CueInstrument, 'filterType' | 'filterCutoff' | 'filterResonance'>> = {
+    'a resonant lowpass': { filterType: 'lowpass', filterCutoff: 0.05, filterResonance: 1 },
+    'a resonant highpass': { filterType: 'highpass', filterCutoff: 0.3, filterResonance: 1 },
+    'a bandpass at 20 Hz with a Q of 20, the longest ring': { filterType: 'bandpass', filterCutoff: 0, filterResonance: 1 },
+    'a notch': { filterType: 'notch', filterCutoff: 0.2, filterResonance: 0.5 },
+    'a bandpass at its least resonance, a repeated pole': { filterType: 'bandpass', filterCutoff: 0.3, filterResonance: 0 },
+  }
+  for (const [name, filter] of Object.entries(FILTERS)) {
+    it(`holds nothing above 2^-24 of the ring heard past where the voice stops waiting: ${name}`, async () => {
+      const stopsAt = START + 0.17
+      const deadline = stopsAt + filterTail(filter, SAMPLE_RATE)
+      // No voice is disconnected in this render, so the whole ring is in it
+      vi.spyOn(VoiceSynthesizer.prototype, 'dispose').mockImplementation(() => {})
+      const { ctx, engine } = await engineWith(1, deadline + 0.5)
+      engine.loadCues(doc({ g: [note('g1', 55, 0)] }, sine(filter)))
+      engine.playCue('g', START)
+      const whole = Float32Array.from((await ctx.startRendering()).getChannelData(0))
+      const heard = peakIn(whole, stopsAt, deadline)
+      expect(heard).toBeGreaterThan(0)
+      expect(peakIn(whole, deadline, deadline + 0.5)).toBeLessThanOrEqual(RUNG_OUT * heard)
+    })
+  }
 })

@@ -4,11 +4,22 @@
 
 ### Added
 
-- **`VoiceSynthesizer.playNote` returns the audio-clock time its sources
-  stop.** It returned nothing.
+- **`VoiceSynthesizer.playNote` returns the audio-clock time the voice falls
+  silent:** its sources' stop, and after that its filter's ring. It returned
+  nothing.
 
 ### Fixed
 
+- **A filtered cue's ring plays out whole, the same on every render.** A cue
+  voice was disconnected as soon as its oscillator's end was reported, while
+  a resonant filter was still ringing, so Chromium and WebKit cut the ring at
+  a different point on every offline render (#128). A voice played with
+  `playNote` now stays connected until its filter has rung out, and the audio
+  clock decides when that is: once the ring is under 2^-24 of its level when
+  the note stopped, worked out from the filter's settings. The longest, a
+  bandpass or notch at 20 Hz with a Q of 20, rings 5.35 s. Its `onEnded`
+  reports the end then. A replaced cue's effects count that ring before their
+  echoes, and `destroy()` disconnects the cue voices still sounding.
 - **Replacing the cue document keeps a ringing cue's echoes.** `loadCues`
   disconnected a replaced cue's effects as soon as its last note's end was
   reported, so the echoes after it were cut (#123). Offline, Chromium and

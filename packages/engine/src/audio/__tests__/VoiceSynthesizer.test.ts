@@ -1,9 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { VoiceSynthesizer } from '../VoiceSynthesizer'
+import { VoiceSynthesizer, filterTail } from '../VoiceSynthesizer'
+import { RUNG_OUT } from '../EffectsChain'
 import { defaultInstrumentParams } from '../../types'
 import type { InstrumentParams } from '../../types'
 import type { CueInstrument } from '../../cues/types'
-import { midiToFrequency, normalizedToLfoFilterDepth, normalizedToLfoPitchDepth } from '../../utils/pitch'
+import {
+  midiToFrequency,
+  normalizedToFilterFreq,
+  normalizedToLfoFilterDepth,
+  normalizedToLfoPitchDepth,
+  normalizedToQ,
+} from '../../utils/pitch'
 import { normalizedToADSR } from '../../utils/time'
 import { createMockAudioContext, isConnected } from './mockWebAudio'
 import type { MockAudioContext, MockNode } from './mockWebAudio'
@@ -298,5 +305,104 @@ describe("a cue instrument whose decay lasts until each note's release", () => {
     const before = ctx.createdNodes.length
     expect(() => voice.playNote({ pitch: 60, velocity: 100, instrument: untilRelease }, 0, 0.25)).not.toThrow()
     expect(ctx.createdNodes.slice(before).filter((n) => n.kind === 'oscillator').length).toBeGreaterThan(0)
+  })
+})
+
+describe('a whole note through a filter', () => {
+  const RESONANT = { filterType: 'lowpass', filterCutoff: 0.05, filterResonance: 1 } as const
+  function play(filter: Pick<InstrumentParams, 'filterType' | 'filterCutoff' | 'filterResonance'>) {
+    const ctx = createMockAudioContext()
+    const voice = new VoiceSynthesizer(ctx as unknown as AudioContext, ctx.createGain() as unknown as AudioNode)
+    // The voice made, in order: gain (ADSR), filter, output
+    const output = ctx.createdNodes[3]!
+    const ended = vi.fn()
+    voice.onEnded = ended
+    const before = ctx.createdNodes.length
+    const silentAt = voice.playNote({ pitch: 55, velocity: 100, instrument: makeParams(filter) }, 0.5, 0.15)
+    const made = ctx.createdNodes.slice(before)
+    return { ctx, voice, output, ended, silentAt, made }
+  }
+  const end = (source: MockNode) => (source as unknown as { onended: () => void }).onended()
+
+  it('ends when its filter has rung out, by a silent clock stopped then, not when its oscillators stop', () => {
+    const { ctx, output, ended, silentAt, made } = play(RESONANT)
+    const [clock, ...more] = made.filter((n) => n.kind === 'constant')
+    const stopsAt = made.find((n) => n.kind === 'oscillator')!.stopped[0]!
+    expect(more).toHaveLength(0)
+    expect(clock!.offset.value).toBe(0)
+    expect(clock!.started).toEqual([0.5])
+    // playNote returns the time the voice falls silent, the clock's stop
+    expect(silentAt).toBe(stopsAt + filterTail(RESONANT, ctx.sampleRate))
+    expect(clock!.stopped).toEqual([silentAt])
+    // After the filter, so the filter's input still falls silent
+    expect(clock!.connections).toEqual([output])
+    for (const osc of made.filter((n) => n.kind === 'oscillator')) {
+      expect((osc as unknown as { onended?: unknown }).onended).toBeUndefined()
+    }
+    expect(ended).not.toHaveBeenCalled()
+    end(clock!)
+    expect(ended).toHaveBeenCalledTimes(1)
+  })
+
+  it('needs no clock with no filter, and ends with its oscillators', () => {
+    const { ended, silentAt, made } = play({ filterType: 'none', filterCutoff: 0.05, filterResonance: 1 })
+    expect(made.filter((n) => n.kind === 'constant')).toHaveLength(0)
+    expect(silentAt).toBe(made.find((n) => n.kind === 'oscillator')!.stopped[0])
+    end(made.find((n) => n.kind === 'oscillator')!)
+    expect(ended).toHaveBeenCalledTimes(1)
+  })
+
+  it('disconnects its clock with every other node when disposed', () => {
+    const { voice, made } = play(RESONANT)
+    voice.dispose()
+    expect(made.find((n) => n.kind === 'constant')!.disconnect).toHaveBeenCalled()
+  })
+})
+
+describe('filterTail', () => {
+  const RATE = 48000
+  const QUANTUM = 128 / RATE
+  type Type = 'lowpass' | 'highpass' | 'bandpass' | 'notch'
+  const tail = (filterType: Type, filterCutoff: number, filterResonance: number, rate = RATE) =>
+    filterTail({ filterType, filterCutoff, filterResonance }, rate)
+
+  it('is 0 with no filter, and with a cutoff at Nyquist, where the filter has nothing to ring with', () => {
+    expect(filterTail({ filterType: 'none', filterCutoff: 0.05, filterResonance: 1 }, RATE)).toBe(0)
+    // 20 kHz is past Nyquist at 32 kHz
+    expect(tail('lowpass', 1, 1, 32000)).toBe(0)
+  })
+
+  it('reads Q in dB for a lowpass or highpass and as it is for a bandpass or notch, which ring longer', () => {
+    expect(tail('highpass', 0, 1)).toBe(tail('lowpass', 0, 1))
+    expect(tail('notch', 0, 1)).toBe(tail('bandpass', 0, 1))
+    expect(tail('bandpass', 0, 1)).toBeGreaterThan(tail('lowpass', 0, 1))
+  })
+
+  it('rings 5.35 s at the longest, a bandpass or notch at 20 Hz with a Q of 20, and nothing rings longer', () => {
+    expect(tail('bandpass', 0, 1)).toBeCloseTo(5.348, 3)
+    let longest = 0
+    for (const type of ['lowpass', 'highpass', 'bandpass', 'notch'] as const) {
+      for (let c = 0; c <= 20; c++) for (let r = 0; r <= 20; r++) longest = Math.max(longest, tail(type, c / 20, r / 20))
+    }
+    expect(longest).toBe(tail('bandpass', 0, 1))
+  })
+
+  it("counts a resonant ring until its level is RUNG_OUT, less what a sampled peak can miss, and a cycle more", () => {
+    // The spec's lowpass at 28 Hz and 20 dB, its poles worked out here
+    const w0 = (2 * Math.PI * normalizedToFilterFreq(0.05)) / RATE
+    const alpha = Math.sin(w0) / (2 * 10 ** (normalizedToQ(1) / 20))
+    const radius = Math.sqrt((1 - alpha) / (1 + alpha))
+    const theta = Math.acos(Math.cos(w0) / ((1 + alpha) * radius))
+    const samples = Math.log(RUNG_OUT * Math.cos(theta / 2)) / Math.log(radius) + (2 * Math.PI) / theta
+    expect(tail('lowpass', 0.05, 1)).toBe(Math.ceil(samples) / RATE + QUANTUM)
+    expect(tail('lowpass', 0.05, 1)).toBeCloseTo(1.9125, 4)
+  })
+
+  it('counts a repeated pole, at a bandpass at its least resonance, until (2n + 1) r^n is RUNG_OUT', () => {
+    const w0 = (2 * Math.PI * normalizedToFilterFreq(0.3)) / RATE
+    const radius = Math.cos(w0) / (1 + Math.sin(w0))
+    const n = Math.round((tail('bandpass', 0.3, 0) - QUANTUM) * RATE)
+    expect((2 * n + 1) * radius ** n).toBeLessThanOrEqual(RUNG_OUT)
+    expect((2 * n - 1) * radius ** (n - 1)).toBeGreaterThan(RUNG_OUT)
   })
 })
