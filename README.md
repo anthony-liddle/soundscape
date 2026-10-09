@@ -65,6 +65,10 @@ npm install soundscape-engine
 
 See the [engine package documentation](packages/engine/README.md) for API details.
 
+### Playing cues in Swift
+
+A Swift package in this repository reads, renders and plays the engine's cue files on iOS and macOS, held to the engine sample for sample. See [Soundscape for Swift](swift/README.md).
+
 ### Developing the editor
 
 ```bash
@@ -135,7 +139,16 @@ packages/
         └── utils/       # Pitch, time, and validation helpers
 
 examples/                # Integration code samples
+
+swift/                   # The Swift package; Package.swift is at the root
+├── Sources/             # Soundscape, SoundscapePlayer and soundscape-play
+├── Tests/
+└── CueCheck.swiftpm/    # An app to hear the player on an iPhone, for testing only
+
+conformance/cues/        # The corpus and references both languages are held to
 ```
+
+Releasing either is in [RELEASING.md](RELEASING.md).
 
 ## Contributing
 
