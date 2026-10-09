@@ -60,6 +60,7 @@ export interface MockNode {
   detune: MockParam;
   Q: MockParam;
   delayTime: MockParam;
+  offset: MockParam;
   threshold: MockParam;
   knee: MockParam;
   ratio: MockParam;
@@ -90,6 +91,7 @@ function createMockNode(kind: string): MockNode {
     detune: createMockParam(0),
     Q: createMockParam(1),
     delayTime: createMockParam(0),
+    offset: createMockParam(1),
     threshold: createMockParam(-24),
     knee: createMockParam(30),
     ratio: createMockParam(12),
@@ -122,6 +124,7 @@ export interface MockAudioContext {
   createGain: () => MockNode;
   createBiquadFilter: () => MockNode;
   createOscillator: () => MockNode;
+  createConstantSource: () => MockNode;
   createDelay: (maxDelay?: number) => MockNode;
   createWaveShaper: () => MockNode;
   createConvolver: () => MockNode;
@@ -153,6 +156,7 @@ export function createMockAudioContext(): MockAudioContext {
     createGain: () => make('gain'),
     createBiquadFilter: () => make('filter'),
     createOscillator: () => make('oscillator'),
+    createConstantSource: () => make('constant'),
     createDelay: () => make('delay'),
     createWaveShaper: () => make('waveshaper'),
     createConvolver: () => make('convolver'),

@@ -41,6 +41,46 @@ export function asksForNoEffect(params: EffectsParams): boolean {
   return Object.values(params).every((value) => value === 0);
 }
 
+/** The delay's feedback gain at a delayFeedback of 1. */
+const FEEDBACK_CAP = 0.9;
+
+/**
+ * How small an echo still to come must be, next to one already heard, for a
+ * delay to count as rung out: 2^-24, about -144 dB, under the rounding of a
+ * float32 sample at the level of the echo heard.
+ */
+export const RUNG_OUT = 2 ** -24;
+
+/**
+ * Seconds a chain with `params` goes on sounding once its input is silent,
+ * until every echo still to come is at most {@link RUNG_OUT} of one already
+ * heard. A chain built without reverb, as every cue chain is.
+ *
+ * With nothing coming in, each pass round the delay scales what it holds by
+ * the feedback gain, `delayFeedback * 0.9`, and the first pass after the input
+ * stops is heard. So after n passes, with feedback^n at most RUNG_OUT, every
+ * echo left is at most RUNG_OUT of that first one, however loud the loop had
+ * grown. No feedback empties the delay in one pass.
+ *
+ * A pass is the delay time, but never under one render quantum, the least a
+ * delay in a cycle can be. Chromium and WebKit take a render quantum more for
+ * every pass round the loop, and an interpolated read reaches a sample further
+ * back, so each pass is counted a quantum and a sample longer. One render
+ * quantum after the last pass covers the waveshaper's oversampling. A delay
+ * mixed in at 0 has no echo to wait for.
+ *
+ * The longest: feedback 0.9 at the longest delay, 1 s, is 158 passes, 158.4 s
+ * at 48 kHz.
+ */
+export function delayTail(params: EffectsParams, sampleRate: number): number {
+  const quantum = 128 / sampleRate;
+  if (params.delayMix === 0) return quantum;
+  const feedback = params.delayFeedback * FEEDBACK_CAP;
+  const passes = Math.max(1, Math.ceil(Math.log(RUNG_OUT) / Math.log(feedback)));
+  const pass = Math.max(normalizedToDelayTime(params.delayTime), quantum) + quantum + 1 / sampleRate;
+  return passes * pass + quantum;
+}
+
 /**
  * Effects chain: Distortion (main path) + Delay send + Reverb send.
  *
@@ -130,7 +170,7 @@ export class EffectsChain {
     // Delay
     const delayTimeSeconds = normalizedToDelayTime(params.delayTime);
     this.delayNode.delayTime.setValueAtTime(delayTimeSeconds, now);
-    this.feedbackGain.gain.setValueAtTime(params.delayFeedback * 0.9, now); // Cap at 0.9
+    this.feedbackGain.gain.setValueAtTime(params.delayFeedback * FEEDBACK_CAP, now);
 
     // Delay dry/wet mix
     this.dryGain.gain.setValueAtTime(1 - params.delayMix, now);

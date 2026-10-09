@@ -2,8 +2,25 @@
 
 ## Unreleased
 
+### Added
+
+- **`VoiceSynthesizer.playNote` returns the audio-clock time its sources
+  stop.** It returned nothing.
+
 ### Fixed
 
+- **Replacing the cue document keeps a ringing cue's echoes.** `loadCues`
+  disconnected a replaced cue's effects as soon as its last note's end was
+  reported, so the echoes after it were cut (#123). Offline, Chromium and
+  WebKit cut them every time, and Firefox and the engine's Node tests
+  whenever the end was reported before the render finished, which made a
+  Node test fail at random. A replaced instrument's effects now stay
+  connected until its echoes have rung out, and the audio clock decides when
+  that is: once every echo still to come is under 2^-24 of one already heard.
+  For the longest echo a cue can have, feedback 0.9 at a 1 s delay, that is
+  158 passes round the delay, 158.4 s after the last note stops at 48 kHz.
+  They are disconnected then, or at once if nothing they played still rings,
+  and when the engine is destroyed.
 - **`midiToNoteName` names a fractional pitch.** It returned `"undefined5"`
   for a pitch such as 78.99998074500876, which a cue document allows. It now
   gives the nearest note and the distance from it in cents, to two places:
