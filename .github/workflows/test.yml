@@ -153,8 +153,36 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # The engine's Playwright installs the browsers, and the editor's resolves
+      # to the same version
+      - name: Playwright version and OS release
+        id: playwright
+        run: |
+          echo "version=$(pnpm --filter soundscape-engine exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+          echo "os=$(. /etc/os-release && echo "$ID-$VERSION_ID")" >> "$GITHUB_OUTPUT"
+
+      # The browser Playwright downloads, kept between runs. Playwright's version
+      # and the OS release fix the browser's build, so either changing, as when
+      # ubuntu-latest moves to a new release, downloads afresh.
+      - name: Cache ${{ matrix.browser }}
+        id: browser-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ steps.playwright.outputs.os }}-${{ matrix.browser }}-${{ steps.playwright.outputs.version }}
+
+      # A stuck install once held a job for half an hour (#119). An install
+      # takes under a minute, so each fails after five instead.
       - name: Install ${{ matrix.browser }}
+        if: steps.browser-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 5
         run: pnpm --filter soundscape-engine exec playwright install --with-deps ${{ matrix.browser }}
+
+      # A cached browser still needs the system libraries it runs on
+      - name: Install ${{ matrix.browser }}'s system dependencies
+        if: steps.browser-cache.outputs.cache-hit == 'true'
+        timeout-minutes: 5
+        run: pnpm --filter soundscape-engine exec playwright install-deps ${{ matrix.browser }}
 
       - name: Cues against the oracle in ${{ matrix.browser }}
         run: pnpm --filter soundscape-engine test:browser --browser=${{ matrix.browser }}
