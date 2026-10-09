@@ -207,6 +207,35 @@ describe('an EffectsChain built without reverb', () => {
   })
 })
 
+describe("an EffectsChain's distortion curve", () => {
+  const NONE: EffectsParams = { delayTime: 0, delayFeedback: 0, delayMix: 0, distortion: 0, reverbMix: 0 }
+
+  it('is never set null over a curve that is already null, and is set null over one that is not', () => {
+    const ctx = createMockAudioContext()
+    // Record every assignment to the waveshaper's curve
+    const sets: (Float32Array | null)[] = []
+    const createWaveShaper = ctx.createWaveShaper
+    ctx.createWaveShaper = () => {
+      const node = createWaveShaper()
+      let curve: Float32Array | null = null
+      Object.defineProperty(node, 'curve', {
+        get: () => curve,
+        set: (value: Float32Array | null) => {
+          sets.push(value)
+          curve = value
+        },
+      })
+      return node
+    }
+    const chain = new EffectsChain(ctx as unknown as AudioContext)
+    chain.setParams({ ...NONE, delayMix: 0.4 })
+    expect(sets).toEqual([])
+    chain.setParams({ ...NONE, distortion: 0.3 })
+    chain.setParams({ ...NONE, distortion: 0 })
+    expect(sets.map((curve) => (curve === null ? null : 'curve'))).toEqual(['curve', null])
+  })
+})
+
 describe('asksForNoEffect', () => {
   const NONE: EffectsParams = { delayTime: 0, delayFeedback: 0, delayMix: 0, distortion: 0, reverbMix: 0 }
 

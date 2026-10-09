@@ -181,8 +181,10 @@ export class EffectsChain {
     // spec-defined pass-through, equivalent to the identity curve at 0.
     if (params.distortion !== this.lastDistortionAmount) {
       this.lastDistortionAmount = params.distortion;
-      this.distortionNode.curve =
-        params.distortion === 0 ? null : this.makeDistortionCurve(params.distortion);
+      const curve = params.distortion === 0 ? null : this.makeDistortionCurve(params.distortion);
+      // A new waveshaper's curve is already null. Setting it null again changes
+      // nothing, and node-web-audio-api warns that it does not support it.
+      if (curve !== null || this.distortionNode.curve !== null) this.distortionNode.curve = curve;
       this.distortionNode.oversample =
         params.distortion === 0 && this.oversampleOnlyWhenDistorting ? 'none' : '2x';
     }
