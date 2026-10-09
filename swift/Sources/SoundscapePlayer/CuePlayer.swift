@@ -6,9 +6,10 @@ import Soundscape
 /// and `playCue` play them in a browser.
 ///
 /// Every cue is rendered to a buffer when the document loads, off the main
-/// thread, at the rate the output runs at. Each cue plays on a voice of its
-/// own, an `AVAudioPlayerNode` from a pool, started on the cue's own frame,
-/// so cues overlap and sum exactly, as they do in the engine.
+/// thread, at the rate the output runs at, and rendered again if that rate
+/// changes. Each cue plays on a voice of its own, an `AVAudioPlayerNode` from
+/// a pool, started on the cue's own frame, so cues overlap and sum exactly,
+/// as they do in the engine.
 ///
 /// | Engine | CuePlayer |
 /// |---|---|
@@ -33,7 +34,9 @@ public final class CuePlayer {
         case manual(ManualOutput)
     }
 
-    /// The rate and channels of a manual output.
+    /// The rate and channels of a manual output. Changing the rate and posting
+    /// `AVAudioEngineConfigurationChange` for the player's engine is how a test
+    /// changes rate, as a device does when headphones with another rate connect.
     @MainActor
     public final class ManualOutput {
         public var sampleRate: Double
@@ -64,7 +67,10 @@ public final class CuePlayer {
     let output: Output
     private(set) var graph: Graph?
     private var buffers: [String: AVAudioPCMBuffer] = [:]
+    private var generation = 0
     private var loads = 0
+    private(set) var rebuilding: Task<Void, Never>?
+    let observers = Observers()
 
     /// - Parameter voices: how many cues can sound at once, ``defaultVoices``
     ///   unless given. When every voice is busy, the cue that ends soonest is
@@ -89,13 +95,19 @@ public final class CuePlayer {
         guard problems.isEmpty else { throw CueDocumentError(problems) }
         loads += 1
         let mine = loads
-        if graph == nil { try build() }
-        let graph = graph!
-        let rendered = try await Self.render(document, at: graph.rate)
-        // A later load wins, as the engine's last loadCues does
-        guard mine == loads else { return }
-        self.document = document
-        buffers = Self.buffers(rendered, format: graph.format)
+        while true {
+            await settled()
+            if graph == nil { try build() }
+            let rate = graph!.rate
+            let rendered = try await Self.render(document, at: rate)
+            // A later load wins, as the engine's last loadCues does
+            guard mine == loads else { return }
+            // The rate changed while rendering: render again at the new one
+            guard rebuilding == nil, let graph, graph.rate == rate else { continue }
+            self.document = document
+            buffers = Self.buffers(rendered, format: graph.format)
+            return
+        }
     }
 
     /// Reads, validates and loads a document's JSON text.
@@ -137,10 +149,18 @@ public final class CuePlayer {
     ///   `CueRenderError.noCue` for a name the document lacks, as the engine
     ///   throws. It also throws the engine's error if the engine cannot start,
     ///   as during a phone call; a game can ignore that one.
+    ///
+    /// While the player renders again for a new output rate, a cue asked for
+    /// is skipped: there is nothing at the new rate to play yet.
     public func play(_ name: String, at time: Double? = nil) throws {
         guard let document else { throw CuePlayerError.notLoaded }
         guard document.cues[name] != nil else { throw CueRenderError.noCue(name) }
-        guard let graph, let buffer = buffers[name] else { return }
+        guard rebuilding == nil else { return }
+        guard let graph, let buffer = buffers[name] else {
+            // The last rebuild failed, the output gone: try again
+            outputChanged()
+            return
+        }
         try start(graph)
 
         let now = currentFrame(graph)
@@ -193,6 +213,7 @@ public final class CuePlayer {
         self.graph = graph
         sampleRate = graph.rate
         applyGain()
+        observers.watch(graph.engine) { [weak self] in self?.outputChanged() }
     }
 
     /// Starts the engine if it is not running, after a stop, an interruption
@@ -210,6 +231,41 @@ public final class CuePlayer {
             voice.node.stop()
             voice.busyUntil = 0
         }
+    }
+
+    /// The output changed rate or channels: build a new engine and render
+    /// every cue again at the new rate. Called from a task, never inside the
+    /// notification's handler, where releasing an engine can deadlock. A
+    /// newer change outranks an older one still rendering.
+    func outputChanged() {
+        generation += 1
+        let mine = generation
+        let old = graph
+        rebuilding = Task { @MainActor in
+            defer { if mine == self.generation { self.rebuilding = nil } }
+            old?.engine.stop()
+            do {
+                let next = try Graph(output: self.output, voices: self.voiceCount)
+                var rendered: [String: AVAudioPCMBuffer] = [:]
+                if let document = self.document {
+                    let samples = try await Self.render(document, at: next.rate)
+                    rendered = Self.buffers(samples, format: next.format)
+                }
+                guard mine == self.generation else { return }
+                self.buffers = rendered
+                self.install(next)
+            } catch {
+                // No output to build on, or a render refused: the next cue tries again
+                guard mine == self.generation else { return }
+                self.graph = nil
+                self.buffers = [:]
+            }
+        }
+    }
+
+    /// Returns once any rebuild for a new rate has finished.
+    public func settled() async {
+        while let task = rebuilding { await task.value }
     }
 
     /// `destroy`: stops the engine. A later cue starts it again.
