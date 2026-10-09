@@ -29,6 +29,10 @@ jobs:
       - name: Run linter
         run: pnpm -r lint
 
+      # The build's tsc leaves the tests out, so this checks the engine with them
+      - name: Type-check the engine, tests included
+        run: pnpm --filter soundscape-engine typecheck
+
       - name: Run tests
         run: pnpm -r test run
 
