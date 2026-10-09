@@ -58,11 +58,17 @@ public final class CuePlayer {
     public var cueNames: [String] { document?.cueNames ?? [] }
     /// The rate the cues are rendered at: the output's.
     public private(set) var sampleRate: Double = 0
+    /// The output's channels. The cues carry one or two of them, the render in each.
+    public private(set) var outputChannelCount = 0
     public private(set) var cueVolume: Float = 1
     /// Mutes or unmutes every cue, including any ringing now.
     public var cuesMuted = false {
         didSet { applyGain() }
     }
+
+    /// Called on the main actor with each ``Event``: what the player did about
+    /// its output or its session.
+    public var onEvent: ((Event) -> Void)?
 
     let output: Output
     private(set) var graph: Graph?
@@ -160,7 +166,7 @@ public final class CuePlayer {
         guard rebuilding == nil else { return }
         guard let graph, let buffer = buffers[name] else {
             // The last rebuild failed, the output gone: try again
-            outputChanged()
+            rebuild()
             return
         }
         try start(graph)
@@ -221,6 +227,7 @@ public final class CuePlayer {
     private func install(_ graph: Graph) {
         self.graph = graph
         sampleRate = graph.rate
+        outputChannelCount = Int(graph.outputChannels)
         applyGain()
         observers.watch(graph.engine) { [weak self] in self?.outputChanged() }
     }
@@ -240,13 +247,21 @@ public final class CuePlayer {
             voice.node.stop()
             voice.busyUntil = 0
         }
+        onEvent?(.started(sampleRate: graph.rate, channels: Int(graph.outputChannels)))
     }
 
     /// The output changed rate or channels: build a new engine and render
-    /// every cue again at the new rate. Called from a task, never inside the
-    /// notification's handler, where releasing an engine can deadlock. A
-    /// newer change outranks an older one still rendering.
+    /// every cue again at the new rate.
     func outputChanged() {
+        onEvent?(.outputChanged)
+        rebuild()
+    }
+
+    /// Builds a new engine at the output's rate and renders every cue for it,
+    /// in a task, never inside a notification's handler, where releasing an
+    /// engine can deadlock. A newer rebuild outranks an older one still
+    /// rendering.
+    func rebuild() {
         generation += 1
         let mine = generation
         let old = graph
@@ -263,11 +278,13 @@ public final class CuePlayer {
                 guard mine == self.generation else { return }
                 self.buffers = rendered
                 self.install(next)
+                self.onEvent?(.rebuilt(sampleRate: next.rate, channels: Int(next.outputChannels)))
             } catch {
                 // No output to build on, or a render refused: the next cue tries again
                 guard mine == self.generation else { return }
                 self.graph = nil
                 self.buffers = [:]
+                self.onEvent?(.rebuildFailed("\(error)"))
             }
         }
     }
@@ -338,6 +355,8 @@ final class Graph {
     let mixer = AVAudioMixerNode()
     let voices: [Voice]
     let rate: Double
+    /// The output's channels, of which the cues carry one or two.
+    let outputChannels: AVAudioChannelCount
     let format: AVAudioFormat
 
     init(output: CuePlayer.Output, voices count: Int) throws {
@@ -362,12 +381,14 @@ final class Graph {
         guard rate > 0, channels > 0,
               let format = AVAudioFormat(standardFormatWithSampleRate: rate, channels: min(channels, 2))
         else { throw CuePlayerError.noOutput }
+        outputChannels = channels
         self.format = format
         voices = (0..<count).map { _ in Voice() }
         engine.attach(mixer)
         engine.attach(clock)
-        // Connected at the output's own rate, so nothing is resampled: left
-        // alone in manual mode, the main mixer runs at the device's rate
+        // Connected at the output's own rate and channels, so nothing is
+        // resampled: left to its default connection in manual mode, the main
+        // mixer did not pass samples through unchanged
         try connectNode(engine, engine.mainMixerNode, to: engine.outputNode, format: format)
         try connectNode(engine, mixer, to: engine.mainMixerNode, format: format)
         try connectNode(engine, clock, to: mixer, format: format)

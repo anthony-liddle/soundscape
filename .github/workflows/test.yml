@@ -120,6 +120,12 @@ jobs:
           echo "Simulator $id"
           xcodebuild test -scheme Soundscape-Package -destination "platform=iOS Simulator,id=$id" -parallel-testing-enabled NO
 
+      # Cue Check, the app for hearing the player on a phone, still builds
+      # against the library. Built for the Simulator, so nothing is signed.
+      - name: Build Cue Check
+        working-directory: swift/CueCheck.swiftpm
+        run: xcodebuild build -scheme "Cue Check" -destination "generic/platform=iOS Simulator"
+
   # The committed cues held to the oracle in real browsers, each rendering
   # both offline, and the editor's Cues view driven in each. One job per
   # browser, so each installs only its own build.

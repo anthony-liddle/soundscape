@@ -44,17 +44,24 @@ import UIKit
 
     @Test func anInterruptionStopsTheEngineAndTheNextCueStartsIt() async throws {
         let (player, engine) = try await Self.devicePlayer()
+        let log = EventLog(player)
         Self.interrupt()
         #expect(!engine.isRunning)
         try player.play("tick")
         #expect(engine.isRunning)
+        #expect(log.events == [
+            .interrupted,
+            .started(sampleRate: player.sampleRate, channels: player.outputChannelCount),
+        ])
         player.stop()
     }
 
     @Test func goingInactiveStopsTheEngineAndTheNextCueStartsIt() async throws {
         let (player, engine) = try await Self.devicePlayer()
+        let log = EventLog(player)
         NotificationCenter.default.post(name: UIApplication.willResignActiveNotification, object: nil)
         #expect(!engine.isRunning)
+        #expect(log.events == [.wentInactive])
         // Coming back does nothing; the next cue does it
         NotificationCenter.default.post(name: UIApplication.didBecomeActiveNotification, object: nil)
         #expect(!engine.isRunning)
@@ -67,9 +74,14 @@ import UIKit
     /// new engine and sets `.ambient` again, and waits for a cue to start it.
     @Test func aMediaServicesResetBuildsEverythingAgain() async throws {
         let (player, before) = try await Self.devicePlayer()
+        let log = EventLog(player)
         try Self.session.setCategory(.soloAmbient)
         NotificationCenter.default.post(name: AVAudioSession.mediaServicesWereResetNotification, object: Self.session)
         await player.settled()
+        #expect(log.events == [
+            .mediaServicesReset,
+            .rebuilt(sampleRate: player.sampleRate, channels: player.outputChannelCount),
+        ])
         let after = try #require(player.graph?.engine)
         #expect(after !== before)
         #expect(!before.isRunning)
@@ -85,6 +97,7 @@ import UIKit
         let (player, engine) = try await Self.devicePlayer()
         #expect(Self.session.category == .ambient)
         #expect(player.sampleRate == Self.session.sampleRate)
+        #expect(player.outputChannelCount == Self.session.outputNumberOfChannels)
         #expect(engine.outputNode.outputFormat(forBus: 0).sampleRate == player.sampleRate)
         player.stop()
     }

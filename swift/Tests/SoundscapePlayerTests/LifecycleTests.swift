@@ -46,5 +46,18 @@ import Testing
         lay(Peach.renders(at: 48000)["tick"]!, into: &expected, at: 4800)
         #expect(firstDifference(try player.renderOffline(9600)[0], expected) == nil)
     }
+
+    /// Each start is reported, the first and the one after a stop, with the
+    /// output's rate and channels.
+    @Test func reportsEachStart() async throws {
+        let (player, _) = try await manualPlayer(channels: 2)
+        let log = EventLog(player)
+        #expect(player.outputChannelCount == 2)
+        try player.play("tick")
+        try player.play("tick")
+        player.stop()
+        try player.play("tick")
+        #expect(log.events == [.started(sampleRate: 48000, channels: 2), .started(sampleRate: 48000, channels: 2)])
+    }
 }
 #endif
