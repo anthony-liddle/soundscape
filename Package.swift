@@ -23,6 +23,11 @@ let package = Package(
     targets: [
         .target(name: "Soundscape", path: "swift/Sources/Soundscape"),
         .target(name: "SoundscapePlayer", dependencies: ["Soundscape"], path: "swift/Sources/SoundscapePlayer"),
+        .executableTarget(
+            name: "soundscape-play",
+            dependencies: ["Soundscape", "SoundscapePlayer"],
+            path: "swift/Sources/soundscape-play"
+        ),
         .testTarget(
             name: "SoundscapeTests",
             dependencies: ["Soundscape"],

@@ -174,6 +174,13 @@ public final class CuePlayer {
         try voice.play(buffer, at: starts, on: graph)
     }
 
+    /// Seconds a cue sounds for, from its start through its last note's
+    /// stop; nil for a name the loaded document lacks.
+    public func duration(of name: String) -> Double? {
+        guard let buffer = buffers[name], sampleRate > 0 else { return nil }
+        return Double(buffer.frameLength) / sampleRate
+    }
+
     /// Seconds of output since the engine started, as the engine's
     /// `currentTime` counts them. It reads 0 while the engine is stopped, and
     /// counts from 0 again when the next cue starts it, after an interruption,
