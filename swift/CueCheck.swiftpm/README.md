@@ -38,7 +38,7 @@ An app signed with a free team stops opening after seven days. Run it from Xcode
 
 ## Antoine's Check
 
-What `0.1.0` waits for. Do these in order, on the phone, with silent mode off unless a step says otherwise. Each says what you should see or hear. Anything else is a finding: note what the log said.
+The phone check before any Swift release. Do these in order, on the phone, with silent mode off unless a step says otherwise. Each says what you should see or hear. Anything else is a finding: note what the log said.
 
 1. **The cues sound like the web game's.** On the phone or the Mac, open [peachofaword.com/sounds](https://peachofaword.com/sounds), the game's page of every sound it makes. Play the same cues in both, at least `tick`, `invalid`, `found-3-set`, `found-8-mythic-cute`, `source` and `edition`.
    - *Hear:* the same notes, the same lengths and the same loudness in both. The web page plays through WebKit, which the Swift renders are held to.

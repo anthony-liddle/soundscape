@@ -32,19 +32,19 @@ For both:
 
 Nothing publishes the Swift package: a tag on GitHub is the release. SwiftPM reads a tag as a version only if it is semver, with at most a leading `v`, so it never sees the engine's `engine-v*` tags. This package's tags are bare, `0.1.0`, with no `v`.
 
-1. **For 0.1.0 only:** Antoine's check, in `swift/CueCheck.swiftpm/README.md`, passes on his iPhone.
-2. **On a branch,** move `swift/CHANGELOG.md`'s *Unreleased* section under `## 0.1.0 - <date>`, opening a fresh *Unreleased* above, and commit it as `chore(swift): release 0.1.0`. No file holds the version.
+1. **Before every release:** Antoine's check, in `swift/CueCheck.swiftpm/README.md`, passes on his iPhone.
+2. **On a branch,** move `swift/CHANGELOG.md`'s *Unreleased* section under a heading for the version, `## 0.2.0 - <date>`, opening a fresh *Unreleased* above, and commit it as `chore(swift): release 0.2.0`. No file holds the version.
 3. **Open a pull request,** and merge it once `test`, `swift` and `apple` are green.
 4. **Tag the merge commit and push the tag:**
 
    ```sh
    git switch main && git pull
-   git tag 0.1.0
-   git push origin 0.1.0
+   git tag 0.2.0
+   git push origin 0.2.0
    ```
 
-5. **Check it from outside.** In a scratch directory outside the repository, make a package that depends on `https://github.com/anthony-liddle/soundscape.git` with `exact: "0.1.0"`, build it, and play a cue. That is what a user's first fetch does.
-6. **Optionally, a GitHub release** from the tag, its notes the changelog's section: `gh release create 0.1.0 --verify-tag --title 0.1.0 --notes-file <section>`.
+5. **Check it from outside.** In a scratch directory outside the repository, make a package that depends on `https://github.com/anthony-liddle/soundscape.git` with `exact: "0.2.0"`, build it, and play a cue. That is what a user's first fetch does.
+6. **Optionally, a GitHub release** from the tag, its notes the changelog's section: `gh release create 0.2.0 --verify-tag --title 0.2.0 --notes-file <section>`.
 
 ## Why A Bare Tag Cannot Publish The Engine
 
