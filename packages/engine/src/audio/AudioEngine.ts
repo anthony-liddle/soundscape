@@ -159,6 +159,8 @@ export class AudioEngine {
   // Replaced documents' chains still ringing, each with the silent source
   // whose end disconnects it.
   private retiredCueChains: Map<EffectsChain, ConstantSourceNode> = new Map();
+  // Cue voices not yet ended, so destroy() can release them.
+  private cueVoices: Set<VoiceSynthesizer> = new Set();
 
   // Held interactive voices for live MIDI input, keyed by pitch.
   // Independent of the transport: playback stop leaves them sounding.
@@ -967,7 +969,11 @@ export class AudioEngine {
       const instrument = document.instruments[note.instrument]!;
       const voice = new VoiceSynthesizer(context, chain.effectsChain?.getInput() ?? this.cueBus!);
       // Releases the nodes without touching a param: a cue never cancels
-      voice.onEnded = () => voice.dispose();
+      voice.onEnded = () => {
+        voice.dispose();
+        this.cueVoices.delete(voice);
+      };
+      this.cueVoices.add(voice);
       // The whole note at once, so no release depends on how a browser cancels
       const silentAt = voice.playNote(
         { pitch: note.pitch, velocity: 127, instrument, peak: note.level, setAsValues: true },
@@ -1063,6 +1069,8 @@ export class AudioEngine {
       this.removeTrackChannel(id, channel);
     }
 
+    for (const voice of this.cueVoices) voice.dispose();
+    this.cueVoices.clear();
     for (const chain of this.cueChains.values()) chain.effectsChain?.disconnect();
     this.cueChains.clear();
     for (const [effectsChain, clock] of this.retiredCueChains) {

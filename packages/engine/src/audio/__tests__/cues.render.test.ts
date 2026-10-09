@@ -538,6 +538,63 @@ describe('a replaced cue chain', () => {
   })
 })
 
+describe('cue voices', () => {
+  const voices = (engine: AudioEngine) => (engine as unknown as { cueVoices: Set<unknown> }).cueVoices
+  const end = (source: MockNode) => (source as unknown as { onended?: () => void }).onended?.()
+  async function mocked() {
+    const ctx = createMockAudioContext()
+    const engine = new AudioEngine({ context: ctx as unknown as BaseAudioContext })
+    await engine.initialize()
+    const dispose = vi.spyOn(VoiceSynthesizer.prototype, 'dispose')
+    return { ctx, engine, dispose }
+  }
+
+  it('are every one disconnected once they have ended, filtered or not, through 100 plays and replacements', async () => {
+    const { ctx, engine, dispose } = await mocked()
+    for (let i = 0; i < 100; i++) {
+      engine.loadCues(i % 2 === 0 ? FILTERED : ECHO)
+      engine.playCue('g', 0.5 + i * 0.01)
+    }
+    engine.loadCues(OTHER)
+    expect(voices(engine).size).toBe(100)
+    const sources = ctx.createdNodes.filter((n) => n.kind === 'oscillator' || n.kind === 'constant')
+    // 50 filtered voices end by their clocks, 50 echo chains by theirs
+    expect(sources.filter((n) => n.kind === 'constant')).toHaveLength(100)
+    for (const source of sources) end(source)
+    expect(dispose).toHaveBeenCalledTimes(100)
+    expect(new Set(dispose.mock.contexts).size).toBe(100)
+    for (const clock of sources.filter((n) => n.kind === 'constant')) expect(clock.disconnect).toHaveBeenCalled()
+    expect(voices(engine).size).toBe(0)
+  })
+
+  it('still ringing are disconnected when the engine is destroyed', async () => {
+    const { ctx, engine, dispose } = await mocked()
+    engine.loadCues(FILTERED)
+    engine.playCue('g', 0.5)
+    engine.destroy()
+    expect(dispose).toHaveBeenCalledTimes(1)
+    expect(ctx.createdNodes.find((n) => n.kind === 'constant')!.disconnect).toHaveBeenCalled()
+    expect(voices(engine).size).toBe(0)
+  })
+
+  it('are every one disconnected by their own clocks, rendered, after 50 filtered plays', async () => {
+    // Each voice's filter rings out within about 0.03 s of its note's stop
+    const short = doc({ g: [note('g1', 55, 0)] }, sine({ filterType: 'lowpass', filterCutoff: 0.5, filterResonance: 0.5 }))
+    const dispose = vi.spyOn(VoiceSynthesizer.prototype, 'dispose')
+    const ctx = new OfflineAudioContext(1, Math.round(2 * SAMPLE_RATE), SAMPLE_RATE)
+    const engine = new AudioEngine({ context: ctx as unknown as BaseAudioContext })
+    await engine.initialize()
+    for (let i = 0; i < 50; i++) {
+      engine.loadCues(short)
+      engine.playCue('g', START + i * 0.02)
+    }
+    await ctx.startRendering()
+    await vi.waitFor(() => expect(dispose).toHaveBeenCalledTimes(50), { timeout: 5000 })
+    expect(new Set(dispose.mock.contexts).size).toBe(50)
+    expect(voices(engine).size).toBe(0)
+  })
+})
+
 describe("a filter's ring, rendered", () => {
   // Each type a voice has: the longest ring of all, rings that fade before a
   // cycle, and a repeated pole, at a bandpass's least resonance

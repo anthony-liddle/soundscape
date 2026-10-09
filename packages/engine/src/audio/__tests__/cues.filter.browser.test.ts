@@ -138,3 +138,22 @@ describe('a filtered cue, in this browser', () => {
     })
   }
 })
+
+describe('cue voices, in this browser', () => {
+  it('are every one disconnected by their own clocks after 50 filtered plays', async () => {
+    // Each voice's filter rings out within about 0.03 s of its note's stop
+    const short = oneNote(sine({ filterType: 'lowpass', filterCutoff: 0.5, filterResonance: 0.5 }))
+    const dispose = vi.spyOn(VoiceSynthesizer.prototype, 'dispose')
+    const ctx = new OfflineAudioContext(1, 2 * RATE, RATE)
+    const engine = new AudioEngine({ context: ctx })
+    await engine.initialize()
+    for (let i = 0; i < 50; i++) {
+      engine.loadCues(short)
+      engine.playCue('g', START + i * 0.02)
+    }
+    await ctx.startRendering()
+    await vi.waitFor(() => expect(dispose).toHaveBeenCalledTimes(50), { timeout: 5000 })
+    expect(new Set(dispose.mock.contexts).size).toBe(50)
+    expect((engine as unknown as { cueVoices: Set<unknown> }).cueVoices.size).toBe(0)
+  })
+})
