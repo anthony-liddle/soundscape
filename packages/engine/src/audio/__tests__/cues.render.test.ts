@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { OfflineAudioContext } from 'node-web-audio-api'
 import { AudioEngine } from '../AudioEngine'
-import { EffectsChain, delayTail } from '../EffectsChain'
-import { VoiceSynthesizer } from '../VoiceSynthesizer'
+import { EffectsChain, RUNG_OUT, delayTail } from '../EffectsChain'
+import { VoiceSynthesizer, filterTail } from '../VoiceSynthesizer'
 import { createMockAudioContext } from './mockWebAudio'
 import type { MockAudioContext, MockNode } from './mockWebAudio'
 import { midiToFrequency } from '../../utils/pitch'
@@ -108,6 +108,8 @@ const peakIn = (x: Float32Array, from: number, to: number) => {
 /** One short note through a delay, and a document to replace it with. */
 const ECHO = doc({ g: [note('g1', 55, 0)] }, sine({ delayTime: 0.1, delayFeedback: 0.5, delayMix: 0.4 }))
 const OTHER = doc({ other: [note('o', 60, 0)] })
+/** One short note through a lowpass at 28 Hz with 20 dB of resonance, which rings for nearly 2 s. */
+const FILTERED = doc({ g: [note('g1', 55, 0)] }, sine({ filterType: 'lowpass', filterCutoff: 0.05, filterResonance: 1 }))
 
 /** After ECHO's note has stopped, at START + 0.17 s, and while its echoes ring. */
 const ENDS_REPORTED_AT = 0.4
@@ -250,6 +252,16 @@ describe('playCue', () => {
     )
     const plain = await render((e) => e.playCue('g', START), ECHO)
     expect(largestDifference(kept, plain)).toBe(0)
+  })
+
+  it("plays a filtered cue's ring out whole, its oscillator's end reported mid-render", async () => {
+    // A reference in which no voice is ever disconnected
+    const kept = vi.spyOn(VoiceSynthesizer.prototype, 'dispose').mockImplementation(() => {})
+    const whole = await render((e) => e.playCue('g', START), FILTERED)
+    kept.mockRestore()
+    const reported = await renderReportingEnds('mid-render', FILTERED, (e) => e.playCue('g', START))
+    expect(peakIn(whole, ENDS_REPORTED_AT, ENDS_REPORTED_AT + 0.1)).toBeGreaterThan(1e-4)
+    expect(largestDifference(reported, whole)).toBe(0)
   })
 
   it('says what is wrong when it cannot play', async () => {
@@ -491,4 +503,31 @@ describe('a replaced cue chain', () => {
     expect(new Set(disconnect.mock.contexts).size).toBe(50)
     expect(retired(engine).size).toBe(0)
   })
+})
+
+describe("a filter's ring, rendered", () => {
+  // Each type a voice has: the longest ring of all, rings that fade before a
+  // cycle, and a repeated pole, at a bandpass's least resonance
+  const FILTERS: Record<string, Pick<CueInstrument, 'filterType' | 'filterCutoff' | 'filterResonance'>> = {
+    'a resonant lowpass': { filterType: 'lowpass', filterCutoff: 0.05, filterResonance: 1 },
+    'a resonant highpass': { filterType: 'highpass', filterCutoff: 0.3, filterResonance: 1 },
+    'a bandpass at 20 Hz with a Q of 20, the longest ring': { filterType: 'bandpass', filterCutoff: 0, filterResonance: 1 },
+    'a notch': { filterType: 'notch', filterCutoff: 0.2, filterResonance: 0.5 },
+    'a bandpass at its least resonance, a repeated pole': { filterType: 'bandpass', filterCutoff: 0.3, filterResonance: 0 },
+  }
+  for (const [name, filter] of Object.entries(FILTERS)) {
+    it(`holds nothing above 2^-24 of the ring heard past where the voice stops waiting: ${name}`, async () => {
+      const stopsAt = START + 0.17
+      const deadline = stopsAt + filterTail(filter, SAMPLE_RATE)
+      // No voice is disconnected in this render, so the whole ring is in it
+      vi.spyOn(VoiceSynthesizer.prototype, 'dispose').mockImplementation(() => {})
+      const { ctx, engine } = await engineWith(1, deadline + 0.5)
+      engine.loadCues(doc({ g: [note('g1', 55, 0)] }, sine(filter)))
+      engine.playCue('g', START)
+      const whole = Float32Array.from((await ctx.startRendering()).getChannelData(0))
+      const heard = peakIn(whole, stopsAt, deadline)
+      expect(heard).toBeGreaterThan(0)
+      expect(peakIn(whole, deadline, deadline + 0.5)).toBeLessThanOrEqual(RUNG_OUT * heard)
+    })
+  }
 })
