@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.4.1 - 2026-10-09
+
 ### Added
 
 - **`VoiceSynthesizer.playNote` returns the audio-clock time the voice falls
@@ -32,6 +34,12 @@
   158 passes round the delay, 158.4 s after the last note stops at 48 kHz.
   They are disconnected then, or at once if nothing they played still rings,
   and when the engine is destroyed.
+- **No warning from `node-web-audio-api` for an effects chain without
+  distortion.** Every chain with distortion at 0 set its waveshaper's curve to
+  null, which it already was, and `node-web-audio-api` warned at each:
+  "Setting the 'curve' property on 'WaveShaperNode' to 'null' is not
+  supported yet". It no longer sets a null curve over one already null.
+  Nothing sounds different.
 - **`midiToNoteName` names a fractional pitch.** It returned `"undefined5"`
   for a pitch such as 78.99998074500876, which a cue document allows. It now
   gives the nearest note and the distance from it in cents, to two places:
