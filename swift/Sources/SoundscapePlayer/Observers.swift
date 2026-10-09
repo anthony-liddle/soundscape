@@ -1,9 +1,10 @@
 #if canImport(AVFoundation)
 import AVFoundation
 
-/// The notification a player listens to, its engine's, removed when it goes.
+/// The notifications a player listens to, removed when it goes.
 final class Observers {
     private var engine: NSObjectProtocol?
+    private var session: [NSObjectProtocol] = []
 
     /// Calls `changed` on the main actor when `engine`'s output changes rate
     /// or channels, in place of any engine watched before. The notification
@@ -19,8 +20,33 @@ final class Observers {
         ) { _ in MainActor.assumeIsolated { changed() } }
     }
 
+    /// Calls `handle` on the main actor with what `read` takes from each
+    /// notification named `name`. A notification is not `Sendable`, so what
+    /// the handler needs is read from it before it crosses.
+    @MainActor
+    func on<Value: Sendable>(
+        _ name: Notification.Name,
+        _ object: Any?,
+        read: @escaping @Sendable (Notification) -> Value,
+        _ handle: @escaping @MainActor (Value) -> Void
+    ) {
+        session.append(
+            NotificationCenter.default.addObserver(forName: name, object: object, queue: .main) { note in
+                let value = read(note)
+                MainActor.assumeIsolated { handle(value) }
+            }
+        )
+    }
+
+    @MainActor
+    func on(_ name: Notification.Name, _ object: Any?, _ handle: @escaping @MainActor () -> Void) {
+        on(name, object, read: { _ in () }, handle)
+    }
+
     deinit {
-        if let engine { NotificationCenter.default.removeObserver(engine) }
+        for token in session + [engine].compactMap(\.self) {
+            NotificationCenter.default.removeObserver(token)
+        }
     }
 }
 #endif

@@ -79,6 +79,8 @@ public final class CuePlayer {
         precondition(voices > 0, "a player needs a voice")
         self.output = output
         voiceCount = voices
+        // A manual output has no session: a call does not stop a render to a file
+        if case .device = output { observeTheSession() }
     }
 
     // MARK: Loading
