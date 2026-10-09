@@ -93,6 +93,22 @@ describe('a filtered cue, in this browser', () => {
     expect(differences).toEqual(Array(20).fill(0))
   })
 
+  it('plays its ring out whole through an echo when the document is replaced under it', async () => {
+    // A ring of nearly 2 s through one echo, whose delay alone would let the
+    // replaced chain go 55 ms after the note stops
+    const ringing = oneNote({ ...sine(RESONANT), delayTime: 0.05, delayMix: 0.4 })
+    const plain = await render(ringing, 0.8)
+    const ctx = new OfflineAudioContext(1, Math.round(0.8 * RATE), RATE)
+    const engine = new AudioEngine({ context: ctx })
+    await engine.initialize()
+    engine.loadCues(ringing)
+    engine.playCue('g', START)
+    engine.loadCues(FILTERED)
+    const replaced = Float32Array.from((await ctx.startRendering()).getChannelData(0))
+    expect(peakIn(plain, 0.4, 0.5)).toBeGreaterThan(1e-4)
+    expect(largestDifference(replaced, plain)).toBe(0)
+  })
+
   // Each type a voice has: the longest ring of all, rings that fade before a
   // cycle, and a repeated pole, at a bandpass's least resonance
   const FILTERS: Record<string, Filter> = {

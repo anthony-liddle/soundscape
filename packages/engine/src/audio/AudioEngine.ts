@@ -969,12 +969,13 @@ export class AudioEngine {
       // Releases the nodes without touching a param: a cue never cancels
       voice.onEnded = () => voice.dispose();
       // The whole note at once, so no release depends on how a browser cancels
-      const stopsAt = voice.playNote(
+      const silentAt = voice.playNote(
         { pitch: note.pitch, velocity: 127, instrument, peak: note.level, setAsValues: true },
         base + note.start,
         note.duration
       );
-      chain.ringsUntil = Math.max(chain.ringsUntil, stopsAt + chain.tail);
+      // The chain's input falls silent once the voice's filter has rung out too
+      chain.ringsUntil = Math.max(chain.ringsUntil, silentAt + chain.tail);
     }
   }
 

@@ -170,7 +170,8 @@ export class VoiceSynthesizer {
    *
    * @param startTime - Audio-clock time the note starts; a time already past starts now.
    * @param duration - Seconds from the start to the release.
-   * @returns Audio-clock time the voice's sources stop.
+   * @returns Audio-clock time the voice falls silent: its sources' stop, and
+   *   after that its filter's ring, see {@link filterTail}.
    */
   playNote(params: VoiceParams, startTime: number, duration: number): number {
     const start = Math.max(this.context.currentTime, startTime);
@@ -211,7 +212,7 @@ export class VoiceSynthesizer {
       }
     }
     this.isPlaying = true;
-    return stopAt;
+    return stopAt + ring;
   }
 
   /**

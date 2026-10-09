@@ -318,19 +318,22 @@ describe('a whole note through a filter', () => {
     const ended = vi.fn()
     voice.onEnded = ended
     const before = ctx.createdNodes.length
-    const stopsAt = voice.playNote({ pitch: 55, velocity: 100, instrument: makeParams(filter) }, 0.5, 0.15)
+    const silentAt = voice.playNote({ pitch: 55, velocity: 100, instrument: makeParams(filter) }, 0.5, 0.15)
     const made = ctx.createdNodes.slice(before)
-    return { ctx, voice, output, ended, stopsAt, made }
+    return { ctx, voice, output, ended, silentAt, made }
   }
   const end = (source: MockNode) => (source as unknown as { onended: () => void }).onended()
 
   it('ends when its filter has rung out, by a silent clock stopped then, not when its oscillators stop', () => {
-    const { ctx, output, ended, stopsAt, made } = play(RESONANT)
+    const { ctx, output, ended, silentAt, made } = play(RESONANT)
     const [clock, ...more] = made.filter((n) => n.kind === 'constant')
+    const stopsAt = made.find((n) => n.kind === 'oscillator')!.stopped[0]!
     expect(more).toHaveLength(0)
     expect(clock!.offset.value).toBe(0)
     expect(clock!.started).toEqual([0.5])
-    expect(clock!.stopped).toEqual([stopsAt + filterTail(RESONANT, ctx.sampleRate)])
+    // playNote returns the time the voice falls silent, the clock's stop
+    expect(silentAt).toBe(stopsAt + filterTail(RESONANT, ctx.sampleRate))
+    expect(clock!.stopped).toEqual([silentAt])
     // After the filter, so the filter's input still falls silent
     expect(clock!.connections).toEqual([output])
     for (const osc of made.filter((n) => n.kind === 'oscillator')) {
@@ -342,8 +345,9 @@ describe('a whole note through a filter', () => {
   })
 
   it('needs no clock with no filter, and ends with its oscillators', () => {
-    const { ended, made } = play({ filterType: 'none', filterCutoff: 0.05, filterResonance: 1 })
+    const { ended, silentAt, made } = play({ filterType: 'none', filterCutoff: 0.05, filterResonance: 1 })
     expect(made.filter((n) => n.kind === 'constant')).toHaveLength(0)
+    expect(silentAt).toBe(made.find((n) => n.kind === 'oscillator')!.stopped[0])
     end(made.find((n) => n.kind === 'oscillator')!)
     expect(ended).toHaveBeenCalledTimes(1)
   })
