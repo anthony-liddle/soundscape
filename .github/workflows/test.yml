@@ -42,8 +42,8 @@ jobs:
   # generator held against the engine, a check that the corpus's recorded
   # answers are still the engine's, and every reference cue rendered and held
   # to the bar. Node runs the engine's TypeScript source
-  # directly, so nothing is installed for it. A macOS job waits for the player,
-  # the first code to touch Apple's frameworks.
+  # directly, so nothing is installed for it. The player, on AVFoundation,
+  # builds to nothing here; the apple job tests it.
   #
   # No paths filter, here or on the workflow: test is a required check, and a
   # workflow skipped by a filter leaves it pending, which blocks the merge.
@@ -87,6 +87,38 @@ jobs:
 
       - name: Every positive control misses the bar, and 0.05 dB louder passes
         run: node conformance/cues/render/judge.mjs .build/renders --controls
+
+  # The Swift package on Apple's platforms: every suite on macOS, the player's
+  # AVFoundation ones included, then every suite again in the iOS Simulator,
+  # where the audio session lives. The runner's default Xcode is a 26, so this
+  # is the player before the 27 SDKs: the iOS 17 to 26 interruption
+  # notification, and AVFoundation's calls that do not throw. Xcode 27, and
+  # iOS 27's notifications, are tested locally until a runner has them.
+  apple:
+    runs-on: macos-26
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Xcode and Swift versions
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Simulator runtimes
+        run: xcrun simctl list runtimes
+
+      - name: Test on macOS, the player included
+        run: swift test
+
+      # The newest iOS runtime's first iPhone
+      - name: Test in the iOS Simulator
+        run: |
+          id=$(xcrun simctl list devices available --json | jq -r '[.devices | to_entries | sort_by(.key) | reverse | .[] | select(.key | test("iOS")) | .value[] | select(.name | startswith("iPhone"))][0].udid')
+          echo "Simulator $id"
+          xcodebuild test -scheme Soundscape-Package -destination "platform=iOS Simulator,id=$id" -parallel-testing-enabled NO
 
   # The committed cues held to the oracle in real browsers, each rendering
   # both offline, and the editor's Cues view driven in each. One job per
