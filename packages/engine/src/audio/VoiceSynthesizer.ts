@@ -164,8 +164,9 @@ export class VoiceSynthesizer {
    *
    * @param startTime - Audio-clock time the note starts; a time already past starts now.
    * @param duration - Seconds from the start to the release.
+   * @returns Audio-clock time the voice's sources stop.
    */
-  playNote(params: VoiceParams, startTime: number, duration: number): void {
+  playNote(params: VoiceParams, startTime: number, duration: number): number {
     const start = Math.max(this.context.currentTime, startTime);
     this.startSources(params, start);
 
@@ -189,6 +190,7 @@ export class VoiceSynthesizer {
     }
     this.lfoNode?.stop(stopAt);
     this.isPlaying = true;
+    return stopAt;
   }
 
   /**

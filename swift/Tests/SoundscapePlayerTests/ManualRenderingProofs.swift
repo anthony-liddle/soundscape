@@ -99,9 +99,8 @@ import Testing
     }
 
     /// Loading a document while cues ring leaves them ringing, to the end of
-    /// their render. The engine plays a replaced cue's notes out but cuts its
-    /// effects' tail (#123); Peach's cues have no effects, and a rendered
-    /// buffer carries its whole tail.
+    /// their render, as the engine plays a replaced cue out, its effects'
+    /// tail included (#123). A rendered buffer carries its whole tail.
     @Test func reloadingLeavesRingingCuesRinging() async throws {
         let (player, _) = try await manualPlayer()
         let edition = Peach.renders(at: 48000)["edition"]!

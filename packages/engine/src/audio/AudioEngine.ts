@@ -3,7 +3,7 @@ import { defaultTrackMixerState } from '../types';
 import { beatsToSeconds, normalizedToADSR } from '../utils/time';
 import { VoiceSynthesizer } from './VoiceSynthesizer';
 import type { VoiceParams } from './VoiceSynthesizer';
-import { EffectsChain, asksForNoEffect } from './EffectsChain';
+import { EffectsChain, asksForNoEffect, delayTail } from './EffectsChain';
 import type { EffectsParams } from './EffectsChain';
 import { getPresetById } from '../presets';
 import { CueDocumentError } from '../cues/types';
@@ -54,13 +54,14 @@ function voiceKey(noteId: string, iteration: number): string {
   return `${noteId}|${iteration}`;
 }
 
-/** A loaded cue instrument's effects, and how many of its voices still sound. */
+/** A loaded cue instrument's effects, and until when what they have played rings. */
 interface CueChain {
   /** Null for an instrument that asks for no effect: its voices play straight into the cue output. */
   effectsChain: EffectsChain | null;
-  voices: number;
-  /** True once a newer document replaced this one's instruments. */
-  retired: boolean;
+  /** Seconds the effects ring on once their input is silent; see {@link delayTail}. */
+  tail: number;
+  /** Audio-clock time by which every note played through them has stopped and rung out. */
+  ringsUntil: number;
 }
 
 /** A cue instrument's effect settings, in the form EffectsChain takes. */
@@ -155,6 +156,9 @@ export class AudioEngine {
   private cuesMuted = false;
   private cueDocument: CueDocument | null = null;
   private cueChains: Map<string, CueChain> = new Map();
+  // Replaced documents' chains still ringing, each with the silent source
+  // whose end disconnects it.
+  private retiredCueChains: Map<EffectsChain, ConstantSourceNode> = new Map();
 
   // Held interactive voices for live MIDI input, keyed by pitch.
   // Independent of the transport: playback stop leaves them sounding.
@@ -879,7 +883,8 @@ export class AudioEngine {
 
   /**
    * Loads a cue document, replacing any loaded before. Cues already ringing
-   * from the previous document play out on their own instruments.
+   * from the previous document play out on their own instruments, their
+   * effects' echoes included, until those have rung out.
    *
    * The first call creates the cues' own output: a gain with its own volume and
    * mute, feeding the analyser directly, so cues bypass the master gain and the
@@ -907,7 +912,7 @@ export class AudioEngine {
       this.cueBus.connect(this.analyserNode ?? context.destination);
     }
 
-    for (const chain of this.cueChains.values()) this.retireCueChain(chain);
+    for (const chain of this.cueChains.values()) this.retireCueChain(chain, context);
     this.cueChains = new Map();
     for (const [name, instrument] of Object.entries(own.instruments)) {
       // A chain with no effect to make sounds the same as none, but its delay
@@ -915,7 +920,7 @@ export class AudioEngine {
       // instrument's effects are fixed once loaded, so this holds.
       const effects = cueEffects(instrument);
       if (asksForNoEffect(effects)) {
-        this.cueChains.set(name, { effectsChain: null, voices: 0, retired: false });
+        this.cueChains.set(name, { effectsChain: null, tail: 0, ringsUntil: 0 });
         continue;
       }
       // A cue with no distortion must not be oversampled: WebKit delays it 6
@@ -923,7 +928,7 @@ export class AudioEngine {
       const effectsChain = new EffectsChain(context, { oversampleOnlyWhenDistorting: true, reverb: false });
       effectsChain.setParams(effects);
       effectsChain.getOutput().connect(this.cueBus);
-      this.cueChains.set(name, { effectsChain, voices: 0, retired: false });
+      this.cueChains.set(name, { effectsChain, tail: delayTail(effects, context.sampleRate), ringsUntil: 0 });
     }
     this.cueDocument = own;
   }
@@ -961,19 +966,15 @@ export class AudioEngine {
       const chain = this.cueChains.get(note.instrument)!;
       const instrument = document.instruments[note.instrument]!;
       const voice = new VoiceSynthesizer(context, chain.effectsChain?.getInput() ?? this.cueBus!);
-      chain.voices++;
-      voice.onEnded = () => {
-        // Releases the nodes without touching a param: a cue never cancels
-        voice.dispose();
-        chain.voices--;
-        if (chain.retired && chain.voices === 0) chain.effectsChain?.disconnect();
-      };
+      // Releases the nodes without touching a param: a cue never cancels
+      voice.onEnded = () => voice.dispose();
       // The whole note at once, so no release depends on how a browser cancels
-      voice.playNote(
+      const stopsAt = voice.playNote(
         { pitch: note.pitch, velocity: 127, instrument, peak: note.level, setAsValues: true },
         base + note.start,
         note.duration
       );
+      chain.ringsUntil = Math.max(chain.ringsUntil, stopsAt + chain.tail);
     }
   }
 
@@ -997,10 +998,32 @@ export class AudioEngine {
     this.cueBus.gain.setValueAtTime(this.cuesMuted ? 0 : this.cueVolume, this.context.currentTime);
   }
 
-  /** Disconnect a replaced document's chain now, or once its last voice ends. */
-  private retireCueChain(chain: CueChain): void {
-    chain.retired = true;
-    if (chain.voices === 0) chain.effectsChain?.disconnect();
+  /**
+   * Disconnect a replaced document's chain once what it played has rung out:
+   * now, if it has, or else when a silent source stopped at that time ends.
+   * The audio clock decides. A voice's end can be reported at any time after
+   * its note stops, so it cannot say when the echoes have died away, and a
+   * timer would run on while the context is suspended.
+   */
+  private retireCueChain(chain: CueChain, context: BaseAudioContext): void {
+    const { effectsChain } = chain;
+    if (!effectsChain) return;
+    if (chain.ringsUntil <= context.currentTime) {
+      effectsChain.disconnect();
+      return;
+    }
+    // Connected so every browser renders it to its end; it adds exact zeros
+    const clock = context.createConstantSource();
+    clock.offset.value = 0;
+    clock.connect(effectsChain.getOutput());
+    clock.onended = () => {
+      clock.disconnect();
+      effectsChain.disconnect();
+      this.retiredCueChains.delete(effectsChain);
+    };
+    clock.start();
+    clock.stop(chain.ringsUntil);
+    this.retiredCueChains.set(effectsChain, clock);
   }
 
   private stopAllMIDINotes(): void {
@@ -1041,6 +1064,12 @@ export class AudioEngine {
 
     for (const chain of this.cueChains.values()) chain.effectsChain?.disconnect();
     this.cueChains.clear();
+    for (const [effectsChain, clock] of this.retiredCueChains) {
+      clock.onended = null;
+      clock.disconnect();
+      effectsChain.disconnect();
+    }
+    this.retiredCueChains.clear();
     this.cueDocument = null;
     if (this.cueBus) {
       this.cueBus.disconnect();

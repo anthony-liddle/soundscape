@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { EffectsChain, asksForNoEffect } from '../EffectsChain'
+import { EffectsChain, RUNG_OUT, asksForNoEffect, delayTail } from '../EffectsChain'
 import type { EffectsParams } from '../EffectsChain'
 import { createMockAudioContext, isConnected } from './mockWebAudio'
 import type { MockAudioContext, MockNode } from './mockWebAudio'
@@ -221,4 +221,41 @@ describe('asksForNoEffect', () => {
       expect(asksForNoEffect({ ...NONE, [key]: 1 })).toBe(false)
     })
   }
+})
+
+describe('delayTail', () => {
+  const RATE = 48000
+  const QUANTUM = 128 / RATE
+  const ECHO: EffectsParams = { delayTime: 0.1, delayFeedback: 0.5, delayMix: 0.4, distortion: 0, reverbMix: 0 }
+  /** A pass round the loop, as counted: the delay, a render quantum and a sample. */
+  const pass = (delayTime: number) => Math.max(delayTime, QUANTUM) + QUANTUM + 1 / RATE
+  const passes = (params: EffectsParams) => Math.round((delayTail(params, RATE) - QUANTUM) / pass(params.delayTime))
+
+  it('waits 158 passes for the longest echo a cue can have, feedback 0.9 at a 1 s delay', () => {
+    expect(0.9 ** 158).toBeLessThanOrEqual(RUNG_OUT)
+    expect(0.9 ** 157).toBeGreaterThan(RUNG_OUT)
+    expect(delayTail({ ...ECHO, delayTime: 1, delayFeedback: 1 }, RATE)).toBeCloseTo(158 * pass(1) + QUANTUM, 9)
+  })
+
+  it('waits the fewest passes that take the feedback to RUNG_OUT, at every feedback', () => {
+    for (let i = 1; i <= 100; i++) {
+      const params = { ...ECHO, delayFeedback: i / 100 }
+      const n = passes(params)
+      expect((params.delayFeedback * 0.9) ** n).toBeLessThanOrEqual(RUNG_OUT)
+      if (n > 1) expect((params.delayFeedback * 0.9) ** (n - 1)).toBeGreaterThan(RUNG_OUT)
+    }
+  })
+
+  it('waits one pass with no feedback, which empties the delay', () => {
+    expect(passes({ ...ECHO, delayFeedback: 0 })).toBe(1)
+  })
+
+  it('counts a pass as no shorter than a render quantum, the least a delay in a cycle can be', () => {
+    expect(delayTail({ ...ECHO, delayTime: 0, delayFeedback: 0 }, RATE)).toBeCloseTo(pass(0) + QUANTUM, 12)
+    expect(pass(0)).toBeCloseTo(2 * QUANTUM + 1 / RATE, 12)
+  })
+
+  it('waits only for the oversampling when the delay is mixed in at 0', () => {
+    expect(delayTail({ ...ECHO, delayMix: 0 }, RATE)).toBe(QUANTUM)
+  })
 })
