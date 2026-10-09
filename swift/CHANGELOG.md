@@ -4,7 +4,9 @@ The Swift package's changelog, for its bare semver tags. The npm engine's is in 
 
 ## Unreleased
 
-0.1.0, the first release. It waits for the check on an iPhone in `swift/CueCheck.swiftpm/README.md`.
+## 0.1.0 - 2026-10-09
+
+0.1.0, the first release. The check on an iPhone in `swift/CueCheck.swiftpm/README.md` passed on Antoine's iPhone on 2026-10-09.
 
 ### Added
 
