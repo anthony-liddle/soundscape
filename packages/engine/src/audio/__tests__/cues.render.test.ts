@@ -33,7 +33,10 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-const sine = (overrides: Partial<CueInstrument> = {}): CueInstrument => ({
+/** A cue instrument with a decay of fixed length, which is what sine() makes. */
+type FixedDecay = Extract<CueInstrument, { decay: number }>
+
+const sine = (overrides: Partial<FixedDecay> = {}): CueInstrument => ({
   waveform: 'sine',
   pitchOffset: 0,
   attack: 0.074,
@@ -197,8 +200,10 @@ describe('playCue', () => {
   })
 
   it('lands each note at its level: no master gain, no compressor, no ceiling', async () => {
-    const steady = doc({ hold: [note('h', 69, 0, { duration: 0.4, level: 0.5 })] }, sine({ envelopeCurve: 'linear', envelopeFloor: undefined, sustain: 1, attack: 0 }))
-    delete (steady.instruments.sine as Partial<CueInstrument>).envelopeFloor
+    // A linear envelope has no floor
+    const linear = sine({ envelopeCurve: 'linear', sustain: 1, attack: 0 })
+    delete (linear as Partial<CueInstrument>).envelopeFloor
+    const steady = doc({ hold: [note('h', 69, 0, { duration: 0.4, level: 0.5 })] }, linear)
     const x = await render((e) => e.playCue('hold', START), steady)
     expect(peakIn(x, START + 0.1, START + 0.3)).toBeCloseTo(0.5, 3)
   })
