@@ -49,6 +49,23 @@ import Testing
         #expect(difference == nil, "\(difference ?? "")")
     }
 
+    /// The player says what it did: started, saw the output change, rebuilt
+    /// at the new rate, and started again for the next cue.
+    @Test func reportsTheChangeAndTheRebuild() async throws {
+        let (player, output) = try await manualPlayer(rate: 48000)
+        let log = EventLog(player)
+        #expect(player.outputChannelCount == 1)
+        try player.play("tick")
+        try await Self.change(player, output, to: 44100)
+        try player.play("tick")
+        #expect(log.events == [
+            .started(sampleRate: 48000, channels: 1),
+            .outputChanged,
+            .rebuilt(sampleRate: 44100, channels: 1),
+            .started(sampleRate: 44100, channels: 1),
+        ])
+    }
+
     /// A cue asked for while the cues are rendering again is skipped: there
     /// is nothing at the new rate to play yet, and the old engine is stopped.
     @Test func skipsACueWhileRenderingAgain() async throws {

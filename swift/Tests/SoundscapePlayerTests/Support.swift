@@ -37,6 +37,16 @@ func manualPlayer(
     return (player, output)
 }
 
+/// Every ``CuePlayer/Event`` a player reports, in order.
+@MainActor
+final class EventLog {
+    private(set) var events: [CuePlayer.Event] = []
+
+    init(_ player: CuePlayer) {
+        player.onEvent = { [unowned self] in events.append($0) }
+    }
+}
+
 /// `cue` laid into `into` from frame `at`, summed with what is there.
 func lay(_ cue: [Float], into out: inout [Float], at: Int) {
     for (i, sample) in cue.enumerated() where at + i < out.count { out[at + i] += sample }

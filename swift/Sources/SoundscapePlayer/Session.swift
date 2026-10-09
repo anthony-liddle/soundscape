@@ -49,7 +49,7 @@ extension CuePlayer {
         observers.on(AVAudioSession.mediaServicesWereResetNotification, session) { [weak self] in
             self?.mediaServicesReset()
         }
-        observers.on(UIApplication.willResignActiveNotification, nil) { [weak self] in self?.stop() }
+        observers.on(UIApplication.willResignActiveNotification, nil) { [weak self] in self?.wentInactive() }
         #endif
     }
 
@@ -79,6 +79,7 @@ extension CuePlayer {
     /// starts it again, or throws if the session still cannot be had.
     func interrupted() {
         stop()
+        onEvent?(.interrupted)
     }
 
     /// The interruption is over and the system suggests resuming: the
@@ -86,13 +87,22 @@ extension CuePlayer {
     /// engine waits for that cue.
     func resumed() {
         try? activateTheSession()
+        onEvent?(.resumable)
+    }
+
+    /// The app went inactive: the engine stops, and the first cue after the
+    /// app comes back starts it.
+    func wentInactive() {
+        stop()
+        onEvent?(.wentInactive)
     }
 
     /// The media services restarted, and every audio object with them: build
     /// a new engine, set the category again, and render every cue again. The
     /// sound waits for the next cue, as Apple asks.
     func mediaServicesReset() {
-        outputChanged()
+        onEvent?(.mediaServicesReset)
+        rebuild()
     }
 }
 #endif
