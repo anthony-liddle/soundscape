@@ -11,9 +11,6 @@ import type { InstrumentParams } from '../../types'
  * implementation (node-web-audio-api) rendering into an OfflineAudioContext,
  * and assertions are made on the rendered samples. This is the only test
  * style that catches "schedules fine but produces silence" regressions.
- *
- * Tests marked [characterizes-bug] pin CURRENT buggy audio on purpose — flip
- * them in the same commit as the 0.3.0 fix.
  */
 
 const SAMPLE_RATE = 44100

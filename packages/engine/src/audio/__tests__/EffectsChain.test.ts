@@ -4,12 +4,6 @@ import type { EffectsParams } from '../EffectsChain'
 import { createMockAudioContext, isConnected } from './mockWebAudio'
 import type { MockAudioContext, MockNode } from './mockWebAudio'
 
-/**
- * Characterization tests pinning the CURRENT effects routing and parameter
- * mapping. Tests marked [characterizes-bug] assert known-buggy behavior on
- * purpose — flip them in the same commit as the 0.3.0 fix.
- */
-
 const PARAMS: EffectsParams = {
   delayTime: 0.5,
   delayFeedback: 0.5,

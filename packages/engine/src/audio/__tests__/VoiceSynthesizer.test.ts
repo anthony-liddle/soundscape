@@ -8,13 +8,6 @@ import { normalizedToADSR } from '../../utils/time'
 import { createMockAudioContext, isConnected } from './mockWebAudio'
 import type { MockAudioContext, MockNode } from './mockWebAudio'
 
-/**
- * Characterization tests: these pin down the CURRENT behavior of the voice,
- * including known quirks slated to change in 0.3.0. Tests marked
- * [characterizes-bug] assert buggy behavior on purpose — when the fix lands,
- * flip the assertion in the same commit.
- */
-
 function makeParams(overrides: Partial<InstrumentParams> = {}): InstrumentParams {
   return { ...defaultInstrumentParams, ...overrides }
 }
