@@ -155,7 +155,7 @@ describe('validation utilities', () => {
           tracks: [
             {
               ...validState.tracks[0],
-              notes: [{ ...validState.tracks[0].notes[0], pitch: -1 }],
+              notes: [{ ...validState.tracks[0]!.notes[0], pitch: -1 }],
             },
           ],
         }
@@ -168,7 +168,7 @@ describe('validation utilities', () => {
           tracks: [
             {
               ...validState.tracks[0],
-              notes: [{ ...validState.tracks[0].notes[0], pitch: 128 }],
+              notes: [{ ...validState.tracks[0]!.notes[0], pitch: 128 }],
             },
           ],
         }
@@ -181,7 +181,7 @@ describe('validation utilities', () => {
           tracks: [
             {
               ...validState.tracks[0],
-              notes: [{ ...validState.tracks[0].notes[0], duration: 0 }],
+              notes: [{ ...validState.tracks[0]!.notes[0], duration: 0 }],
             },
           ],
         }
@@ -194,7 +194,7 @@ describe('validation utilities', () => {
           tracks: [
             {
               ...validState.tracks[0],
-              notes: [{ ...validState.tracks[0].notes[0], velocity: -1 }],
+              notes: [{ ...validState.tracks[0]!.notes[0], velocity: -1 }],
             },
           ],
         }

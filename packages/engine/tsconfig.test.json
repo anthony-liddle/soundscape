@@ -1,0 +1,12 @@
+{
+  // The engine with its tests, which tsconfig.json leaves out of the build.
+  // The tests run on Node 24 and in current browsers, so they may use ES2023.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src"],
+  "exclude": []
+}

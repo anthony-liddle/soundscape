@@ -45,7 +45,10 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-const sine = (overrides: Partial<CueInstrument> = {}): CueInstrument => ({
+/** A cue instrument with a decay of fixed length, which is what sine() makes. */
+type FixedDecay = Extract<CueInstrument, { decay: number }>
+
+const sine = (overrides: Partial<FixedDecay> = {}): CueInstrument => ({
   waveform: 'sine',
   pitchOffset: 0,
   attack: 0.074,
