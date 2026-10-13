@@ -95,10 +95,17 @@ export async function renderInLockstep(
 }
 
 /**
- * node-web-audio-api occasionally refuses a suspension registered up front,
- * mid-render, under load: it was seen in 3 of 12 runs of the whole suite, one
- * suspension each, at a different frame every time. The render is then not a
- * lockstep render, so it is thrown away rather than compared.
+ * node-web-audio-api 2.2.0 refuses a suspension registered up front when the
+ * render starts before the suspension is recorded. Its `suspend` records it
+ * on a worker thread after the call has returned, and `startRendering` takes
+ * the renderer on another, so under load the render can win: "InvalidStateError
+ * - cannot suspend when rendering has already started", surfaced as "Error in
+ * async function". Nothing in JavaScript can tell when a suspension has been
+ * recorded, so no wait before rendering makes it certain, and a lone worker
+ * thread does not either. A lockstep render cannot do without suspensions,
+ * and its references were recorded here, so a refused one is thrown away and
+ * the render made again; anything that can be tested without one is, and a
+ * render held at a point is tested in the browsers.
  */
 export class LockstepRefused extends Error {
   constructor(refused: string[]) {
