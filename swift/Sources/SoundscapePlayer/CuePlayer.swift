@@ -95,6 +95,12 @@ public final class CuePlayer {
     /// the main thread. Cues already ringing from the previous document play
     /// out.
     ///
+    /// Each cue's render is held whole, in every channel of the output: four
+    /// bytes a frame a channel, for as long as the document is loaded. A cue
+    /// through a delay rings until the engine would disconnect its chain, so
+    /// the longest echo a cue can have, the most feedback at a 1 s delay,
+    /// renders 158.5 s: 58 MB on a stereo output at 48 kHz.
+    ///
     /// - Throws: `CueDocumentError` for a feature ``CueRenderer`` cannot
     ///   render yet, refusing the whole document and keeping the one loaded
     ///   before, as the engine's `loadCues` keeps it when it throws.
