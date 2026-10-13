@@ -4,13 +4,17 @@
 // can see their features: each feature knocked out must fail its bar.
 //
 //   node conformance/cues/render/bar.mjs
+//   node conformance/cues/render/bar.mjs --set filters --set modulation
 //
-// Needs the browsers for the knockouts; CI only reads bar.json.
-import { writeFileSync } from 'node:fs';
+// With --set, only those sets' conditions are written, added to bar.json and
+// leaving every other entry in it as it was; nothing is rendered. Without it,
+// every set, and the knockouts, which need the browsers. CI only reads bar.json.
+import { readFileSync, writeFileSync } from 'node:fs';
+import { parseArgs } from 'node:util';
 import { measure } from '../measure/soundMeasure.ts';
 import { NO_SPREAD, spreadBetween, toleranceFrom, widest } from '../measure/renderSpread.ts';
 import { buildEngine, renderInBrowser } from './browser.mjs';
-import { RATES, SECONDS, SETS, STARTS, documentText, readFixture, readReferences } from './conditions.mjs';
+import { RATES, SECONDS, SETS, STARTS, documentText, readFixture, readReferences, recordedBrowsers } from './conditions.mjs';
 import { breaks } from './rule.mjs';
 
 /**
@@ -20,8 +24,12 @@ import { breaks } from './rule.mjs';
  */
 const DISCOVERY_BAR = { seconds: 0.00001, db: 0.09, hz: 0.01, partialHz: 0.02, partialDb: 0.02 };
 
-const conditions = {};
-for (const [set, { browsers }] of Object.entries(SETS)) {
+const { values } = parseArgs({ options: { set: { type: 'string', multiple: true } } });
+
+/** A set's conditions, one per rate and start, each bar from its references' spread. */
+function conditionsFor(set) {
+  const { browsers } = SETS[set];
+  const conditions = {};
   for (const rate of RATES) {
     const references = readReferences(set, rate);
     for (const start of Object.keys(STARTS)) {
@@ -46,12 +54,30 @@ for (const [set, { browsers }] of Object.entries(SETS)) {
         rate,
         start: STARTS[start],
         references: withFixture ? [...browsers, 'fixture'] : browsers,
+        ...(SETS[set].recorded ? { recordedBeside: recordedBrowsers(set).filter((b) => !browsers.includes(b)) } : {}),
         spread,
         bar,
       };
     }
   }
+  return conditions;
 }
+
+const path = new URL('bar.json', import.meta.url);
+if (values.set) {
+  const written = JSON.parse(readFileSync(path, 'utf8'));
+  for (const set of values.set) {
+    if (!SETS[set]) throw new Error(`no set named ${set}`);
+    Object.assign(written.conditions, conditionsFor(set));
+  }
+  writeFileSync(path, JSON.stringify(written, null, 2) + '\n');
+  for (const [name, c] of Object.entries(written.conditions))
+    if (values.set.includes(c.set)) console.log(name.padEnd(26), JSON.stringify(c.bar));
+  process.exit(0);
+}
+
+const conditions = {};
+for (const set of Object.keys(SETS)) Object.assign(conditions, conditionsFor(set));
 
 // Each feature knocked out, rendered in Chromium at 48 kHz from 0: each must
 // fail its own cue's bar against Chromium and WebKit, or the reference cannot
@@ -80,7 +106,7 @@ for (const [cue, [instrument, change, what]] of Object.entries(KNOCKOUTS)) {
 
 const fixture = readFixture();
 writeFileSync(
-  new URL('bar.json', import.meta.url),
+  path,
   JSON.stringify(
     {
       about:

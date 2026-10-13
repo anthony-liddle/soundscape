@@ -5,15 +5,33 @@ import { PAIR_SPLIT_S } from '../measure/soundMeasure.ts';
 const here = new URL('./', import.meta.url);
 
 /**
- * The two sets of cues. Peach's 34 are held to Chromium, Firefox, WebKit and
- * the frozen Chrome 154 fixture. The others, one per oscillator and envelope
- * feature Peach does not use, are held to Chromium and WebKit, where Firefox
- * stops being a reference for the full feature set (decisions.md).
+ * The sets of cues. Peach's 34 are held to Chromium, Firefox, WebKit and the
+ * frozen Chrome 154 fixture. The others are held to Chromium and WebKit, where
+ * Firefox stops being a reference for the full feature set (decisions.md):
+ * one cue per oscillator and envelope feature Peach does not use, then the
+ * filters, LFOs and unison.
  */
 export const SETS = {
   peach: { document: new URL('../cases/peach-of-a-word.json', here), browsers: ['chromium', 'firefox', 'webkit'] },
   features: { document: new URL('features.cues.json', here), browsers: ['chromium', 'webkit'] },
+  // Filters, LFOs and unison: held to Chromium and WebKit, with Firefox rendered
+  // and recorded beside them, never held to. Made with the published engine.
+  filters: {
+    document: new URL('filters.cues.json', here),
+    browsers: ['chromium', 'webkit'],
+    recorded: ['chromium', 'webkit', 'firefox'],
+    engine: { npm: 'soundscape-engine', version: '0.4.1' },
+  },
+  modulation: {
+    document: new URL('modulation.cues.json', here),
+    browsers: ['chromium', 'webkit'],
+    recorded: ['chromium', 'webkit', 'firefox'],
+    engine: { npm: 'soundscape-engine', version: '0.4.1' },
+  },
 };
+
+/** The browsers a set is rendered in: those it is held to, and any recorded beside them. */
+export const recordedBrowsers = (set) => SETS[set].recorded ?? SETS[set].browsers;
 
 /** Both rates, because the player pass decides which one cues render at. */
 export const RATES = [48000, 44100];

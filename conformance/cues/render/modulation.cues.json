@@ -1,0 +1,253 @@
+{
+  "format": "soundscape-cues",
+  "version": 1,
+  "instruments": {
+    "lfo-pitch-slow": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "none",
+      "filterCutoff": 1,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 1,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "lfo-pitch-fast": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "none",
+      "filterCutoff": 1,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 1,
+      "lfoDepth": 1,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "lfo-filter-slow": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "lowpass",
+      "filterCutoff": 0.5,
+      "filterResonance": 0.5,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 1,
+      "lfoTarget": "filter",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "lfo-filter-fast": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "lowpass",
+      "filterCutoff": 0.5,
+      "filterResonance": 0.5,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 1,
+      "lfoDepth": 1,
+      "lfoTarget": "filter",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "unison": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "none",
+      "filterCutoff": 1,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 1,
+      "velocityResponse": 0
+    },
+    "unison-filter-lfo": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "lowpass",
+      "filterCutoff": 0.5,
+      "filterResonance": 0.5,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0.5,
+      "lfoDepth": 0.5,
+      "lfoTarget": "filter",
+      "unisonDetune": 1,
+      "velocityResponse": 0
+    },
+    "unison-filter-lfo-decaying": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.4,
+      "sustain": 0,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "lowpass",
+      "filterCutoff": 0.5,
+      "filterResonance": 0.5,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0.5,
+      "lfoDepth": 0.5,
+      "lfoTarget": "filter",
+      "unisonDetune": 1,
+      "velocityResponse": 0
+    }
+  },
+  "cues": {
+    "lfo-pitch-slow": {
+      "notes": [
+        {
+          "id": "lfo-pitch-slow",
+          "instrument": "lfo-pitch-slow",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "lfo-pitch-fast": {
+      "notes": [
+        {
+          "id": "lfo-pitch-fast",
+          "instrument": "lfo-pitch-fast",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "lfo-filter-slow": {
+      "notes": [
+        {
+          "id": "lfo-filter-slow",
+          "instrument": "lfo-filter-slow",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "lfo-filter-fast": {
+      "notes": [
+        {
+          "id": "lfo-filter-fast",
+          "instrument": "lfo-filter-fast",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "unison": {
+      "notes": [
+        {
+          "id": "unison",
+          "instrument": "unison",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "unison-filter-lfo": {
+      "notes": [
+        {
+          "id": "unison-filter-lfo",
+          "instrument": "unison-filter-lfo",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "unison-filter-lfo-decaying": {
+      "notes": [
+        {
+          "id": "unison-filter-lfo-decaying",
+          "instrument": "unison-filter-lfo-decaying",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    }
+  }
+}

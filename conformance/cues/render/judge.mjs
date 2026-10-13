@@ -6,6 +6,11 @@
 //
 //   node conformance/cues/render/judge.mjs <dir>              <dir>/<set>-<rate>-<start>/<cue>.f32
 //   node conformance/cues/render/judge.mjs <dir> --controls   <dir>/controls/<control>/<cue>.f32
+//   node conformance/cues/render/judge.mjs <dir> --sets peach,features    only these sets
+//
+// A browser a condition records beside its references, Firefox for the filters,
+// LFOs and unison, is measured against too and shown in the cell, for the
+// record; it never fails a render.
 //
 // A render is float32, little-endian, mono, from the frame on or before the
 // cue's start; one shorter than the references' two seconds is read as silent
@@ -21,7 +26,10 @@ import { spreadBetween } from '../measure/renderSpread.ts';
 import { SECONDS, STARTS, cueNames, optionsFor, readFixture, readReferences } from './conditions.mjs';
 import { breaks, worstGap } from './rule.mjs';
 
-const { values, positionals } = parseArgs({ allowPositionals: true, options: { controls: { type: 'boolean' } } });
+const { values, positionals } = parseArgs({
+  allowPositionals: true,
+  options: { controls: { type: 'boolean' }, sets: { type: 'string' } },
+});
 const [dir] = positionals;
 if (!dir) throw new Error('usage: judge.mjs <dir> [--controls]');
 
@@ -52,7 +60,13 @@ function judge(path, condition, cue) {
     const gap = worstGap(spread, tolerance);
     if (gap.ratio > worst.ratio) worst = { ...gap, against: name };
   }
-  return { failures, worst };
+  // Beside the references, for the record only
+  const beside = (condition.recordedBeside ?? []).map((name) => {
+    const spread = spreadBetween(referencesFor(set, rate).cues[cue][start][name], m);
+    const broken = breaks(spread, tolerance);
+    return `${name}: ${broken.length ? `would miss, ${broken.join(', ')}` : worstGap(spread, tolerance).text}`;
+  });
+  return { failures, worst, beside };
 }
 
 if (values.controls) {
@@ -84,7 +98,8 @@ if (values.controls) {
   process.exit(wrong ? 1 : 0);
 }
 
-const columns = Object.entries(bar.conditions);
+const chosen = values.sets?.split(',');
+const columns = Object.entries(bar.conditions).filter(([, c]) => !chosen || chosen.includes(c.set));
 const sets = [...new Set(columns.map(([, c]) => c.set))];
 let misses = 0;
 let cells = 0;
@@ -96,13 +111,14 @@ for (const set of sets) {
     for (const [name, condition] of columns.filter(([, c]) => c.set === set)) {
       const path = `${dir}/${name}/${cue}.f32`;
       if (!existsSync(path)) throw new Error(`missing ${path}`);
-      const { failures, worst } = judge(path, condition, cue);
+      const { failures, worst, beside } = judge(path, condition, cue);
       cells++;
+      const record = beside.length ? ` (${beside.join('; ')})` : '';
       if (failures.length) {
         misses++;
-        row.push(`**MISS** ${failures.join('; ')}`);
+        row.push(`**MISS** ${failures.join('; ')}${record}`);
       } else {
-        row.push(`${worst.text}, ${worst.against}`);
+        row.push(`${worst.text}, ${worst.against}${record}`);
       }
     }
     console.log(`| ${row.join(' | ')} |`);
