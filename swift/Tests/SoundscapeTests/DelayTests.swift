@@ -46,7 +46,9 @@ import Testing
             let centre = window.map { Double($0) * Double(out[$0]) }.reduce(0, +) / weight
             #expect(abs(centre - at) < 0.01, "pass \(pass): centred on \(centre), not \(at)")
             // Each pass scaled by the feedback gain, 0.9
-            #expect(abs(weight - (0..<pass).reduce(1.0) { r, _ in r * 0.9 }) < 1e-5)
+            var scaled = 1.0
+            for _ in 0..<pass { scaled *= 0.9 }
+            #expect(abs(weight - scaled) < 1e-5)
         }
     }
 

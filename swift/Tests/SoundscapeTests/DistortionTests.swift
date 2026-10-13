@@ -69,8 +69,9 @@ import Testing
         let gap = { (a: [Float]) in zip(a, chromium).map { abs($0 - $1) }.max()! }
         #expect(chromium.count == 2048)
         #expect(gap(shaped(true)) < 1e-6)
-        let flat = shaped(false)
-        #expect(gap([Float](repeating: 0, count: 128) + flat.dropLast(128)) > 1e-3)
+        var late = [Float](repeating: 0, count: 128)
+        late += shaped(false).dropLast(128)
+        #expect(gap(late) > 1e-3)
     }
 
     /// Float32 samples from base64 of their little-endian bytes.
@@ -82,15 +83,20 @@ import Testing
         var bits: UInt32 = 0
         var count = 0
         for c in base64.utf8 where c != UInt8(ascii: "=") {
-            bits = bits << 6 | value[c]!
+            bits = (bits << 6) | value[c]!
             count += 6
             if count >= 8 {
                 count -= 8
                 bytes.append(UInt8(truncatingIfNeeded: bits >> UInt32(count)))
             }
         }
-        return stride(from: 0, to: bytes.count, by: 4).map { i in
-            Float(bitPattern: UInt32(bytes[i]) | UInt32(bytes[i + 1]) << 8 | UInt32(bytes[i + 2]) << 16 | UInt32(bytes[i + 3]) << 24)
+        // A word at a time, in steps an older compiler can type-check
+        return stride(from: 0, to: bytes.count, by: 4).map { i -> Float in
+            var word = UInt32(bytes[i])
+            word |= UInt32(bytes[i + 1]) << 8
+            word |= UInt32(bytes[i + 2]) << 16
+            word |= UInt32(bytes[i + 3]) << 24
+            return Float(bitPattern: word)
         }
     }
 
