@@ -1,0 +1,13 @@
+{
+  // The editor with its tests, which tsconfig.json leaves out of the build.
+  // The tests run on Node 24 under jsdom and in current browsers, with
+  // vitest's globals, so they may use ES2023 and Node's types.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node", "vite/client", "vitest/globals"]
+  },
+  "include": ["src"],
+  "exclude": []
+}
