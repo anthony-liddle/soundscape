@@ -27,6 +27,12 @@ export default defineConfig({
   },
   test: {
     include: ['src/**/*.browser.test.{ts,tsx}'],
+    // One file at a time. The keyboard test needs real focus, which a browser
+    // gives one document at a time. With the acceptance test running beside
+    // it in Firefox, its document lost the focus just after its file upload:
+    // Filter cues was the active element but matched neither :focus nor
+    // :focus-visible, so it had no outline, in 3 runs of 30.
+    fileParallelism: false,
     testTimeout: 180_000,
     browser: {
       enabled: true,

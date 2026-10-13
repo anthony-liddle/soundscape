@@ -69,7 +69,7 @@ describe('MIDIStatus recording', () => {
   async function connectAndArm(onRecordingGrid?: (grid: number) => void) {
     const user = userEvent.setup();
     const view = render(
-      <MIDIStatus track={track} onRecordingGrid={onRecordingGrid} />
+      <MIDIStatus track={track} {...(onRecordingGrid && { onRecordingGrid })} />
     );
     await user.click(screen.getByRole('button', { name: /connect midi/i }));
     await waitFor(() =>

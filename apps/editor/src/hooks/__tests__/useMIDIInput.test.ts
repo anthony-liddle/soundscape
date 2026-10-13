@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import type { Mock } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useMIDIInput } from '../useMIDIInput'
 
@@ -31,8 +32,8 @@ function send(access: ReturnType<typeof makeAccess>, bytes: number[]) {
 
 describe('useMIDIInput', () => {
   let access: ReturnType<typeof makeAccess>
-  let onNoteOn: ReturnType<typeof vi.fn>
-  let onNoteOff: ReturnType<typeof vi.fn>
+  let onNoteOn: Mock<(pitch: number, velocity: number) => void>
+  let onNoteOff: Mock<(pitch: number) => void>
 
   beforeEach(() => {
     access = makeAccess(['Fake Keys 61'])
