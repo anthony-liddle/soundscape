@@ -68,7 +68,7 @@ A `@MainActor` class, mirroring the engine's cue methods:
 **Loading.**
 - `load` renders every cue when the document loads, off the main thread, at the output's sample rate, and renders them again if that rate changes.
 - Every valid document loads. `load(parsing:)` throws the validator's `CueDocumentError` for an invalid one, keeping the document loaded before.
-- Each cue's render is held whole, in every channel of the output, for as long as its document is loaded: four bytes a frame a channel. A cue through a delay rings until the engine would disconnect its effects chain, so an echo can be long: the longest a cue can have, the most feedback at a 1 s delay, is 158.5 s, 58 MB on a stereo output at 48 kHz.
+- Each cue's render is held whole, in every channel of the output, for as long as its document is loaded: four bytes a frame a channel. A cue through a delay rings until the engine would disconnect its effects chain, so an echo can be long: the longest a cue can have, the most feedback at a 1 s delay, is 158.5 s, 58 MiB on a stereo output at 48 kHz.
 - Cues still ringing from the previous document play out.
 
 **Playing.**

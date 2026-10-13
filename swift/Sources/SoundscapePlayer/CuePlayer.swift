@@ -99,7 +99,7 @@ public final class CuePlayer {
     /// bytes a frame a channel, for as long as the document is loaded. A cue
     /// through a delay rings until the engine would disconnect its chain, so
     /// the longest echo a cue can have, the most feedback at a 1 s delay,
-    /// renders 158.5 s: 58 MB on a stereo output at 48 kHz.
+    /// renders 158.5 s: 58 MiB on a stereo output at 48 kHz.
     ///
     /// - Throws: the output's error if it cannot be built, keeping the
     ///   document loaded before, as the engine's `loadCues` keeps it when it
