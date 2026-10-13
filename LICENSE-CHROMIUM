@@ -36,6 +36,23 @@ effects chain processes, follow those last three and:
   third_party/blink/renderer/modules/webaudio/audio_node_output.cc
   third_party/blink/renderer/platform/audio/audio_bus.cc
 
+The waveshaper, how it reads its curve, and its 2x oversampling, follow:
+
+  third_party/blink/renderer/modules/webaudio/wave_shaper_handler.cc
+  third_party/blink/renderer/modules/webaudio/wave_shaper_handler.h
+  third_party/blink/renderer/modules/webaudio/wave_shaper_node.cc
+  third_party/blink/renderer/platform/audio/up_sampler.cc
+  third_party/blink/renderer/platform/audio/up_sampler.h
+  third_party/blink/renderer/platform/audio/down_sampler.cc
+  third_party/blink/renderer/platform/audio/down_sampler.h
+  third_party/blink/renderer/platform/audio/direct_convolver.cc
+  third_party/blink/renderer/platform/audio/direct_convolver.h
+  third_party/blink/renderer/platform/audio/simple_fft_convolver.cc
+  third_party/blink/renderer/platform/audio/simple_fft_convolver.h
+  third_party/blink/renderer/platform/audio/vector_math.cc
+  third_party/blink/renderer/platform/audio/mac/vector_math_mac.h
+  third_party/blink/renderer/platform/audio/cpu/arm/vector_math_neon.h
+
 The math functions the filter calls, ported so that it computes what
 Chromium computes on every platform, follow V8's fork of fdlibm as Chromium
 carries it, built as Chromium builds it:
@@ -52,8 +69,9 @@ GitHub mirror, github.com/chromium/chromium, or from
 chromium.googlesource.com. The Swift was written from reading them, not
 copied, and is close enough to their design to carry their notices, which
 follow: Chromium's own, which covers the files that carry no other; the two
-that biquad.cc, biquad.h and biquad_filter_node.cc carry, which audio_bus.cc
-and the delay's older files carry too; and fdlibm's, which ieee754.cc
+that biquad.cc, biquad.h and biquad_filter_node.cc carry, which audio_bus.cc,
+the delay's older files, wave_shaper_node.cc and vector_math.cc carry too;
+the resamplers'; the direct convolver's; and fdlibm's, which ieee754.cc
 carries and swift/Sources/Soundscape/Render/FDLibm.swift repeats.
 
 Copyright 2015 The Chromium Authors
@@ -115,7 +133,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ----------------------------------------------------------------------------
-modules/webaudio/biquad_filter_node.cc:
+modules/webaudio/biquad_filter_node.cc and modules/webaudio/wave_shaper_node.cc:
 
 Copyright (C) 2011, Google Inc. All rights reserved.
 
@@ -142,8 +160,8 @@ DAMAGE.
 
 ----------------------------------------------------------------------------
 platform/audio/delay.cc, platform/audio/delay.h,
-modules/webaudio/delay_node.cc, modules/webaudio/audio_node_input.cc and
-modules/webaudio/audio_node_output.cc:
+modules/webaudio/delay_node.cc, modules/webaudio/audio_node_input.cc,
+modules/webaudio/audio_node_output.cc and platform/audio/vector_math.cc:
 
 Copyright (C) 2010, Google Inc. All rights reserved.
 
@@ -167,6 +185,67 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
+
+----------------------------------------------------------------------------
+platform/audio/up_sampler.cc, platform/audio/up_sampler.h,
+platform/audio/down_sampler.cc and platform/audio/down_sampler.h:
+
+Copyright (C) 2013 Google Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+    * Neither the name of Google Inc. nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+----------------------------------------------------------------------------
+platform/audio/direct_convolver.cc and platform/audio/direct_convolver.h:
+
+Copyright (C) 2012 Intel Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1.  Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+2.  Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of
+    its contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ----------------------------------------------------------------------------
 third_party/fdlibm/ieee754.cc, adapted there from fdlibm

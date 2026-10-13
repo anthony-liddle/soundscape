@@ -3,7 +3,8 @@ import Testing
 
 /// The delay, to the frame. The bar allows a delay's last frame to move by
 /// WebKit's 14 frames, so these hold the parts it cannot see: where every echo
-/// lands, where the render ends, and that each chain ends on its own.
+/// lands, and that each chain ends on its own. ChainEndTests holds where every
+/// render through a chain ends.
 @Suite struct DelayTests {
     /// A document of one instrument per name, a sine with the delay given,
     /// and one cue per instrument of one 30 ms note, `both` playing each
@@ -47,36 +48,6 @@ import Testing
             // Each pass scaled by the feedback gain, 0.9
             #expect(abs(weight - (0..<pass).reduce(1.0) { r, _ in r * 0.9 }) < 1e-5)
         }
-    }
-
-    /// Every render through a delay ends on the frame the engine would
-    /// disconnect its chain on, its deadline rounded up to a frame, as every
-    /// browser's engine worked it out for the references; and last sounds on
-    /// the frame Chromium's render last sounds on.
-    @Test(arguments: [("delay", 76), ("echo", 4)])
-    func endsWhereTheEngineAndChromiumEnd(_ set: String, _ count: Int) throws {
-        let document = Corpus.text(Corpus.directory + "/render/\(set).cues.json")
-        var checked = 0
-        var wrong: [String] = []
-        for rate in ReferenceRenders.rates {
-            let references = try JSONValue(parsing: Corpus.text(Corpus.directory + "/render/references/\(set)-\(Int(rate)).json"))
-            let renderer = try CueRenderer(parsing: document, sampleRate: rate)
-            for (label, start) in ReferenceRenders.starts {
-                for name in renderer.document.cueNames {
-                    let samples = try renderer.render(name, at: start)
-                    let last = samples.lastIndex { $0 != 0 } ?? -1
-                    let cut = try #require(references["cutFrames"]?[name]?[label]?["chromium"]?.number)
-                    let chromium = try #require(references["lastSoundFrames"]?[name]?[label]?["chromium"]?.number)
-                    checked += 1
-                    if Double(samples.count) != cut || Double(last) != chromium {
-                        wrong.append("\(name) at \(Int(rate)) Hz from \(label) s: \(samples.count) long, last \(last); "
-                            + "the cut is \(Int(cut)), Chromium's last \(Int(chromium))")
-                    }
-                }
-            }
-        }
-        #expect(checked == count)
-        #expect(wrong.isEmpty, "\(wrong.joined(separator: "; "))")
     }
 
     /// Each instrument's chain goes at its own deadline, as the engine retires

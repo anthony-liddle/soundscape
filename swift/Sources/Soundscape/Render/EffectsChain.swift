@@ -4,6 +4,11 @@
 // follows Chromium, in third_party/blink at Chromium
 // 935133e72a654887fb49ffbe65c8b762bdff821f:
 //
+// - the waveshaper, modules/webaudio/wave_shaper_handler.cc: the curve read
+//   between its two nearest points, in float, as WaveShaperCurveValues reads
+//   it on arm64; at twice the rate through Resampler.swift, oversampled as
+//   its 2x path does, a render quantum at a time; and its latency, the two
+//   resamplers' 128 frames, and its tail, 0 for a curve that maps 0 to 0;
 // - the delay, platform/audio/delay.cc as platform/audio/cpu/arm/delay_neon.cc
 //   computes it on arm64, where the references are recorded: each quantum's
 //   input written first, then each frame's read position worked out in float
@@ -85,6 +90,79 @@ enum EngineTails {
     }
 }
 
+/// `makeDistortionCurve` in EffectsChain.ts: 44,101 points of
+/// x(pi + k) / (pi + k|x|), k 100 times the amount, worked out in double and
+/// stored as floats.
+func distortionCurve(_ amount: Double) -> [Float] {
+    let samples = 44101
+    let k = amount * 100
+    return (0..<samples).map { i in
+        let x = Double(i * 2) / Double(samples - 1) - 1
+        return Float((x * (Double.pi + k)) / (Double.pi + k * abs(x)))
+    }
+}
+
+/// A WaveShaperNode as a cue chain has it: the engine's curve, oversampled
+/// 2x, while it distorts, and no curve and no oversampling at 0, a straight
+/// wire.
+struct WaveShaper {
+    private let curve: [Float]?
+    private let oversampling: Bool
+    private var up = UpSampler(blockSize: 128)
+    private var down = DownSampler(blockSize: 256)
+    private var doubled = [Float](repeating: 0, count: 256)
+    /// Seconds, as `LatencyTime` has them: the resamplers' frames over the rate.
+    let latency: Double
+    /// Seconds, as `SetCurve` sets them: 0 for a curve that maps silence to
+    /// silence, as the engine's always does, otherwise forever.
+    let tail: Double
+
+    init(curve: [Float]?, oversampling: Bool, sampleRate: Double) {
+        self.curve = curve
+        self.oversampling = oversampling && curve != nil
+        latency = self.oversampling ? Double(up.latencyFrames + down.latencyFrames) / Double(Float(sampleRate)) : 0
+        tail = curve.map { Self.valueAtZero($0) == 0 ? 0 : .infinity } ?? 0
+    }
+
+    /// `WaveShaperCurveValue` at 0, in double, as `SetCurve` reads it.
+    private static func valueAtZero(_ curve: [Float]) -> Double {
+        let index = 0.5 * (0 + 1) * Double(curve.count - 1)
+        if index >= Double(curve.count - 1) { return Double(curve[curve.count - 1]) }
+        let i1 = Int(index)
+        let f = index - Double(i1)
+        return (1 - f) * Double(curve[i1]) + f * Double(curve[i1 + 1])
+    }
+
+    /// `WaveShaperCurveValues`: each sample's place on the curve, in float,
+    /// clipped to it, and read between its two nearest points.
+    static func shape(_ samples: UnsafeMutableBufferPointer<Float>, _ curve: UnsafeBufferPointer<Float>) {
+        let last = curve.count - 1
+        let scale = Float(0.5 * Double(last))
+        for k in samples.indices {
+            let index = max(min((samples[k] + 1) * scale, Float(last)), 0)
+            let i1 = min(max(Int(index), 0), last)
+            let i2 = min(max(i1 + 1, 0), last)
+            let f = index - Float(i1)
+            samples[k] = f * (curve[i2] - curve[i1]) + curve[i1]
+        }
+    }
+
+    /// One render quantum, in place.
+    mutating func process(_ quantum: inout [Float]) {
+        guard let curve else { return }
+        curve.withUnsafeBufferPointer { curve in
+            quantum.withUnsafeMutableBufferPointer { quantum in
+                guard oversampling else { return Self.shape(quantum, curve) }
+                doubled.withUnsafeMutableBufferPointer { doubled in
+                    up.process(UnsafeBufferPointer(quantum), into: doubled)
+                    Self.shape(doubled, curve)
+                    down.process(UnsafeBufferPointer(doubled), into: quantum)
+                }
+            }
+        }
+    }
+}
+
 /// A DelayNode's line, two seconds and a render quantum long, written a
 /// quantum at a time.
 struct DelayLine {
@@ -137,6 +215,9 @@ struct CueEffectsChain {
     let feedbackGain: Float
     let dryGain: Float
     let wetGain: Float
+    /// The waveshaper's curve, and whether it oversamples: only while it
+    /// distorts, as a cue chain is built.
+    let curve: [Float]?
     let sampleRate: Double
 
     /// nil where the engine builds no chain: every effect exactly 0, `asksForNoEffect`.
@@ -147,6 +228,7 @@ struct CueEffectsChain {
         feedbackGain = Float(instrument.delayFeedback * 0.9)
         dryGain = Float(1 - instrument.delayMix)
         wetGain = Float(instrument.delayMix)
+        curve = instrument.distortion == 0 ? nil : distortionCurve(instrument.distortion)
         self.sampleRate = sampleRate
     }
 
@@ -165,6 +247,7 @@ struct CueEffectsChain {
         let first = min(voices.map(\.quanta.lowerBound).min() ?? quanta, quanta)
         var samples = [Float](repeating: 0, count: max(0, cut - first * quantum))
 
+        var shaper = WaveShaper(curve: curve, oversampling: true, sampleRate: sampleRate)
         var line = DelayLine(delayTime: delayTime, sampleRate: sampleRate)
         var shaped = [Float](repeating: 0, count: quantum)
         var delayed = [Float](repeating: 0, count: quantum)
@@ -177,9 +260,9 @@ struct CueEffectsChain {
             // The chain's input: every voice sounding in this quantum, summed
             let inputSilent = !voices.contains { $0.quanta.contains(q) }
 
-            // The waveshaper, a straight wire with no curve: no latency and no
-            // tail, so it processes while its input sounds and the quantum after
-            let shaperRuns = !(inputSilent && shaperLastSound < time(q))
+            // The waveshaper, in place: it processes while its input sounds,
+            // and after for its latency and its tail
+            let shaperRuns = !(inputSilent && shaperLastSound + shaper.latency + shaper.tail < time(q))
             if shaperRuns {
                 for k in 0..<quantum { shaped[k] = 0 }
                 for voice in voices where voice.quanta.contains(q) {
@@ -188,6 +271,7 @@ struct CueEffectsChain {
                         if i >= 0 && i < voice.samples.count { shaped[k] += voice.samples[i] }
                     }
                 }
+                shaper.process(&shaped)
                 if !inputSilent { shaperLastSound = time(q + 1) }
             }
 

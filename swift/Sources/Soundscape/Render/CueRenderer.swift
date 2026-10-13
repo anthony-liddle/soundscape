@@ -12,13 +12,10 @@ import Glibc
 /// that instrument's effects chain, shared by all its notes; all summed at the
 /// cue output with its volume at 1.
 ///
-/// What it renders is everything but distortion: every waveform, every
-/// envelope shape, the pitch offset, every filter, the LFO on either target,
-/// unison and the delay. A render through an effects chain runs until the
+/// It renders everything a cue can ask for: every waveform, every envelope
+/// shape, the pitch offset, every filter, the LFO on either target, unison,
+/// the delay and distortion. A render through an effects chain runs until the
 /// engine would disconnect the chain, by its own 2^-24 rule (`EngineTails`).
-/// A document with any instrument that needs more is refused whole, as
-/// `loadCues` refuses an invalid one, with a problem for each field at fault
-/// (see ``unsupported(_:)``).
 ///
 /// Its tables are built once, for the waveforms the document uses at its rate,
 /// so a renderer, like a context, has one sample rate.
@@ -54,21 +51,10 @@ public struct CueRenderer: Sendable {
         try self.init(CueDocument(parsing: text), sampleRate: sampleRate)
     }
 
-    /// Every field that needs distortion, in the document's instrument order:
-    /// `distortion` other than exactly 0. `-0` is 0.
-    ///
-    /// Every instrument is checked, used by a cue or not, as `loadCues` builds
-    /// a chain for every instrument.
+    /// Every field this renderer cannot play: none, as it plays every field a
+    /// valid document can hold.
     public static func unsupported(_ document: CueDocument) -> [CueProblem] {
-        var problems: [CueProblem] = []
-        for name in document.instrumentNames {
-            let i = document.instruments[name]!
-            let base = "instruments.\(name)"
-            if i.distortion != 0 {
-                problems.append(CueProblem(path: "\(base).distortion", message: "must be 0: distortion is not rendered yet"))
-            }
-        }
-        return problems
+        []
     }
 
     /// The frame a render starting at `start` begins on: the frame on or before it.
