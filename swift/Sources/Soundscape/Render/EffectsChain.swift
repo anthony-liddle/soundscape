@@ -203,6 +203,29 @@ struct DelayLine {
         }
         writeIndex = (start + input.count) % length
     }
+
+    /// For the knockout that leaves out the quantum every pass round the loop
+    /// takes: each frame read before it is written, and fed back into the
+    /// frame it was read on, as if the loop had no render quantum in it.
+    mutating func process(_ input: [Float], feedingBack feedback: Float, into output: inout [Float]) {
+        let length = buffer.count
+        let lengthF = Float(length)
+        let offset = lengthF - delayFrames
+        let start = writeIndex
+        buffer.withUnsafeMutableBufferPointer { buffer in
+            for k in 0..<input.count {
+                let w = (start + k) % length
+                var position = Float(w) + offset
+                if position >= lengthF { position -= lengthF }
+                let r1 = Int(position) % length
+                let r2 = (r1 + 1) % length
+                let f = position - Float(r1)
+                output[k] = buffer[r1] + f * (buffer[r2] - buffer[r1])
+                buffer[w] = input[k] + output[k] * feedback
+            }
+        }
+        writeIndex = (start + input.count) % length
+    }
 }
 
 /// One cue instrument's effects chain, as `loadCues` builds it, run render
@@ -219,17 +242,21 @@ struct CueEffectsChain {
     /// distorts, as a cue chain is built.
     let curve: [Float]?
     let sampleRate: Double
+    let knockouts: Knockouts
 
     /// nil where the engine builds no chain: every effect exactly 0, `asksForNoEffect`.
-    init?(_ instrument: CueInstrument, sampleRate: Double) {
+    init?(_ instrument: CueInstrument, sampleRate: Double, knockouts: Knockouts = []) {
         let effects = [instrument.delayTime, instrument.delayFeedback, instrument.delayMix, instrument.distortion, instrument.reverbMix]
         if effects.allSatisfy({ $0 == 0 }) { return nil }
         delayTime = instrument.delayTime
         feedbackGain = Float(instrument.delayFeedback * 0.9)
-        dryGain = Float(1 - instrument.delayMix)
+        dryGain = knockouts.contains(.mixOnWetOnly) ? 1 : Float(1 - instrument.delayMix)
         wetGain = Float(instrument.delayMix)
-        curve = instrument.distortion == 0 ? nil : distortionCurve(instrument.distortion)
+        // Twice the amount is twice k, 100 times the amount
+        let amount = instrument.distortion * (knockouts.contains(.distortionKDoubled) ? 2 : 1)
+        curve = amount == 0 ? nil : distortionCurve(amount)
         self.sampleRate = sampleRate
+        self.knockouts = knockouts
     }
 
     /// A voice into the chain: its samples from a frame, and the render quanta
@@ -247,7 +274,7 @@ struct CueEffectsChain {
         let first = min(voices.map(\.quanta.lowerBound).min() ?? quanta, quanta)
         var samples = [Float](repeating: 0, count: max(0, cut - first * quantum))
 
-        var shaper = WaveShaper(curve: curve, oversampling: true, sampleRate: sampleRate)
+        var shaper = WaveShaper(curve: curve, oversampling: !knockouts.contains(.noOversampling), sampleRate: sampleRate)
         var line = DelayLine(delayTime: delayTime, sampleRate: sampleRate)
         var shaped = [Float](repeating: 0, count: quantum)
         var delayed = [Float](repeating: 0, count: quantum)
@@ -256,32 +283,43 @@ struct CueEffectsChain {
         var shaperLastSound = 0.0
         var delayLastSound = 0.0
         var delayedSilent = true
-        for q in 0..<quanta {
+        // The waveshaper, in place, a quantum: it processes while its input
+        // sounds, and after for its latency and its tail
+        func shape(_ q: Int) -> Bool {
             // The chain's input: every voice sounding in this quantum, summed
             let inputSilent = !voices.contains { $0.quanta.contains(q) }
-
-            // The waveshaper, in place: it processes while its input sounds,
-            // and after for its latency and its tail
-            let shaperRuns = !(inputSilent && shaperLastSound + shaper.latency + shaper.tail < time(q))
-            if shaperRuns {
-                for k in 0..<quantum { shaped[k] = 0 }
-                for voice in voices where voice.quanta.contains(q) {
-                    for k in 0..<quantum {
-                        let i = q * quantum + k - voice.from
-                        if i >= 0 && i < voice.samples.count { shaped[k] += voice.samples[i] }
-                    }
+            guard !(inputSilent && shaperLastSound + shaper.latency + shaper.tail < time(q)) else { return false }
+            for k in 0..<quantum { shaped[k] = 0 }
+            for voice in voices where voice.quanta.contains(q) {
+                for k in 0..<quantum {
+                    let i = q * quantum + k - voice.from
+                    if i >= 0 && i < voice.samples.count { shaped[k] += voice.samples[i] }
                 }
-                shaper.process(&shaped)
-                if !inputSilent { shaperLastSound = time(q + 1) }
             }
+            shaper.process(&shaped)
+            if !inputSilent { shaperLastSound = time(q + 1) }
+            return true
+        }
+        // For the knockout that takes the resamplers' latency back out: the
+        // waveshaper a quantum ahead, so its 128 frames late come out on time
+        let ahead = knockouts.contains(.oversamplingWithoutDelay) ? 1 : 0
+        if ahead > 0 { _ = shape(0) }
+        let loop = !knockouts.contains(.noExtraQuantum)
+        for q in 0..<quanta {
+            let shaperRuns = shape(q + ahead)
 
             // The feedback gain, on the delay's output from the quantum before.
             // In the first quantum its value is read frame by frame and it is
             // silent only on silence; after, a gain of 0 is silence.
-            let feedbackSilent = delayedSilent || (q > 0 && feedbackGain == 0)
+            let feedbackSilent = !loop || delayedSilent || (q > 0 && feedbackGain == 0)
             let delayInputSilent = !shaperRuns && feedbackSilent
             // The delay's tail is its longest delay, 2 s
-            if !(delayInputSilent && delayLastSound + 2.0 < time(q)) {
+            if !loop {
+                // The knockout's loop is inside the line, so it never falls silent
+                for k in 0..<quantum { delayInput[k] = shaperRuns ? shaped[k] : 0 }
+                line.process(delayInput, feedingBack: feedbackGain, into: &delayed)
+                delayedSilent = false
+            } else if !(delayInputSilent && delayLastSound + 2.0 < time(q)) {
                 for k in 0..<quantum {
                     let fed: Float = feedbackSilent ? 0 : delayed[k] * feedbackGain
                     delayInput[k] = shaperRuns ? (feedbackSilent ? shaped[k] : shaped[k] + fed) : fed

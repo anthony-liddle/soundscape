@@ -44,24 +44,30 @@ import Testing
         print("wrote \(written) renders to \(Self.out!)")
     }
 
-    /// Each feature filters, LFOs and unison bring, knocked out, for judge.mjs
-    /// --knockouts: every cue whose instrument has the feature, at every rate
-    /// and start, each render of which must miss the bar.
-    static let knockouts: [(String, Knockouts, @Sendable (CueInstrument) -> Bool)] = [
-        ("no-filter", .noFilter, { $0.filterType != .none }),
-        ("linear-lowpass-q", .linearLowpassQ, { $0.filterType == .lowpass }),
-        ("lfo-rate-doubled", .lfoRateDoubled, { $0.lfoDepth > 0 }),
-        ("unison-half-detune", .unisonHalfDetune, { $0.unisonDetune > 0 }),
-        ("ring-to-level", .ringToLevel, { $0.filterType != .none }),
+    /// Each feature filters, LFOs, unison, the delay and distortion bring,
+    /// knocked out, for judge.mjs --knockouts: every cue of the sets named
+    /// whose instrument has the feature, at every rate and start, each render
+    /// of which must miss the bar.
+    static let knockouts: [(String, Knockouts, [String], @Sendable (CueInstrument) -> Bool)] = [
+        ("no-filter", .noFilter, ["filters", "modulation"], { $0.filterType != .none }),
+        ("linear-lowpass-q", .linearLowpassQ, ["filters", "modulation"], { $0.filterType == .lowpass }),
+        ("lfo-rate-doubled", .lfoRateDoubled, ["filters", "modulation"], { $0.lfoDepth > 0 }),
+        ("unison-half-detune", .unisonHalfDetune, ["filters", "modulation"], { $0.unisonDetune > 0 }),
+        ("ring-to-level", .ringToLevel, ["filters", "modulation"], { $0.filterType != .none }),
+        ("no-extra-quantum", .noExtraQuantum, ["delay", "echo", "distortion"], { $0.delayFeedback > 0 && $0.delayMix > 0 }),
+        ("no-oversampling", .noOversampling, ["distortion"], { $0.distortion > 0 }),
+        ("oversampling-without-delay", .oversamplingWithoutDelay, ["distortion"], { $0.distortion > 0 }),
+        ("distortion-k-doubled", .distortionKDoubled, ["distortion"], { $0.distortion > 0 }),
+        ("mix-on-wet-only", .mixOnWetOnly, ["delay", "echo", "distortion"], { $0.delayMix > 0 }),
     ]
 
     @Test(.enabled(if: out != nil, "set CUE_RENDER_OUT to a directory for judge.mjs"))
     func writesTheKnockouts() throws {
         var written = 0
-        for (set, path) in Self.sets where set == "filters" || set == "modulation" {
+        for (set, path) in Self.sets {
             for rate in Self.rates {
                 var renderer = try CueRenderer(parsing: Corpus.text(path), sampleRate: rate)
-                for (knockout, switches, has) in Self.knockouts {
+                for (knockout, switches, sets, has) in Self.knockouts where sets.contains(set) {
                     renderer.knockouts = switches
                     let cues = renderer.document.cueNames.filter { name in
                         renderer.document.cues[name]!.notes.contains { has(renderer.document.instruments[$0.instrument]!) }

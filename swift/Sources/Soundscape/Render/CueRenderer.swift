@@ -137,7 +137,7 @@ public struct CueRenderer: Sendable {
             // one, and the time the engine would disconnect it: once every
             // voice through it has stopped, and its filter rung out, and then
             // the chain's own tail
-            if chains[note.instrument] == nil, let chain = CueEffectsChain(instrument, sampleRate: rate) {
+            if chains[note.instrument] == nil, let chain = CueEffectsChain(instrument, sampleRate: rate, knockouts: knockouts) {
                 chains[note.instrument] = (chain, 0)
             }
             if let (chain, ringsUntil) = chains[note.instrument] {
@@ -336,9 +336,9 @@ struct LFO {
     }
 }
 
-/// Each feature filters, LFOs and unison bring, knocked out, for the positive
-/// controls in ReferenceRenders: each must miss the bar, or the bar cannot see
-/// that feature.
+/// Each feature filters, LFOs, unison, the delay and distortion bring,
+/// knocked out, for the positive controls in ReferenceRenders: each must miss
+/// the bar, or the bar cannot see that feature.
 struct Knockouts: OptionSet, Sendable {
     let rawValue: Int
     /// Every filter left out of the voice's path, as for `'none'`.
@@ -353,6 +353,17 @@ struct Knockouts: OptionSet, Sendable {
     /// its level when the input stopped, to the sample, rather than at the
     /// tail time Chromium and WebKit end it at, on a quantum's edge.
     static let ringToLevel = Knockouts(rawValue: 1 << 4)
+    /// A delay with feedback whose every pass round the loop takes the delay
+    /// time alone, without the render quantum Chromium and WebKit add.
+    static let noExtraQuantum = Knockouts(rawValue: 1 << 5)
+    /// Distortion's curve read at the context's rate, not oversampled 2x.
+    static let noOversampling = Knockouts(rawValue: 1 << 6)
+    /// Oversampled 2x, but with the resamplers' 128 frames of latency taken out.
+    static let oversamplingWithoutDelay = Knockouts(rawValue: 1 << 7)
+    /// Distortion's k, 100 times the amount, doubled.
+    static let distortionKDoubled = Knockouts(rawValue: 1 << 8)
+    /// The delay's mix applied to the wet path alone, the dry path left at 1.
+    static let mixOnWetOnly = Knockouts(rawValue: 1 << 9)
 }
 
 /// Why a cue could not be rendered, once its document was accepted.

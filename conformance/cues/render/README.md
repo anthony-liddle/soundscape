@@ -24,6 +24,7 @@ What a Swift render of a cue is held to. The browsers' renders are recorded as m
 - **`references/distortion-<rate>.json`:** `distortion.cues.json`, a sine and a square A3 at a low (0.1) and the full amount of distortion; `into-delay`, distortion into a delay with feedback; and `voice-through-both`, a sawtooth through a resonant lowpass with an LFO on it, and unison, through distortion and a delay with feedback.
 
   These three sets, from `soundscape-engine` 0.4.1 too and held and recorded the same way, render until the engine would disconnect each cue's effects chain, by its own 2^-24 rule. Each browser's engine works out that deadline, `ringsUntil`, the render is silent from the frame it rounds up to, and each file records that frame, `cutFrames`, for every browser. They agree on every cue. A render runs at least two seconds, and as long as its deadline needs: 63.7 s for the longest of `delay`, 158.5 s for `longest`.
+- **`references/waveshaper-chromium.json`:** what Chromium's own WaveShaperNode makes of one input, a band-limited 1 kHz square whose shaping makes harmonics far past Nyquist, with the engine's curve at 0.1 and 1, oversampled 2x. `waveshaper.mjs` writes it; DistortionTests holds the Swift waveshaper to it sample by sample.
 - **`references/fixture-chrome-154.json`:** Peach's frozen baseline, Chrome 154 at 48 kHz, its measurements only. `--fixture <path to Peach's sounds.json>` rewrites it.
 - **Both rates,** 48 and 44.1 kHz, because the player pass decides which one cues render at.
 - **Both starts:** 0, and 8.0027 s, the discovery's late start. That is 3001 render quanta at 48 kHz; at 44.1 kHz it falls between frames, so the start's fraction is tested too.
@@ -74,7 +75,7 @@ Notes on each row:
 
 `judge.mjs <dir> --controls` checks the positive controls in `<dir>/controls/`: each mistake must miss the bar, and 0.05 dB louder must pass.
 
-`judge.mjs <dir> --knockouts` checks that the bar can see each feature the filters, LFOs and unison bring. The Swift renderer knocks each out in turn and renders every cue whose instrument has it, at both rates and both starts, into `<dir>/knockouts/<knockout>/`. Each render must miss:
+`judge.mjs <dir> --knockouts` checks that the bar can see each feature the filters, LFOs, unison, the delay and distortion bring. The Swift renderer knocks each out in turn and renders every cue of its sets whose instrument has it, at both rates and both starts, into `<dir>/knockouts/<knockout>/`. Each render must miss:
 
 | Knockout | Renders | Missed | Nearest miss, in multiples of the bar |
 |---|---|---|---|
@@ -83,10 +84,17 @@ Notes on each row:
 | The LFO at twice its rate | 24 | 24 | `lfo-pitch-slow`, 44.1 kHz from 8.0027 s: a partial 7.02 Hz off, 140 |
 | Unison detuned half as far | 12 | 12 | `unison-filter-lfo-decaying`, 44.1 kHz from 8.0027 s: a partial 14.66 dB off, 733 |
 | A ring ended where it falls to 2^-24 of its level, to the sample, not at Chromium's tail time | 84 | 68 | `notch-high-q1`, 44.1 kHz from 0: 18.10 ms, 1.2; at 48 kHz, 2.48 ms, 248 |
+| A delay with feedback without the render quantum every pass takes | 64 | 64 | `middle-half-low`, 44.1 kHz from 0: 26.83 dB, 1342 |
+| Distortion not oversampled | 24 | 24 | `voice-through-both`, 48 kHz from 0: 6.31 dB, 631 |
+| Distortion oversampled, without the resamplers' 128 frames of latency | 24 | 24 | `voice-through-both`, 48 kHz from 0: 6.31 dB, 631 |
+| Distortion's k doubled | 24 | 24 | `square-low`, 48 kHz from 0: 4.64 dB, 464 |
+| The delay's mix on the wet path alone, the dry path left at 1 | 88 | 88 | `short-none-low`, 44.1 kHz from 8.0027 s: 1.94 dB, 97 |
 
-The judge prints each knockout's nearest miss.
+The judge prints each knockout's nearest miss. The delay's knockouts take the cues with feedback, or with any mix; distortion's, every distortion cue.
 
 **The bar cannot see the last one on 16 renders:** 8 of the 17 filter cues at 44.1 kHz, from each start. There the filters' bar allows 14.52 ms in time, the 640 frames WebKit rings past Chromium at a bandpass's or notch's least resonance, and a ring cut at a level lands 0.7 to 8.2 ms from Chromium's end. The judge names these two conditions as blind to that knockout and fails on any other render that passes. `RingEndTests` in the Swift package holds every ring to Chromium's last frame instead.
+
+**Distortion not oversampled misses mostly by its timing,** the 128 frames it no longer delays. With them put back, its aliases alone miss on 17 of 24 renders: not on `sine-low`, nor `sine-full` at 44.1 kHz, nor `into-delay` at 44.1 kHz from 8.0027 s, where so little is made past Nyquist that measure() reads the cue the same. `DistortionTests` holds the waveshaper to Chromium's own on `waveshaper-chromium.json`'s input instead, which aliases: within 2.4e-7, where the aliases alone are 0.09 to 0.13 off.
 
 ## Chromium's Math
 
