@@ -87,7 +87,7 @@ jobs:
         run: CUE_RENDER_OUT=.build/renders swift test --filter ReferenceRenders
 
       - name: Every render within the bar, measured by Peach's measure()
-        run: node conformance/cues/render/judge.mjs .build/renders --sets peach,features,filters
+        run: node conformance/cues/render/judge.mjs .build/renders
 
       - name: Every positive control misses the bar, and 0.05 dB louder passes
         run: node conformance/cues/render/judge.mjs .build/renders --controls

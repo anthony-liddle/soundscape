@@ -1,15 +1,17 @@
 Soundscape is MIT licensed: see LICENSE. Parts of the Swift package, in
 swift/Sources/Soundscape/Render/, follow the design of these files of
-Chromium. The band-limited oscillator follows:
+Chromium. The band-limited oscillator, an LFO's included, and the path an
+oscillator takes when an LFO drives its detune, follow:
 
   third_party/blink/renderer/modules/webaudio/periodic_wave_handler.cc
   third_party/blink/renderer/modules/webaudio/oscillator_handler.cc
   third_party/blink/renderer/modules/webaudio/oscillator_handler.h
+  third_party/blink/renderer/modules/webaudio/cpu/arm/oscillator_kernel_neon.cc
   third_party/blink/renderer/modules/webaudio/audio_scheduled_source_handler.cc
   third_party/blink/renderer/platform/audio/audio_utilities.cc
 
 The filter, its coefficients, its two realizations and where its ring ends,
-follows:
+and how an LFO reaches a param through its gain, follows:
 
   third_party/blink/renderer/platform/audio/biquad.cc
   third_party/blink/renderer/platform/audio/biquad.h
