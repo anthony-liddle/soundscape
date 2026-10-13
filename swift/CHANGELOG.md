@@ -4,6 +4,19 @@ The Swift package's changelog, for its bare semver tags. The npm engine's is in 
 
 ## Unreleased
 
+### Added
+
+- **Filters,** every `filterType`: lowpass, highpass, bandpass and notch. They follow Chromium's biquad: the spec's coefficients, with Q in dB for a lowpass or highpass, worked out in double from Chromium's own copy of fdlibm, ported so they come out the same on every platform; its precision; and its ring, which ends at the tail time Chromium and WebKit give the filter, on a render quantum's edge.
+- **The LFO,** on the filter's cutoff or on pitch, at any `lfoRate` and `lfoDepth`, wired as the engine wires it. On the cutoff, the filter works out its coefficients frame by frame; on pitch, each oscillator takes Chromium's a-rate path.
+- **Unison,** a second oscillator, each detuned half of `unisonDetune * 50` cents away.
+
+Each is held to Chromium and WebKit within the bar in `conformance/cues/render`, against references made with `soundscape-engine` 0.4.1.
+
+### Changed
+
+- **Refusals:** a document is refused only for delay or distortion.
+- **Notices:** `LICENSE-CHROMIUM` now also carries the two BSD notices of Chromium's biquad files and fdlibm's notice. An app that ships the package must carry them as well as the ones it carried before.
+
 ## 0.1.0 - 2026-10-09
 
 0.1.0, the first release. The check on an iPhone in `swift/CueCheck.swiftpm/README.md` passed on Antoine's iPhone on 2026-10-09.

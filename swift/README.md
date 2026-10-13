@@ -101,25 +101,25 @@ The JSON reader is the library's own, with `JSON.parse`'s rules, not Foundation'
 ### Rendering: `CueRenderer`, In `Soundscape`
 
 - `CueRenderer(_:sampleRate:)` and `CueRenderer(parsing:sampleRate:)` take any rate in `CueRenderer.sampleRates`, 3 to 768 kHz.
-- `render(_:at:)` returns a cue's samples, mono, from its start through its last note's stop. It keeps a start's fraction of a frame, as Chromium and WebKit do.
+- `render(_:at:)` returns a cue's samples, mono, from its start through its last note's stop, or the end of its filter's ring. It keeps a start's fraction of a frame, as Chromium and WebKit do, but for a note whose LFO is on its pitch, where it drops the fraction, as Chromium does.
 
 ## What It Plays, And What It Refuses
 
 **It plays cue format version 1:**
 - every waveform: sine, square, sawtooth and triangle;
 - every envelope shape: linear or exponential curves, a fixed decay, or `decayUntilRelease`;
-- the pitch offset.
+- the pitch offset;
+- every filter, lowpass, highpass, bandpass and notch, at any cutoff and resonance, with Chromium's coefficients and precision. A filter rings on after its notes stop until the tail time Chromium and WebKit give it, ending on a render quantum's edge;
+- the LFO, on the filter's cutoff or on the oscillators' pitch, at any rate and depth;
+- unison, a second oscillator, each detuned half the spread away.
 
 A note's level is its peak, and velocity plays no part, as in the engine. Reverb is not part of the cue format; the engine refuses it too.
 
 **It refuses, with the whole document and a problem at each path:**
-- a filter, a `filterType` other than `none`;
-- an LFO, an `lfoDepth` above 0;
-- unison, a `unisonDetune` above 0;
 - delay, any of `delayTime`, `delayFeedback` or `delayMix` not 0;
 - distortion, a `distortion` not 0.
 
-A filtered cue played without its filter would sound wrong and say nothing, so it fails at load, where it can be explained. These come next, held to Chromium and WebKit.
+A cue played without its delay or distortion would sound wrong and say nothing, so it fails at load, where it can be explained.
 
 ## Platforms
 
@@ -131,9 +131,9 @@ A filtered cue played without its filter would sound wrong and say nothing, so i
 
 The package is MIT licensed: see `LICENSE`.
 
-Its band-limited oscillator, in `swift/Sources/Soundscape/Render/`, follows the design of Chromium's, so Chromium's BSD-3-Clause notice applies to that part. The notice is in `LICENSE-CHROMIUM`.
+Its band-limited oscillator and its filter, in `swift/Sources/Soundscape/Render/`, follow the design of Chromium's, and the math functions the filter calls port Chromium's copy of fdlibm. So Chromium's BSD notices apply to those parts: its own, and the two its biquad files carry. fdlibm's notice applies too. All are in `LICENSE-CHROMIUM`.
 
-**An app that ships Soundscape must carry Chromium's BSD notice as well as the MIT licence,** for example on its acknowledgements screen.
+**An app that ships Soundscape must carry those notices as well as the MIT licence,** for example on its acknowledgements screen.
 
 ## Hear It
 
