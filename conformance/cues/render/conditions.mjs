@@ -9,7 +9,7 @@ const here = new URL('./', import.meta.url);
  * frozen Chrome 154 fixture. The others are held to Chromium and WebKit, where
  * Firefox stops being a reference for the full feature set (decisions.md):
  * one cue per oscillator and envelope feature Peach does not use, then the
- * filters, LFOs and unison.
+ * filters, LFOs and unison, then delay and distortion.
  */
 export const SETS = {
   peach: { document: new URL('../cases/peach-of-a-word.json', here), browsers: ['chromium', 'firefox', 'webkit'] },
@@ -27,6 +27,31 @@ export const SETS = {
     browsers: ['chromium', 'webkit'],
     recorded: ['chromium', 'webkit', 'firefox'],
     engine: { npm: 'soundscape-engine', version: '0.4.1' },
+  },
+  // Delay and distortion: rendered until the engine would disconnect the
+  // cue's effects chain, by its own 2^-24 rule, and silent from there.
+  delay: {
+    document: new URL('delay.cues.json', here),
+    browsers: ['chromium', 'webkit'],
+    recorded: ['chromium', 'webkit', 'firefox'],
+    engine: { npm: 'soundscape-engine', version: '0.4.1' },
+    untilTheChainGoes: true,
+  },
+  // The longest echo a cue can have, feedback 0.9 at a 1 s delay, rendered to
+  // its deadline at 158 s: a set of its own, so its bar is its own.
+  echo: {
+    document: new URL('echo.cues.json', here),
+    browsers: ['chromium', 'webkit'],
+    recorded: ['chromium', 'webkit', 'firefox'],
+    engine: { npm: 'soundscape-engine', version: '0.4.1' },
+    untilTheChainGoes: true,
+  },
+  distortion: {
+    document: new URL('distortion.cues.json', here),
+    browsers: ['chromium', 'webkit'],
+    recorded: ['chromium', 'webkit', 'firefox'],
+    engine: { npm: 'soundscape-engine', version: '0.4.1' },
+    untilTheChainGoes: true,
   },
 };
 

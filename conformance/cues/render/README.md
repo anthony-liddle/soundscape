@@ -19,6 +19,11 @@ What a Swift render of a cue is held to. The browsers' renders are recorded as m
 - **`references/modulation-<rate>.json`:** `modulation.cues.json`, an LFO on pitch and an LFO on the filter, each slow (0.1 Hz) and fast (20 Hz) at full depth; unison at full detune; and unison through a lowpass with an LFO on it, sustained and decaying.
 
   These two sets were made with `soundscape-engine` 0.4.1 from npm, its integrity recorded in each file. They are held to Chromium and WebKit; Firefox is rendered and recorded beside them, never held to. Every render in them came out the same twice, and the same again with no voice ever disconnected, so neither a race nor the engine cutting a voice short is in them. Each file also records the frame each render last sounds on.
+- **`references/delay-<rate>.json`:** `delay.cues.json`, a 30 ms sine blip, G4, through a delay at 50, 200 and 400 ms, with no feedback, half and the most (0, 0.45 and 0.9 round the loop), each at a mix of 0.2 and 1; and `under-a-quantum`, a 1 ms delay, under one render quantum, with the most feedback. Each delay puts its echoes on `measure()`'s fixed points.
+- **`references/echo-<rate>.json`:** `echo.cues.json`, `longest`: the longest echo a cue can have, the most feedback at a 1 s delay, 158 s long. A set of its own, so its bar is its own.
+- **`references/distortion-<rate>.json`:** `distortion.cues.json`, a sine and a square A3 at a low (0.1) and the full amount of distortion; `into-delay`, distortion into a delay with feedback; and `voice-through-both`, a sawtooth through a resonant lowpass with an LFO on it, and unison, through distortion and a delay with feedback.
+
+  These three sets, from `soundscape-engine` 0.4.1 too and held and recorded the same way, render until the engine would disconnect each cue's effects chain, by its own 2^-24 rule. Each browser's engine works out that deadline, `ringsUntil`, the render is silent from the frame it rounds up to, and each file records that frame, `cutFrames`, for every browser. They agree on every cue. A render runs at least two seconds, and as long as its deadline needs: 63.7 s for the longest of `delay`, 158.5 s for `longest`.
 - **`references/fixture-chrome-154.json`:** Peach's frozen baseline, Chrome 154 at 48 kHz, its measurements only. `--fixture <path to Peach's sounds.json>` rewrites it.
 - **Both rates,** 48 and 44.1 kHz, because the player pass decides which one cues render at.
 - **Both starts:** 0, and 8.0027 s, the discovery's late start. That is 3001 render quanta at 48 kHz; at 44.1 kHz it falls between frames, so the start's fraction is tested too.
@@ -39,6 +44,11 @@ Each file records the engine's version and commit, Playwright's version and each
 | Filters, 44.1 kHz, both starts | Chromium, WebKit | 0.01452 | 0.01 | 0.01 | 0.02 | 0.01 |
 | Modulation, both rates, from 0; 48 kHz from 8.0027 s | Chromium, WebKit | 0.00001 | 0.01 | 0.01 | 0.02 | 0.01 |
 | Modulation, 44.1 kHz, from 8.0027 s | Chromium, WebKit | 0.00003 | 0.21 | 0.01 | 0.05 | 0.02 |
+| Delay, 48 kHz, both starts | Chromium, WebKit | 0.0003 | 0.01 | 0.01 | 0.02 | 0.01 |
+| Delay, 44.1 kHz, both starts | Chromium, WebKit | 0.00033 | 0.02 | 0.01 | 0.03 | 0.03, 0.02 from 8.0027 s |
+| Echo, both rates, both starts | Chromium, WebKit | 0.00001 | 0.01 | 0.01 | 0.01 | 0.01 |
+| Distortion, 48 kHz, both starts | Chromium, WebKit | 0.00001 | 0.01 | 0.01 | 0.02 | 0.01 |
+| Distortion, 44.1 kHz, both starts | Chromium, WebKit | 0.00001 | 0.01 | 0.01 | 0.02 | 0.02 |
 
 Notes on each row:
 
@@ -49,6 +59,7 @@ Notes on each row:
   - The conditions are kept apart, so neither of these loosens a bar on the frame grid.
 - **Filters at 44.1 kHz** are wide in time, 14.52 ms, from two cues alone, `bandpass-low-q0` and `notch-low-q0`: the last frame each sounds on, `stop`, is 640 frames later in WebKit than in Chromium. At the least resonance a bandpass or notch has a repeated pole, and Chromium's tail time takes a different branch there, by the last bit of its `sin` and `cos`. At 48 kHz the two browsers end every ring on the same frame. So wide a bar cannot see a ring ended at a level on 8 of the 17 filter cues: see `--knockouts` below.
 - **Modulation at 44.1 kHz from 8.0027 s,** a start between frames, is wide on the pitch LFOs: up to 0.20 dB at an envelope point and 0.04 Hz on a partial. With an LFO on its detune, Chromium's oscillator drops the start's fraction of a frame; WebKit keeps it.
+- **Delay is wide in time, up to 0.33 ms, from `stop` alone,** on the cues with feedback at 200 and 400 ms: the last non-zero sample is up to 14 frames later in WebKit. Chromium and WebKit agree on every onset, end and duration. On arm64 Chromium works out where to read the delay line in float: 0.4 s, a float, times 48,000 is 19,200.000286, which rounds to 19,200 exactly. WebKit works it out in double, so it reads 0.000286 of a frame late, and every pass round the loop smears the echo that much further, a tail falling by about 10^-4 a frame, under 10^-12. So wide a bar would not see an echo a few frames out of place, but no knockout is that small, and `DelayTests` in the Swift package holds every delay cue's last frame to Chromium's.
 - **The features** are held to Chromium and WebKit alone (`decisions.md`). They agree to 0 on every number, so each bar is one recording step.
 - **Every feature reference can see its feature.** Each feature knocked out and rendered in Chromium misses its bar against both references. `bar.json` records how:
   - square for sawtooth: 8.12 dB, and 40 partials gained or lost;

@@ -457,6 +457,354 @@
         "partialHz": 0.05,
         "partialDb": 0.02
       }
+    },
+    "delay-48000-0": {
+      "set": "delay",
+      "rate": 48000,
+      "start": 0,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "recordedBeside": [
+        "firefox"
+      ],
+      "spread": {
+        "seconds": 0.0002899999999996794,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0.010000000000218279,
+        "partialDb": 0,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.0003,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.02,
+        "partialDb": 0.01
+      }
+    },
+    "delay-48000-8.0027": {
+      "set": "delay",
+      "rate": 48000,
+      "start": 8.002666666666666,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "recordedBeside": [
+        "firefox"
+      ],
+      "spread": {
+        "seconds": 0.0002899999999996794,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0.010000000000218279,
+        "partialDb": 0,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.0003,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.02,
+        "partialDb": 0.01
+      }
+    },
+    "delay-44100-0": {
+      "set": "delay",
+      "rate": 44100,
+      "start": 0,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "recordedBeside": [
+        "firefox"
+      ],
+      "spread": {
+        "seconds": 0.0003200000000020964,
+        "db": 0.00999999999999801,
+        "hz": 0,
+        "windowDbfs": 0.010000000000005116,
+        "partialHz": 0.01999999999998181,
+        "partialDb": 0.020000000000003126,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00033,
+        "db": 0.02,
+        "hz": 0.01,
+        "partialHz": 0.03,
+        "partialDb": 0.03
+      }
+    },
+    "delay-44100-8.0027": {
+      "set": "delay",
+      "rate": 44100,
+      "start": 8.002666666666666,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "recordedBeside": [
+        "firefox"
+      ],
+      "spread": {
+        "seconds": 0.00031999999999499096,
+        "db": 0.00999999999999801,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0.01999999999998181,
+        "partialDb": 0.010000000000000009,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00033,
+        "db": 0.02,
+        "hz": 0.01,
+        "partialHz": 0.03,
+        "partialDb": 0.02
+      }
+    },
+    "echo-48000-0": {
+      "set": "echo",
+      "rate": 48000,
+      "start": 0,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "recordedBeside": [
+        "firefox"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0,
+        "partialDb": 0,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.01,
+        "partialDb": 0.01
+      }
+    },
+    "echo-48000-8.0027": {
+      "set": "echo",
+      "rate": 48000,
+      "start": 8.002666666666666,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "recordedBeside": [
+        "firefox"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0,
+        "partialDb": 0,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.01,
+        "partialDb": 0.01
+      }
+    },
+    "echo-44100-0": {
+      "set": "echo",
+      "rate": 44100,
+      "start": 0,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "recordedBeside": [
+        "firefox"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0,
+        "partialDb": 0,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.01,
+        "partialDb": 0.01
+      }
+    },
+    "echo-44100-8.0027": {
+      "set": "echo",
+      "rate": 44100,
+      "start": 8.002666666666666,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "recordedBeside": [
+        "firefox"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0,
+        "partialDb": 0,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.01,
+        "partialDb": 0.01
+      }
+    },
+    "distortion-48000-0": {
+      "set": "distortion",
+      "rate": 48000,
+      "start": 0,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "recordedBeside": [
+        "firefox"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0.010000000000218279,
+        "partialDb": 0,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.02,
+        "partialDb": 0.01
+      }
+    },
+    "distortion-48000-8.0027": {
+      "set": "distortion",
+      "rate": 48000,
+      "start": 8.002666666666666,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "recordedBeside": [
+        "firefox"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0.010000000000218279,
+        "partialDb": 0,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.02,
+        "partialDb": 0.01
+      }
+    },
+    "distortion-44100-0": {
+      "set": "distortion",
+      "rate": 44100,
+      "start": 0,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "recordedBeside": [
+        "firefox"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0.009999999999990905,
+        "partialDb": 0.00999999999999801,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.02,
+        "partialDb": 0.02
+      }
+    },
+    "distortion-44100-8.0027": {
+      "set": "distortion",
+      "rate": 44100,
+      "start": 8.002666666666666,
+      "references": [
+        "chromium",
+        "webkit"
+      ],
+      "recordedBeside": [
+        "firefox"
+      ],
+      "spread": {
+        "seconds": 0,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0.009999999999763531,
+        "partialDb": 0.010000000000001563,
+        "membershipChanges": 0,
+        "strongestChanges": 0
+      },
+      "bar": {
+        "seconds": 0.00001,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.02,
+        "partialDb": 0.02
+      }
     }
   },
   "knockouts": {
