@@ -6,12 +6,14 @@ import Glibc
 
 /// Renders a cue document's cues offline to samples, as the engine's
 /// `playCue` sounds them in an `OfflineAudioContext`: each note an oscillator
-/// through its own gain envelope, summed at the cue output with its volume at 1.
+/// through its own gain envelope and, unless its filter is `'none'`, a biquad,
+/// summed at the cue output with its volume at 1.
 ///
-/// What it renders is the oscillator and envelope path: every waveform, every
-/// envelope shape and the pitch offset. A document with any instrument that
-/// needs more is refused whole, as `loadCues` refuses an invalid one, with a
-/// problem for each field at fault (see ``unsupported(_:)``).
+/// What it renders is the oscillator, envelope and filter path: every
+/// waveform, every envelope shape, the pitch offset and every filter. A
+/// document with any instrument that needs more is refused whole, as
+/// `loadCues` refuses an invalid one, with a problem for each field at fault
+/// (see ``unsupported(_:)``).
 ///
 /// Its tables are built once, for the waveforms the document uses at its rate,
 /// so a renderer, like a context, has one sample rate.
@@ -43,12 +45,10 @@ public struct CueRenderer: Sendable {
         try self.init(CueDocument(parsing: text), sampleRate: sampleRate)
     }
 
-    /// Every field that needs more than the oscillator and envelope path, in the
-    /// document's instrument order and, within an instrument, in the order
-    /// below. The line is the engine's own:
+    /// Every field that needs more than the oscillator, envelope and filter
+    /// path, in the document's instrument order and, within an instrument, in
+    /// the order below. The line is the engine's own:
     ///
-    /// - `filterType` other than `'none'`: the engine routes a voice through a
-    ///   biquad unless the type is `'none'`, so a lowpass at full cutoff is refused.
     /// - `lfoDepth` above 0: the engine builds an LFO only then, so any rate
     ///   and target are fine at depth 0.
     /// - `unisonDetune` above 0: the engine adds a second oscillator when
@@ -65,9 +65,6 @@ public struct CueRenderer: Sendable {
         for name in document.instrumentNames {
             let i = document.instruments[name]!
             let base = "instruments.\(name)"
-            if i.filterType != .none {
-                problems.append(CueProblem(path: "\(base).filterType", message: "must be 'none': filters are not rendered yet"))
-            }
             if i.lfoDepth > 0 {
                 problems.append(CueProblem(path: "\(base).lfoDepth", message: "must be 0: the LFO is not rendered yet"))
             }
@@ -94,7 +91,8 @@ public struct CueRenderer: Sendable {
     /// began at 0, as `playCue(name, start)` would be.
     ///
     /// - Returns: mono float32 samples from the frame on or before `start`,
-    ///   ``firstFrame(of:sampleRate:)``, through the last frame any note sounds.
+    ///   ``firstFrame(of:sampleRate:)``, through the last frame any note
+    ///   sounds, a filter's ring included.
     /// - Throws: ``CueRenderError/noCue(_:)`` for a name the document lacks.
     public func render(_ name: String, at start: Double = 0) throws -> [Float] {
         guard let cue = document.cues[name] else { throw CueRenderError.noCue(name) }
@@ -102,14 +100,8 @@ public struct CueRenderer: Sendable {
         let rate = sampleRate
         let first = Self.firstFrame(of: start, sampleRate: rate)
 
-        struct Planned {
-            let startTime: Double
-            let startFrame: Int
-            let endFrame: Int
-            let envelope: Envelope
-            var oscillator: BandLimitedOscillator
-        }
-        var planned: [Planned] = []
+        // Each note's voice: its samples from a frame, and the frame it ends on
+        var voices: [(from: Int, samples: [Float], end: Int)] = []
         for note in cue.notes {
             let instrument = document.instruments[note.instrument]!
             let envelope = Envelope(instrument, level: note.level, releaseAt: note.duration)
@@ -121,22 +113,91 @@ public struct CueRenderer: Sendable {
             let startFrame = frameRoundingUp(startTime, sampleRate: rate)
             let endFrame = frameRoundingUp(stopTime, sampleRate: rate)
             let offset = startTime * rate - Double(startFrame)
-            let oscillator = BandLimitedOscillator(tables[instrument.waveform]!, frequency: frequency, startOffset: offset)
-            planned.append(Planned(startTime: startTime, startFrame: startFrame, endFrame: endFrame, envelope: envelope, oscillator: oscillator))
+            var oscillator = BandLimitedOscillator(tables[instrument.waveform]!, frequency: frequency, startOffset: offset)
+            // A start rounded to just before its time sounds from the frame after
+            let sounding = offset > 0 ? startFrame + 1 : startFrame
+            var gained: [Float] = []
+            if sounding < endFrame {
+                gained.reserveCapacity(endFrame - sounding)
+                for k in sounding..<endFrame {
+                    gained.append(oscillator.next() * envelope.value(at: Double(k) / rate, start: startTime))
+                }
+            }
+            if instrument.filterType == .none {
+                voices.append((sounding, gained, endFrame))
+            } else {
+                let filter = VoiceFilter(instrument, sampleRate: rate)
+                voices.append(filter.render(gained, from: sounding, oscillators: startFrame..<endFrame))
+            }
         }
 
-        let last = planned.map(\.endFrame).max() ?? first
+        let last = voices.map(\.end).max() ?? first
         var out = [Float](repeating: 0, count: max(0, last - first))
-        for var note in planned {
-            // A start rounded to just before its time sounds from the frame after
-            let sounding = note.startTime * rate - Double(note.startFrame) > 0 ? note.startFrame + 1 : note.startFrame
-            guard sounding < note.endFrame else { continue }
-            for k in sounding..<note.endFrame {
-                let sample = note.oscillator.next()
-                out[k - first] += sample * note.envelope.value(at: Double(k) / rate, start: note.startTime)
+        for voice in voices {
+            for (i, sample) in voice.samples.enumerated() where voice.from + i >= first {
+                out[voice.from + i - first] += sample
             }
         }
         return out
+    }
+}
+
+/// A voice's biquad, run render quantum by render quantum on the context's
+/// frame grid, as Chromium's `BiquadFilterHandler` runs it inside
+/// `AudioHandler::ProcessIfNecessary`.
+///
+/// Its frequency and Q are param values, fixed for the note, so its
+/// coefficients and its tail time are worked out once. Its input is silent in
+/// any quantum where no oscillator sounds. Once a quantum's input is silent,
+/// and the last quantum whose input was not ended more than the tail time
+/// before this one starts, `AudioHandler::PropagatesSilence` holds and the
+/// node stops processing, its output silent: that is where Chromium and
+/// WebKit end a filter's ring, on a quantum's edge, however loud the ring
+/// still is.
+struct VoiceFilter {
+    let coefficients: BiquadCoefficients
+    /// Seconds, as `BiquadFilterHandler` keeps it: `TailFrame` over the rate, at most 30.
+    let tailTime: Double
+    /// The context's rate, a float.
+    let rate: Double
+
+    init(_ instrument: CueInstrument, sampleRate: Double) {
+        rate = Double(Float(sampleRate))
+        let nyquist = 0.5 * rate
+        // normalizedToFilterFreq and normalizedToQ, set as param values: a
+        // float, and the frequency clamped to the param's range, 0 to Nyquist
+        let frequency = min(max(Float(20 * pow(1000, instrument.filterCutoff)), 0), Float(sampleRate) / 2)
+        let q = Float(0.5 + instrument.filterResonance * 19.5)
+        coefficients = BiquadCoefficients.of(instrument.filterType, frequency: Double(frequency) / nyquist, q: Double(q))
+        tailTime = min(max(coefficients.tailFrame(maxFrame: 30 * rate) / rate, 0), 30)
+    }
+
+    /// The voice's gain output, `gained` from frame `sounding`, through the
+    /// filter, from the quantum the oscillators start in to the one the ring
+    /// ends before.
+    func render(_ gained: [Float], from sounding: Int, oscillators: Range<Int>) -> (from: Int, samples: [Float], end: Int) {
+        let quantum = 128
+        let firstQuantum = oscillators.lowerBound / quantum
+        var filter = BiquadFilter()
+        var lastNonSilentTime = 0.0
+        var samples: [Float] = []
+        var input = [Float](repeating: 0, count: quantum)
+        var output = [Float](repeating: 0, count: quantum)
+        var q = firstQuantum
+        while true {
+            let start = q * quantum
+            let silent = oscillators.isEmpty || start >= oscillators.upperBound || start + quantum <= oscillators.lowerBound
+            if silent && lastNonSilentTime + tailTime < Double(start) / rate { break }
+            for k in 0..<quantum {
+                let i = start + k - sounding
+                input[k] = i >= 0 && i < gained.count ? gained[i] : 0
+            }
+            filter.process(coefficients, input, into: &output)
+            samples += output
+            if !silent { lastNonSilentTime = Double(start + quantum) / rate }
+            q += 1
+        }
+        return (firstQuantum * quantum, samples, q * quantum)
     }
 }
 

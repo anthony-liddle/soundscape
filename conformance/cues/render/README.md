@@ -62,3 +62,13 @@ Notes on each row:
 `judge.mjs <dir>` measures a set of renders, `<dir>/<set>-<rate>-<start>/<cue>.f32`, and holds each to its condition's bar. It prints one row per cue and one column per rate and start. Each cell is the worst gap to any reference and which reference it was. It exits 1 if any render misses.
 
 `judge.mjs <dir> --controls` checks the positive controls in `<dir>/controls/`: each mistake must miss the bar, and 0.05 dB louder must pass.
+
+## Chromium's Math
+
+A filter's coefficients and its tail time call Chromium's own copy of fdlibm, never the platform's, so that they come out the same everywhere. At a bandpass's or notch's least resonance, which branch the tail time takes, and so where its ring ends, turns on their last bit. `fdlibm.txt` holds what Chromium's `third_party/fdlibm/ieee754.cc` returns, built from that file at the revision `LICENSE-CHROMIUM` names, with `-ffp-contract=off` as Chromium builds it, and the Swift package's port must give the same bits:
+
+- **`sin` and `cos`:** the angle of every cutoff at 0, 0.05, 0.3, 0.5, 0.7 and 1, at 48, 44.1, 3 and 768 kHz; 400 angles drawn from 0 to pi; and 100 under a millionth.
+- **`log`:** 400 values drawn from e^-60 to e^60, and five edges, 1/32768 among them, the tail time's threshold.
+- **`exp`:** 400 values drawn from -42 to 18, and the exponents behind the least, middle and most resonance of a lowpass or highpass, whose Q is in dB.
+
+Node is no reference for these: V8 takes its sine and cosine from the platform's C library, and three of these answers differ from fdlibm's in the last bit.

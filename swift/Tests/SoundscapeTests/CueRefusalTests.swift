@@ -1,9 +1,9 @@
 import Soundscape
 import Testing
 
-/// Each feature beyond the oscillator and envelope path refused, with its
-/// path, at the edge where the engine starts building it, and the values just
-/// short of that edge accepted.
+/// Each feature beyond the oscillator, envelope and filter path refused, with
+/// its path, at the edge where the engine starts building it, and the values
+/// just short of that edge accepted, as is every filter.
 @Suite struct CueRefusalTests {
     /// Peach's tick: one square instrument, one note, every effect 0.
     static let tick = Corpus.caseText("test-valid")
@@ -23,8 +23,6 @@ import Testing
     }
 
     static let refused: [(String, String, String, String)] = [
-        ("filterType", #""lowpass""#, "instruments.square.filterType", "must be 'none': filters are not rendered yet"),
-        ("filterType", #""highpass""#, "instruments.square.filterType", "must be 'none': filters are not rendered yet"),
         ("lfoDepth", "0.0001", "instruments.square.lfoDepth", "must be 0: the LFO is not rendered yet"),
         ("unisonDetune", "0.0001", "instruments.square.unisonDetune", "must be 0: unison is not rendered yet"),
         ("delayTime", "0.25", "instruments.square.delayTime", "must be 0: delay is not rendered yet"),
@@ -45,6 +43,10 @@ import Testing
     static let accepted: [(String, String)] = [
         ("filterCutoff", "0.3"),  // with filterType 'none' the engine routes around the filter
         ("filterResonance", "1"),
+        ("filterType", #""lowpass""#),  // every filter is rendered
+        ("filterType", #""highpass""#),
+        ("filterType", #""bandpass""#),
+        ("filterType", #""notch""#),
         ("lfoRate", "1"),  // at depth 0 the engine builds no LFO
         ("lfoDepth", "0"),
         ("unisonDetune", "0"),
@@ -77,7 +79,7 @@ import Testing
             text = Self.set(key, value)(text)
         }
         #expect(try CueRenderer.unsupported(CueDocument(parsing: text)).map(\.path) == [
-            "instruments.square.filterType", "instruments.square.lfoDepth", "instruments.square.unisonDetune",
+            "instruments.square.lfoDepth", "instruments.square.unisonDetune",
             "instruments.square.delayMix", "instruments.square.distortion",
         ])
     }

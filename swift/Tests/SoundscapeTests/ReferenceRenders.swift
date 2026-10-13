@@ -16,6 +16,7 @@ import Testing
     static let sets = [
         ("peach", Corpus.directory + "/cases/peach-of-a-word.json"),
         ("features", Corpus.directory + "/render/features.cues.json"),
+        ("filters", Corpus.directory + "/render/filters.cues.json"),
     ]
     static let rates: [Double] = [48000, 44100]
     static let starts: [(String, Double)] = [("0", 0), ("8.0027", Double(3001 * 128) / 48000)]

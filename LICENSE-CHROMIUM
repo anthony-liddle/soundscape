@@ -1,17 +1,44 @@
-Soundscape is MIT licensed: see LICENSE. One part of the Swift package,
-the band-limited oscillator in swift/Sources/Soundscape/Render/, follows the
-design of these files of Chromium:
+Soundscape is MIT licensed: see LICENSE. Parts of the Swift package, in
+swift/Sources/Soundscape/Render/, follow the design of these files of
+Chromium. The band-limited oscillator follows:
 
   third_party/blink/renderer/modules/webaudio/periodic_wave_handler.cc
   third_party/blink/renderer/modules/webaudio/oscillator_handler.cc
+  third_party/blink/renderer/modules/webaudio/oscillator_handler.h
   third_party/blink/renderer/modules/webaudio/audio_scheduled_source_handler.cc
   third_party/blink/renderer/platform/audio/audio_utilities.cc
 
-as read at Chromium revision 935133e72a654887fb49ffbe65c8b762bdff821f, the
-commit of that hash on Chromium's main branch, here fetched through its
-GitHub mirror, github.com/chromium/chromium. It was written from reading
-them, not copied, and is close enough to their design to carry their notice,
-which follows.
+The filter, its coefficients, its two realizations and where its ring ends,
+follows:
+
+  third_party/blink/renderer/platform/audio/biquad.cc
+  third_party/blink/renderer/platform/audio/biquad.h
+  third_party/blink/renderer/modules/webaudio/biquad_filter_handler.cc
+  third_party/blink/renderer/modules/webaudio/biquad_filter_handler.h
+  third_party/blink/renderer/modules/webaudio/biquad_filter_node.cc
+  third_party/blink/renderer/modules/webaudio/audio_handler.cc
+  third_party/blink/renderer/modules/webaudio/audio_handler.h
+  third_party/blink/renderer/modules/webaudio/audio_param_handler.cc
+  third_party/blink/renderer/modules/webaudio/gain_handler.cc
+
+The math functions the filter calls, ported so that it computes what
+Chromium computes on every platform, follow V8's fork of fdlibm as Chromium
+carries it, built as Chromium builds it:
+
+  third_party/fdlibm/ieee754.cc
+  third_party/fdlibm/ieee754.h
+  third_party/fdlibm/overflowing-math.h
+  third_party/fdlibm/BUILD.gn
+  build/config/compiler/BUILD.gn
+
+All were read at Chromium revision 935133e72a654887fb49ffbe65c8b762bdff821f,
+the commit of that hash on Chromium's main branch, here fetched through its
+GitHub mirror, github.com/chromium/chromium. The Swift was written from
+reading them, not copied, and is close enough to their design to carry their
+notices, which follow: Chromium's own, which covers the files that carry no
+other; the two that biquad.cc, biquad.h and biquad_filter_node.cc carry; and
+fdlibm's, which ieee754.cc carries and swift/Sources/Soundscape/Render/
+FDLibm.swift repeats.
 
 Copyright 2015 The Chromium Authors
 
@@ -40,3 +67,71 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+----------------------------------------------------------------------------
+platform/audio/biquad.cc and platform/audio/biquad.h:
+
+Copyright (C) 2010 Google Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1.  Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+2.  Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of
+    its contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+----------------------------------------------------------------------------
+modules/webaudio/biquad_filter_node.cc:
+
+Copyright (C) 2011, Google Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1.  Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2.  Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
+
+----------------------------------------------------------------------------
+third_party/fdlibm/ieee754.cc, adapted there from fdlibm
+(http://www.netlib.org/fdlibm) and modified significantly by Google Inc.,
+Copyright 2016 the V8 project authors and Copyright 2020 The Chromium
+Authors, under Chromium's notice above; fdlibm's own notice:
+
+Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved.
+
+Developed at SunSoft, a Sun Microsystems, Inc. business.
+Permission to use, copy, modify, and distribute this
+software is freely granted, provided that this notice
+is preserved.
