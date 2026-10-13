@@ -98,13 +98,65 @@ jobs:
       - name: Every feature knocked out misses the bar, except where the bar is known not to see it
         run: node conformance/cues/render/judge.mjs .build/renders --knockouts
 
+  # Whether a pull request changes anything the Swift package builds or tests
+  # from, for the apple job, the longest: Package.swift, swift/, which holds
+  # the package's sources and tests and Cue Check, and conformance/cues/, the
+  # corpus and references its tests read. Nothing else is read by swift test,
+  # xcodebuild or the Cue Check build. A change to this workflow alone does not
+  # count, so it can be shown skipping; on main the job always runs, so a change
+  # to it runs there. Where the diff cannot be read, it counts.
+  changes:
+    runs-on: ubuntu-latest
+
+    outputs:
+      swift: ${{ steps.diff.outputs.swift }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: What the pull request changes that the Swift package reads
+        id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT" != pull_request ]; then
+            echo "Not a pull request: the Swift package is tested."
+            echo "swift=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! changed=$(git diff --name-only --no-renames "$BASE...$HEAD"); then
+            echo "::warning::The pull request's changes could not be read, so the Swift package is tested."
+            echo "swift=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          swift=$(printf '%s\n' "$changed" | grep -E '^(Package\.swift$|swift/|conformance/cues/)' || true)
+          if [ -n "$swift" ]; then
+            echo "Changed, read by the Swift package:"
+            printf '%s\n' "$swift"
+            echo "swift=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Nothing the Swift package reads changed."
+            echo "swift=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # The Swift package on Apple's platforms: every suite on macOS, the player's
   # AVFoundation ones included, then every suite again in the iOS Simulator,
   # where the audio session lives. The runner's default Xcode is a 26, so this
   # is the player before the 27 SDKs: the iOS 17 to 26 interruption
   # notification, and AVFoundation's calls that do not throw. Xcode 27, and
   # iOS 27's notifications, are tested locally until a runner has them.
+  #
+  # Skipped, reported as such, when a pull request changes nothing the Swift
+  # package reads; never by a paths filter, which would leave the workflow's
+  # required checks pending. If changes could not run, this runs.
   apple:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.swift != 'false' }}
     runs-on: macos-26
     timeout-minutes: 30
 
