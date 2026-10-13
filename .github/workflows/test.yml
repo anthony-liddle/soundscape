@@ -103,8 +103,9 @@ jobs:
   # the package's sources and tests and Cue Check, and conformance/cues/, the
   # corpus and references its tests read. Nothing else is read by swift test,
   # xcodebuild or the Cue Check build. A change to this workflow alone does not
-  # count, so it can be shown skipping; on main the job always runs, so a change
-  # to it runs there. Where the diff cannot be read, it counts.
+  # count, so a pull request that only changes CI, a weekly Actions update
+  # among them, skips the job; on main it always runs, so a change that breaks
+  # it is caught there, after the merge. Where the diff cannot be read, it counts.
   changes:
     runs-on: ubuntu-latest
 
