@@ -135,9 +135,18 @@ jobs:
 
   # The committed cues held to the oracle in real browsers, each rendering
   # both offline, and the editor's Cues view driven in each. One job per
-  # browser, so each installs only its own build.
+  # browser, in Playwright's own image, which carries every browser and the
+  # system libraries they run on, so nothing is installed: no apt, whose
+  # mirror once held a job for half an hour (#119).
   browsers:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      # The exact Playwright the repository resolves: the check below fails the
+      # job if the two ever differ. As the image's own user, which owns HOME, as
+      # Firefox needs; with the host's IPC, as Chromium's shared memory needs.
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --user 1001 --ipc=host
 
     strategy:
       fail-fast: false
@@ -160,36 +169,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # The engine's Playwright installs the browsers, and the editor's resolves
-      # to the same version
-      - name: Playwright version and OS release
-        id: playwright
+      # The image's browsers are the ones its own Playwright drives. If the
+      # repository's Playwright moves on, as a dependency update can, the image
+      # must move with it, or the tests run against browsers they were not
+      # built for.
+      - name: The image's Playwright is the repository's
         run: |
-          echo "version=$(pnpm --filter soundscape-engine exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
-          echo "os=$(. /etc/os-release && echo "$ID-$VERSION_ID")" >> "$GITHUB_OUTPUT"
-
-      # The browser Playwright downloads, kept between runs. Playwright's version
-      # and the OS release fix the browser's build, so either changing, as when
-      # ubuntu-latest moves to a new release, downloads afresh.
-      - name: Cache ${{ matrix.browser }}
-        id: browser-cache
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ steps.playwright.outputs.os }}-${{ matrix.browser }}-${{ steps.playwright.outputs.version }}
-
-      # A stuck install once held a job for half an hour (#119). An install
-      # takes under a minute, so each fails after five instead.
-      - name: Install ${{ matrix.browser }}
-        if: steps.browser-cache.outputs.cache-hit != 'true'
-        timeout-minutes: 5
-        run: pnpm --filter soundscape-engine exec playwright install --with-deps ${{ matrix.browser }}
-
-      # A cached browser still needs the system libraries it runs on
-      - name: Install ${{ matrix.browser }}'s system dependencies
-        if: steps.browser-cache.outputs.cache-hit == 'true'
-        timeout-minutes: 5
-        run: pnpm --filter soundscape-engine exec playwright install-deps ${{ matrix.browser }}
+          image=$(node -p "JSON.parse(require('node:fs').readFileSync('/ms-playwright/.docker-info', 'utf8')).driverVersion")
+          engine=$(pnpm --filter soundscape-engine exec playwright --version | awk '{print $2}')
+          editor=$(pnpm --filter editor exec playwright --version | awk '{print $2}')
+          echo "The image's Playwright: $image. The engine's: $engine. The editor's: $editor."
+          if [ "$image" != "$engine" ] || [ "$image" != "$editor" ]; then
+            echo "::error::The Playwright image is $image, but the repository resolves $engine (engine) and $editor (editor). Move the image in test.yml to v$engine."
+            exit 1
+          fi
 
       - name: Cues against the oracle in ${{ matrix.browser }}
         run: pnpm --filter soundscape-engine test:browser --browser=${{ matrix.browser }}
