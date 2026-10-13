@@ -144,3 +144,5 @@ Its band-limited oscillator and its filter, in `swift/Sources/Soundscape/Render/
 
 - `swift/CHANGELOG.md` is this package's changelog, separate from the engine's.
 - `RELEASING.md`, at the repository's root, has the steps for both.
+
+<!-- A demonstration for #139, not to merge: a change under swift/ runs the apple job. -->
