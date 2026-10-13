@@ -165,7 +165,10 @@ public struct CueRenderer: Sendable {
             guard played.insert(name).inserted, let (chain, ringsUntil) = chains[name] else { continue }
             let cut = frameRoundingUp(ringsUntil, sampleRate: rate)
             let through = voices.filter { $0.chain == name }.map { (from: $0.from, samples: $0.samples, quanta: $0.quanta) }
-            let (from, samples) = chain.render(through, to: cut)
+            // Every voice's biquad wakes the chain's input in the context's first quanta
+            let idle = cue.notes.filter { $0.instrument == name }
+                .map { VoiceFilter.idleQuanta(document.instruments[$0.instrument]!, sampleRate: rate) }.max() ?? 0
+            let (from, samples) = chain.render(through, idle: idle, to: cut)
             outputs.append((from, samples, cut))
         }
 
@@ -221,6 +224,24 @@ struct VoiceFilter {
         // float, and the frequency clamped to the param's range, 0 to Nyquist
         frequency = min(max(Float(20 * pow(1000, instrument.filterCutoff)), 0), Float(nyquist))
         q = Float(0.5 + instrument.filterResonance * 19.5)
+    }
+
+    /// How many render quanta, from the context's first, a voice's biquad
+    /// processes before its note, hearing only silence: while its tail time
+    /// has not passed since the context began, `PropagatesSilence` fails, so
+    /// it processes and marks its output as sounding, zeros though it is.
+    /// With no filter the engine routes around the biquad but leaves its
+    /// output connected, and Chromium's default, a lowpass at 350 Hz with a Q
+    /// of 1, does the same.
+    static func idleQuanta(_ instrument: CueInstrument, sampleRate: Double) -> Int {
+        let filter = VoiceFilter(instrument, sampleRate: sampleRate)
+        let c = instrument.filterType == .none
+            ? BiquadCoefficients.of(.lowpass, frequency: Double(Float(350)) / filter.nyquist, q: 1)
+            : filter.coefficients(at: filter.frequency)
+        let tail = filter.tailTime(c)
+        var quanta = 0
+        while !(0 + tail < Double(quanta * 128) / filter.rate) { quanta += 1 }
+        return quanta
     }
 
     /// `NormalizeFrequency` and `SetBiquadParams`: a frequency over Nyquist, in double.

@@ -50,6 +50,29 @@ import Testing
         }
     }
 
+    /// Before a cue played late, the delay processes while anything in its
+    /// chain sounds: the gains, read frame by frame in the first two quanta,
+    /// and each voice's biquad, which sounds silence for its tail time from
+    /// the context's first quantum, in the voice's path or left connected
+    /// when the engine routes around it. How far the write index has come
+    /// decides each read's fraction, in float on arm64, at a delay between
+    /// frames. Chromium's render, recorded by delay-wake.mjs where that shows:
+    /// the delay matches it sample by sample, where a quantum off is up to
+    /// 2.8e-4 off and measure() reads the cue the same.
+    @Test(arguments: ["plain", "filtered"])
+    func wakesAsChromiumsDelayDoesBeforeALateCue(_ cue: String) throws {
+        let recorded = try JSONValue(parsing: Corpus.text(Corpus.directory + "/render/references/delay-wake-chromium.json"))
+        let document = try CueDocument(parsing: JavaScript.stringify(#require(recorded["document"])))
+        let rate = try #require(recorded["rate"]?.number)
+        let start = try #require(recorded["start"]?.number)
+        let window = try #require(recorded["window"]?.elements).map { Int($0.number!) }
+        let chromium = try DistortionTests.floats(#require(recorded["windows"]?[cue]?.string))
+        let samples = try CueRenderer(document, sampleRate: rate).render(cue, at: start)
+        #expect(chromium.count == window[1] - window[0])
+        let gap = zip(samples[window[0]..<window[1]], chromium).map { abs($0 - $1) }.max()!
+        #expect(gap < 1e-6)
+    }
+
     /// Each instrument's chain goes at its own deadline, as the engine retires
     /// each chain. Two in one cue: the short echo's chain still sounds, under
     /// 2^-24 of its echoes, at its deadline, and is silent from there, while

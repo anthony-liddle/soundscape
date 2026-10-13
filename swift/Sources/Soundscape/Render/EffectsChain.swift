@@ -24,9 +24,13 @@
 //   silent, a node with a silent input goes on processing for its latency
 //   and its tail time, and a delay's read position depends on how far its
 //   write index has come, which moves only in the quanta it processes;
-// - the gains' values, set as automation at time 0, are read frame by frame
-//   in the first quantum and as the param's value after it,
-//   modules/webaudio/audio_param_handler.cc.
+// - the gains' values, each set twice as automation at time 0, read frame by
+//   frame in the first two quanta and as the param's value after,
+//   modules/webaudio/audio_param_handler.cc, where the timeline lives at this
+//   revision;
+// - each voice's biquad, which processes silence from the context's first
+//   quantum for its tail time and marks the chain's input as sounding,
+//   modules/webaudio/biquad_filter_handler.cc.
 //
 // That code is BSD-licensed: see LICENSE-CHROMIUM at the repository root.
 
@@ -265,7 +269,11 @@ struct CueEffectsChain {
 
     /// The chain's output from the first quantum any voice sounds in to `cut`,
     /// the frame the engine would disconnect it on.
-    func render(_ voices: [Voice], to cut: Int) -> (from: Int, samples: [Float]) {
+    ///
+    /// - Parameter idle: the quanta, from the context's first, in which the
+    ///   chain's input sounds before any note does: its voices' biquads
+    ///   processing silence (``VoiceFilter/idleQuanta(_:sampleRate:)``).
+    func render(_ voices: [Voice], idle: Int = 0, to cut: Int) -> (from: Int, samples: [Float]) {
         let quantum = 128
         // The context's time at a quantum's start: frames over the rate, a float
         let rate = Double(Float(sampleRate))
@@ -283,11 +291,18 @@ struct CueEffectsChain {
         var shaperLastSound = 0.0
         var delayLastSound = 0.0
         var delayedSilent = true
+        // Each gain's value is set twice at time 0, by the engine's constructor
+        // and then by loadCues. With two events HasSampleAccurateValues holds,
+        // so the gain is read frame by frame, and a gain of 0 copies a sounding
+        // input as zeros, not silence. In the second quantum the first event is
+        // past and dropped, and from the third the one left, a SetValue in the
+        // past, is the param's value: a gain of 0 is silence.
+        let silencesAtZero = { (q: Int) in q > 1 }
         // The waveshaper, in place, a quantum: it processes while its input
         // sounds, and after for its latency and its tail
         func shape(_ q: Int) -> Bool {
             // The chain's input: every voice sounding in this quantum, summed
-            let inputSilent = !voices.contains { $0.quanta.contains(q) }
+            let inputSilent = q >= idle && !voices.contains { $0.quanta.contains(q) }
             guard !(inputSilent && shaperLastSound + shaper.latency + shaper.tail < time(q)) else { return false }
             for k in 0..<quantum { shaped[k] = 0 }
             for voice in voices where voice.quanta.contains(q) {
@@ -308,10 +323,8 @@ struct CueEffectsChain {
         for q in 0..<quanta {
             let shaperRuns = shape(q + ahead)
 
-            // The feedback gain, on the delay's output from the quantum before.
-            // In the first quantum its value is read frame by frame and it is
-            // silent only on silence; after, a gain of 0 is silence.
-            let feedbackSilent = !loop || delayedSilent || (q > 0 && feedbackGain == 0)
+            // The feedback gain, on the delay's output from the quantum before
+            let feedbackSilent = !loop || delayedSilent || (silencesAtZero(q) && feedbackGain == 0)
             let delayInputSilent = !shaperRuns && feedbackSilent
             // The delay's tail is its longest delay, 2 s
             if !loop {
@@ -333,8 +346,8 @@ struct CueEffectsChain {
 
             // The dry and wet gains, summed at the chain's output
             guard q >= first else { continue }
-            let dry = shaperRuns && (q == 0 || dryGain != 0)
-            let wet = !delayedSilent && (q == 0 || wetGain != 0)
+            let dry = shaperRuns && (!silencesAtZero(q) || dryGain != 0)
+            let wet = !delayedSilent && (!silencesAtZero(q) || wetGain != 0)
             for k in 0..<min(quantum, cut - q * quantum) {
                 let value: Float = switch (dry, wet) {
                 case (true, true): shaped[k] * dryGain + delayed[k] * wetGain
