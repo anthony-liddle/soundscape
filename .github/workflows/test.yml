@@ -136,19 +136,52 @@ jobs:
         working-directory: swift/CueCheck.swiftpm
         run: xcodebuild build -scheme "Cue Check" -destination "generic/platform=iOS Simulator"
 
+  # The Playwright the repository resolves, read from the lockfile, for the
+  # browsers' image. One version, or the job fails: the engine and the editor
+  # each depend on Playwright, and one image carries one set of browsers.
+  playwright:
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.lockfile.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: /pnpm-lock.yaml
+          sparse-checkout-cone-mode: false
+
+      - name: The Playwright the lockfile resolves
+        id: lockfile
+        run: |
+          versions=$(sed -nE 's/^  playwright@([^:(]+):$/\1/p' pnpm-lock.yaml | sort -u)
+          if [ "$(printf '%s\n' "$versions" | grep -c .)" != 1 ]; then
+            echo "::error::pnpm-lock.yaml should resolve one Playwright, and resolves: $(echo ${versions:-none})"
+            exit 1
+          fi
+          echo "The repository resolves Playwright $versions."
+          echo "version=$versions" >> "$GITHUB_OUTPUT"
+
   # The committed cues held to the oracle in real browsers, each rendering
   # both offline, and the editor's Cues view driven in each. One job per
   # browser, in Playwright's own image, which carries every browser and the
   # system libraries they run on, so nothing is installed: no apt, whose
   # mirror once held a job for half an hour (#119).
   browsers:
+    needs: playwright
+    # Even if the lockfile's Playwright could not be read: then the image
+    # cannot be found and the job fails, where a skipped job would pass as a
+    # required check
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     container:
-      # The exact Playwright the repository resolves: the check below fails the
-      # job if the two ever differ. As the image's own user, which owns HOME, as
-      # Firefox needs; with the host's IPC, as Chromium's shared memory needs.
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      # The exact Playwright the repository resolves, so a Playwright update
+      # needs no other edit; the check below still fails the job if the two
+      # ever differ. As the image's own user, which owns HOME, as Firefox
+      # needs; with the host's IPC, as Chromium's shared memory needs.
+      image: mcr.microsoft.com/playwright:v${{ needs.playwright.outputs.version }}-noble
       options: --user 1001 --ipc=host
 
     strategy:
@@ -172,10 +205,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # The image's browsers are the ones its own Playwright drives. If the
-      # repository's Playwright moves on, as a dependency update can, the image
-      # must move with it, or the tests run against browsers they were not
-      # built for.
+      # The image's browsers are the ones its own Playwright drives, and the
+      # tests must run against the browsers they were built for. The image is
+      # chosen from the lockfile, and this holds it to what pnpm installed.
       - name: The image's Playwright is the repository's
         run: |
           image=$(node -p "JSON.parse(require('node:fs').readFileSync('/ms-playwright/.docker-info', 'utf8')).driverVersion")
@@ -183,7 +215,7 @@ jobs:
           editor=$(pnpm --filter editor exec playwright --version | awk '{print $2}')
           echo "The image's Playwright: $image. The engine's: $engine. The editor's: $editor."
           if [ "$image" != "$engine" ] || [ "$image" != "$editor" ]; then
-            echo "::error::The Playwright image is $image, but the repository resolves $engine (engine) and $editor (editor). Move the image in test.yml to v$engine."
+            echo "::error::The Playwright image is $image, but the repository resolves $engine (engine) and $editor (editor)."
             exit 1
           fi
 
