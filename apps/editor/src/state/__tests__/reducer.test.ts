@@ -1,7 +1,22 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { resetMockUuid } from '../../test/setup'
 import { soundscapeReducer, createInitialState } from '../reducer'
+import type { SoundscapeAction } from '../reducer'
 import type { SoundscapeState } from 'soundscape-engine'
+
+/** The item at `index`, which the test has just made: it fails here if it is missing. */
+function nth<T>(items: readonly T[], index: number): T {
+  const item = items[index]
+  if (item === undefined) throw new Error(`Nothing at ${index}`)
+  return item
+}
+
+/** A track's mixer settings, which the test has just made: it fails here if they are missing. */
+function mixerOf(state: SoundscapeState, trackId: string) {
+  const settings = state.mixer.tracks[trackId]
+  if (settings === undefined) throw new Error(`No mixer settings for ${trackId}`)
+  return settings
+}
 
 describe('soundscape reducer', () => {
   beforeEach(() => {
@@ -20,13 +35,13 @@ describe('soundscape reducer', () => {
     it('creates state with one initial track', () => {
       const state = createInitialState()
       expect(state.tracks).toHaveLength(1)
-      expect(state.tracks[0].name).toBe('Track 1')
-      expect(state.tracks[0].presetId).toBe('lead')
+      expect(nth(state.tracks, 0).name).toBe('Track 1')
+      expect(nth(state.tracks, 0).presetId).toBe('lead')
     })
 
     it('creates mixer state for initial track', () => {
       const state = createInitialState()
-      const trackId = state.tracks[0].id
+      const trackId = nth(state.tracks, 0).id
       expect(state.mixer.tracks[trackId]).toBeDefined()
       expect(state.mixer.masterVolume).toBe(0.8)
     })
@@ -74,8 +89,8 @@ describe('soundscape reducer', () => {
         payload: { name: 'New Track', presetId: 'bass' },
       })
       expect(result.tracks).toHaveLength(2)
-      expect(result.tracks[1].name).toBe('New Track')
-      expect(result.tracks[1].presetId).toBe('bass')
+      expect(nth(result.tracks, 1).name).toBe('New Track')
+      expect(nth(result.tracks, 1).presetId).toBe('bass')
     })
 
     it('creates mixer state for new track', () => {
@@ -84,7 +99,7 @@ describe('soundscape reducer', () => {
         type: 'ADD_TRACK',
         payload: { name: 'New Track', presetId: 'bass' },
       })
-      const newTrackId = result.tracks[1].id
+      const newTrackId = nth(result.tracks, 1).id
       expect(result.mixer.tracks[newTrackId]).toBeDefined()
     })
   })
@@ -96,7 +111,7 @@ describe('soundscape reducer', () => {
         type: 'ADD_TRACK',
         payload: { name: 'Track 2', presetId: 'bass' },
       })
-      const trackToRemove = state.tracks[1].id
+      const trackToRemove = nth(state.tracks, 1).id
 
       const result = soundscapeReducer(state, {
         type: 'REMOVE_TRACK',
@@ -112,7 +127,7 @@ describe('soundscape reducer', () => {
         type: 'ADD_TRACK',
         payload: { name: 'Track 2', presetId: 'bass' },
       })
-      const trackToRemove = state.tracks[1].id
+      const trackToRemove = nth(state.tracks, 1).id
 
       const result = soundscapeReducer(state, {
         type: 'REMOVE_TRACK',
@@ -125,21 +140,21 @@ describe('soundscape reducer', () => {
   describe('DUPLICATE_TRACK', () => {
     it('duplicates a track with a new id and name', () => {
       const state = createInitialState()
-      const sourceId = state.tracks[0].id
+      const sourceId = nth(state.tracks, 0).id
 
       const result = soundscapeReducer(state, {
         type: 'DUPLICATE_TRACK',
         payload: { trackId: sourceId },
       })
       expect(result.tracks).toHaveLength(2)
-      expect(result.tracks[1].name).toBe('Track 1 - copy')
-      expect(result.tracks[1].id).not.toBe(sourceId)
-      expect(result.tracks[1].presetId).toBe(state.tracks[0].presetId)
+      expect(nth(result.tracks, 1).name).toBe('Track 1 - copy')
+      expect(nth(result.tracks, 1).id).not.toBe(sourceId)
+      expect(nth(result.tracks, 1).presetId).toBe(nth(state.tracks, 0).presetId)
     })
 
     it('copies notes with new ids', () => {
       let state = createInitialState()
-      const sourceId = state.tracks[0].id
+      const sourceId = nth(state.tracks, 0).id
       state = soundscapeReducer(state, {
         type: 'ADD_NOTE',
         payload: { trackId: sourceId, pitch: 60, startTime: 0, duration: 2, velocity: 90 },
@@ -153,20 +168,20 @@ describe('soundscape reducer', () => {
         type: 'DUPLICATE_TRACK',
         payload: { trackId: sourceId },
       })
-      const copied = result.tracks[1]
+      const copied = nth(result.tracks, 1)
       expect(copied.notes).toHaveLength(2)
-      expect(copied.notes[0].pitch).toBe(60)
-      expect(copied.notes[0].duration).toBe(2)
-      expect(copied.notes[0].velocity).toBe(90)
-      expect(copied.notes[1].pitch).toBe(64)
+      expect(nth(copied.notes, 0).pitch).toBe(60)
+      expect(nth(copied.notes, 0).duration).toBe(2)
+      expect(nth(copied.notes, 0).velocity).toBe(90)
+      expect(nth(copied.notes, 1).pitch).toBe(64)
       // All note ids should be new
-      expect(copied.notes[0].id).not.toBe(state.tracks[0].notes[0].id)
-      expect(copied.notes[1].id).not.toBe(state.tracks[0].notes[1].id)
+      expect(nth(copied.notes, 0).id).not.toBe(nth(nth(state.tracks, 0).notes, 0).id)
+      expect(nth(copied.notes, 1).id).not.toBe(nth(nth(state.tracks, 0).notes, 1).id)
     })
 
     it('copies paramOverrides', () => {
       let state = createInitialState()
-      const sourceId = state.tracks[0].id
+      const sourceId = nth(state.tracks, 0).id
       state = soundscapeReducer(state, {
         type: 'SET_TRACK_PARAM_OVERRIDES',
         payload: { trackId: sourceId, overrides: { attack: 0.5, decay: 0.3 } },
@@ -176,14 +191,14 @@ describe('soundscape reducer', () => {
         type: 'DUPLICATE_TRACK',
         payload: { trackId: sourceId },
       })
-      expect(result.tracks[1].paramOverrides).toEqual({ attack: 0.5, decay: 0.3 })
+      expect(nth(result.tracks, 1).paramOverrides).toEqual({ attack: 0.5, decay: 0.3 })
       // Should be a separate object, not the same reference
-      expect(result.tracks[1].paramOverrides).not.toBe(state.tracks[0].paramOverrides)
+      expect(nth(result.tracks, 1).paramOverrides).not.toBe(nth(state.tracks, 0).paramOverrides)
     })
 
     it('copies mixer state', () => {
       let state = createInitialState()
-      const sourceId = state.tracks[0].id
+      const sourceId = nth(state.tracks, 0).id
       state = soundscapeReducer(state, {
         type: 'SET_MIXER_TRACK',
         payload: { trackId: sourceId, state: { volume: 0.6, mute: true } },
@@ -193,22 +208,22 @@ describe('soundscape reducer', () => {
         type: 'DUPLICATE_TRACK',
         payload: { trackId: sourceId },
       })
-      const newId = result.tracks[1].id
+      const newId = nth(result.tracks, 1).id
       expect(result.mixer.tracks[newId]).toBeDefined()
-      expect(result.mixer.tracks[newId].volume).toBe(0.6)
-      expect(result.mixer.tracks[newId].mute).toBe(true)
+      expect(mixerOf(result, newId).volume).toBe(0.6)
+      expect(mixerOf(result, newId).mute).toBe(true)
     })
 
     it('duplicate without paramOverrides has no paramOverrides property', () => {
       const state = createInitialState()
-      const sourceId = state.tracks[0].id
+      const sourceId = nth(state.tracks, 0).id
 
       const result = soundscapeReducer(state, {
         type: 'DUPLICATE_TRACK',
         payload: { trackId: sourceId },
       })
-      expect(result.tracks[1].paramOverrides).toBeUndefined()
-      expect('paramOverrides' in result.tracks[1]).toBe(false)
+      expect(nth(result.tracks, 1).paramOverrides).toBeUndefined()
+      expect('paramOverrides' in nth(result.tracks, 1)).toBe(false)
     })
 
     it('returns unchanged state for non-existent track', () => {
@@ -224,30 +239,30 @@ describe('soundscape reducer', () => {
   describe('SET_TRACK_PRESET', () => {
     it('updates the preset id', () => {
       const state = createInitialState()
-      const trackId = state.tracks[0].id
+      const trackId = nth(state.tracks, 0).id
 
       const result = soundscapeReducer(state, {
         type: 'SET_TRACK_PRESET',
         payload: { trackId, presetId: 'bass' },
       })
-      expect(result.tracks[0].presetId).toBe('bass')
+      expect(nth(result.tracks, 0).presetId).toBe('bass')
     })
 
     it('clears paramOverrides when preset changes', () => {
       let state = createInitialState()
-      const trackId = state.tracks[0].id
+      const trackId = nth(state.tracks, 0).id
       state = soundscapeReducer(state, {
         type: 'SET_TRACK_PARAM_OVERRIDES',
         payload: { trackId, overrides: { attack: 0.9, decay: 0.1 } },
       })
-      expect(state.tracks[0].paramOverrides).toBeDefined()
+      expect(nth(state.tracks, 0).paramOverrides).toBeDefined()
 
       const result = soundscapeReducer(state, {
         type: 'SET_TRACK_PRESET',
         payload: { trackId, presetId: 'bass' },
       })
-      expect(result.tracks[0].paramOverrides).toBeUndefined()
-      expect('paramOverrides' in result.tracks[0]).toBe(false)
+      expect(nth(result.tracks, 0).paramOverrides).toBeUndefined()
+      expect('paramOverrides' in nth(result.tracks, 0)).toBe(false)
     })
 
     it('does not affect other tracks', () => {
@@ -256,100 +271,100 @@ describe('soundscape reducer', () => {
         type: 'ADD_TRACK',
         payload: { name: 'Track 2', presetId: 'bass' },
       })
-      const track1Id = state.tracks[0].id
-      const track2Id = state.tracks[1].id
+      const track1Id = nth(state.tracks, 0).id
+      const track2Id = nth(state.tracks, 1).id
 
       const result = soundscapeReducer(state, {
         type: 'SET_TRACK_PRESET',
         payload: { trackId: track1Id, presetId: 'pad' },
       })
-      expect(result.tracks[1].id).toBe(track2Id)
-      expect(result.tracks[1].presetId).toBe('bass')
+      expect(nth(result.tracks, 1).id).toBe(track2Id)
+      expect(nth(result.tracks, 1).presetId).toBe('bass')
     })
   })
 
   describe('ADD_NOTE', () => {
     it('adds a note to a track', () => {
       const initialState = createInitialState()
-      const trackId = initialState.tracks[0].id
+      const trackId = nth(initialState.tracks, 0).id
       const result = soundscapeReducer(initialState, {
         type: 'ADD_NOTE',
         payload: { trackId, pitch: 60, startTime: 0, duration: 1, velocity: 100 },
       })
-      expect(result.tracks[0].notes).toHaveLength(1)
-      expect(result.tracks[0].notes[0].pitch).toBe(60)
+      expect(nth(result.tracks, 0).notes).toHaveLength(1)
+      expect(nth(nth(result.tracks, 0).notes, 0).pitch).toBe(60)
     })
 
     it('uses default duration and velocity', () => {
       const initialState = createInitialState()
-      const trackId = initialState.tracks[0].id
+      const trackId = nth(initialState.tracks, 0).id
       const result = soundscapeReducer(initialState, {
         type: 'ADD_NOTE',
         payload: { trackId, pitch: 60, startTime: 0 },
       })
-      expect(result.tracks[0].notes[0].duration).toBe(1)
-      expect(result.tracks[0].notes[0].velocity).toBe(100)
+      expect(nth(nth(result.tracks, 0).notes, 0).duration).toBe(1)
+      expect(nth(nth(result.tracks, 0).notes, 0).velocity).toBe(100)
     })
   })
 
   describe('REMOVE_NOTE', () => {
     it('removes a note from a track', () => {
       let state = createInitialState()
-      const trackId = state.tracks[0].id
+      const trackId = nth(state.tracks, 0).id
       state = soundscapeReducer(state, {
         type: 'ADD_NOTE',
         payload: { trackId, pitch: 60, startTime: 0 },
       })
-      const noteId = state.tracks[0].notes[0].id
+      const noteId = nth(nth(state.tracks, 0).notes, 0).id
 
       const result = soundscapeReducer(state, {
         type: 'REMOVE_NOTE',
         payload: { trackId, noteId },
       })
-      expect(result.tracks[0].notes).toHaveLength(0)
+      expect(nth(result.tracks, 0).notes).toHaveLength(0)
     })
   })
 
   describe('UPDATE_NOTE', () => {
     it('updates note properties', () => {
       let state = createInitialState()
-      const trackId = state.tracks[0].id
+      const trackId = nth(state.tracks, 0).id
       state = soundscapeReducer(state, {
         type: 'ADD_NOTE',
         payload: { trackId, pitch: 60, startTime: 0 },
       })
-      const noteId = state.tracks[0].notes[0].id
+      const noteId = nth(nth(state.tracks, 0).notes, 0).id
 
       const result = soundscapeReducer(state, {
         type: 'UPDATE_NOTE',
         payload: { trackId, noteId, updates: { pitch: 72, duration: 2 } },
       })
-      expect(result.tracks[0].notes[0].pitch).toBe(72)
-      expect(result.tracks[0].notes[0].duration).toBe(2)
+      expect(nth(nth(result.tracks, 0).notes, 0).pitch).toBe(72)
+      expect(nth(nth(result.tracks, 0).notes, 0).duration).toBe(2)
     })
   })
 
   describe('SET_MIXER_TRACK', () => {
     it('updates mixer track state', () => {
       const initialState = createInitialState()
-      const trackId = initialState.tracks[0].id
+      const trackId = nth(initialState.tracks, 0).id
       const result = soundscapeReducer(initialState, {
         type: 'SET_MIXER_TRACK',
         payload: { trackId, state: { volume: 0.5, mute: true } },
       })
-      expect(result.mixer.tracks[trackId].volume).toBe(0.5)
-      expect(result.mixer.tracks[trackId].mute).toBe(true)
+      expect(mixerOf(result, trackId).volume).toBe(0.5)
+      expect(mixerOf(result, trackId).mute).toBe(true)
     })
 
     it('preserves other mixer track properties', () => {
       const initialState = createInitialState()
-      const trackId = initialState.tracks[0].id
+      const trackId = nth(initialState.tracks, 0).id
       const result = soundscapeReducer(initialState, {
         type: 'SET_MIXER_TRACK',
         payload: { trackId, state: { volume: 0.5 } },
       })
-      expect(result.mixer.tracks[trackId].mute).toBe(false)
-      expect(result.mixer.tracks[trackId].solo).toBe(false)
+      expect(mixerOf(result, trackId).mute).toBe(false)
+      expect(mixerOf(result, trackId).solo).toBe(false)
     })
   })
 
@@ -367,9 +382,7 @@ describe('soundscape reducer', () => {
   describe('default case', () => {
     it('returns unchanged state for unknown action', () => {
       const initialState = createInitialState()
-      const result = soundscapeReducer(initialState, {
-        type: 'UNKNOWN_ACTION' as never,
-      })
+      const result = soundscapeReducer(initialState, { type: 'UNKNOWN_ACTION' } as unknown as SoundscapeAction)
       expect(result).toBe(initialState)
     })
   })
