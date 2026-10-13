@@ -13,7 +13,6 @@ import { createMixerState, defaultMetadata } from '../../types'
 import {
   SAMPLE_RATE,
   START,
-  LockstepRefused,
   installOfflineAudioContext,
   largestDifference,
   renderInLockstep,
@@ -115,74 +114,51 @@ const OTHER = doc({ other: [note('o', 60, 0)] })
 const FILTERED = doc({ g: [note('g1', 55, 0)] }, sine({ filterType: 'lowpass', filterCutoff: 0.05, filterResonance: 1 }))
 
 /** After ECHO's note has stopped, at START + 0.17 s, and while its echoes ring. */
-const ENDS_REPORTED_AT = 0.4
+const ECHOES_RING_AT = 0.4
 
 /**
- * Render with every source's end reported to the engine when the test says,
- * not when node-web-audio-api delivers it. It usually delivers one after the
- * render has finished, but once delivered one first, and only then were a
- * replaced cue's echoes cut (#123). Each end is held with the time its source
- * stops, then reported at a suspension at ENDS_REPORTED_AT if the source has
- * stopped by then, or once the render has finished: both times a renderer may
- * report it. Oscillators and the engine's silent clocks are held alike.
- * `atSuspension` runs at the suspension, after the ends are reported.
+ * Render with every source's end reported to the engine once the render has
+ * finished, as node-web-audio-api usually delivers it. It once delivered one
+ * first, and only then were a replaced cue's echoes cut (#123). Each end is
+ * held with the time its source stops, and reported if the source has stopped
+ * by the render's end. Oscillators and the engine's silent clocks are held
+ * alike.
+ *
+ * An end reported during the render, as Chromium and WebKit report one, is
+ * tested in those browsers, not here: cues.replaced.browser.test.ts and
+ * cues.filter.browser.test.ts. node-web-audio-api 2.2.0 cannot hold an
+ * offline render at a point every time. Its `suspend` registers the
+ * suspension on a worker thread after the call returns, so the render can
+ * start first and refuse it; under load, 9.5% of the suite's suspension
+ * renders had one refused.
  */
-async function renderReportingEnds(
-  reported: 'mid-render' | 'after the render',
-  cues: CueDocument,
-  play: (engine: AudioEngine) => void,
-  atSuspension?: (engine: AudioEngine) => void
-): Promise<Float32Array> {
-  return retryRefused(async () => {
-    const { ctx, engine } = await engineWith()
-    const held: Array<{ stopsAt: number; report: () => void }> = []
-    const hold = <T extends { stop(when?: number): void }>(source: T): T => {
-      const end = { stopsAt: Infinity, report: () => {} }
-      const stop = source.stop.bind(source)
-      source.stop = (when = 0) => {
-        end.stopsAt = when
-        stop(when)
-      }
-      Object.defineProperty(source, 'onended', {
-        set: (report: () => void) => {
-          end.report = report
-          held.push(end)
-        },
-      })
-      return source
+async function renderReportingEndsAfter(cues: CueDocument, play: (engine: AudioEngine) => void): Promise<Float32Array> {
+  const { ctx, engine } = await engineWith()
+  const held: Array<{ stopsAt: number; report: () => void }> = []
+  const hold = <T extends { stop(when?: number): void }>(source: T): T => {
+    const end = { stopsAt: Infinity, report: () => {} }
+    const stop = source.stop.bind(source)
+    source.stop = (when = 0) => {
+      end.stopsAt = when
+      stop(when)
     }
-    const createOscillator = ctx.createOscillator.bind(ctx)
-    ctx.createOscillator = () => hold(createOscillator())
-    const createConstantSource = ctx.createConstantSource.bind(ctx)
-    ctx.createConstantSource = () => hold(createConstantSource())
-    const reportEnds = (by: number) => {
-      for (const end of held.filter((e) => e.stopsAt <= by)) {
-        held.splice(held.indexOf(end), 1)
-        end.report()
-      }
-    }
-    engine.loadCues(cues)
-    play(engine)
-    let refused: unknown = null
-    if (reported === 'mid-render') {
-      ctx.suspend(ENDS_REPORTED_AT).then(
-        () => {
-          reportEnds(ENDS_REPORTED_AT)
-          atSuspension?.(engine)
-          void ctx.resume()
-        },
-        (error: unknown) => {
-          refused = error
-        }
-      )
-    }
-    const buffer = await ctx.startRendering()
-    if (refused !== null) {
-      throw new LockstepRefused([`frame ${Math.round(ENDS_REPORTED_AT * SAMPLE_RATE)} of ${ctx.length}: ${String(refused)}`])
-    }
-    reportEnds(ctx.length / SAMPLE_RATE)
-    return Float32Array.from(buffer.getChannelData(0))
-  })
+    Object.defineProperty(source, 'onended', {
+      set: (report: () => void) => {
+        end.report = report
+        held.push(end)
+      },
+    })
+    return source
+  }
+  const createOscillator = ctx.createOscillator.bind(ctx)
+  ctx.createOscillator = () => hold(createOscillator())
+  const createConstantSource = ctx.createConstantSource.bind(ctx)
+  ctx.createConstantSource = () => hold(createConstantSource())
+  engine.loadCues(cues)
+  play(engine)
+  const buffer = await ctx.startRendering()
+  for (const end of held.filter((e) => e.stopsAt <= ctx.length / SAMPLE_RATE)) end.report()
+  return Float32Array.from(buffer.getChannelData(0))
 }
 
 describe('playCue', () => {
@@ -250,57 +226,22 @@ describe('playCue', () => {
     expect(largestDifference(kept, plain)).toBe(0)
   })
 
-  for (const reported of ['mid-render', 'after the render'] as const) {
-    it(`plays out a ringing cue through its effects chain when the document is replaced under it, its note's end reported ${reported}`, async () => {
-      const kept = await renderReportingEnds(reported, ECHO, (e) => {
-        e.playCue('g', START)
-        e.loadCues(OTHER)
-      })
-      const plain = await render((e) => e.playCue('g', START), ECHO)
-      // Reporting the end where the test says changes nothing by itself
-      expect(largestDifference(await renderReportingEnds(reported, ECHO, (e) => e.playCue('g', START)), plain)).toBe(0)
-      // The echoes are there, and the same as if the document had stayed
-      expect(peakIn(plain, ENDS_REPORTED_AT, ENDS_REPORTED_AT + 0.15)).toBeGreaterThan(0.01)
-      expect(largestDifference(kept, plain)).toBe(0)
-    })
-  }
-
-  it('plays out a ringing cue through its effects chain when the document is replaced after its note has ended', async () => {
-    const kept = await renderReportingEnds(
-      'mid-render',
-      ECHO,
-      (e) => e.playCue('g', START),
-      (e) => e.loadCues(OTHER)
-    )
-    const plain = await render((e) => e.playCue('g', START), ECHO)
-    expect(largestDifference(kept, plain)).toBe(0)
-  })
-
-  it("plays a filtered cue's ring out whole, its oscillator's end reported mid-render", async () => {
-    // A reference in which no voice is ever disconnected
-    const kept = vi.spyOn(VoiceSynthesizer.prototype, 'dispose').mockImplementation(() => {})
-    const whole = await render((e) => e.playCue('g', START), FILTERED)
-    kept.mockRestore()
-    const reported = await renderReportingEnds('mid-render', FILTERED, (e) => e.playCue('g', START))
-    expect(peakIn(whole, ENDS_REPORTED_AT, ENDS_REPORTED_AT + 0.1)).toBeGreaterThan(1e-4)
-    expect(largestDifference(reported, whole)).toBe(0)
-  })
-
-  it("plays a filtered cue's ring out whole through its echo when the document is replaced under it", async () => {
-    // A ring of nearly 2 s through one echo, whose delay alone would let the
-    // replaced chain go 55 ms after the note stops
-    const ringing = doc(
-      { g: [note('g1', 55, 0)] },
-      sine({ filterType: 'lowpass', filterCutoff: 0.05, filterResonance: 1, delayTime: 0.05, delayMix: 0.4 })
-    )
-    const kept = await renderReportingEnds('mid-render', ringing, (e) => {
+  it("plays out a ringing cue through its effects chain when the document is replaced under it, its note's end reported after the render", async () => {
+    const kept = await renderReportingEndsAfter(ECHO, (e) => {
       e.playCue('g', START)
       e.loadCues(OTHER)
     })
-    const plain = await render((e) => e.playCue('g', START), ringing)
-    expect(peakIn(plain, ENDS_REPORTED_AT, ENDS_REPORTED_AT + 0.1)).toBeGreaterThan(1e-4)
+    const plain = await render((e) => e.playCue('g', START), ECHO)
+    // Reporting the ends after the render changes nothing by itself
+    expect(largestDifference(await renderReportingEndsAfter(ECHO, (e) => e.playCue('g', START)), plain)).toBe(0)
+    // The echoes are there, and the same as if the document had stayed
+    expect(peakIn(plain, ECHOES_RING_AT, ECHOES_RING_AT + 0.15)).toBeGreaterThan(0.01)
     expect(largestDifference(kept, plain)).toBe(0)
   })
+
+  // A voice's end reported during the render, its filter's ring and its
+  // echoes kept, is held in Chromium and WebKit, which report it so: see
+  // renderReportingEndsAfter.
 
   it('says what is wrong when it cannot play', async () => {
     const { engine } = await engineWith()
