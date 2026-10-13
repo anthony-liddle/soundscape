@@ -31,16 +31,57 @@ import Testing
         return out
     }
 
+    /// hashes.json's text: what it says it is, the platform it was made on,
+    /// and every render's hash, in the order rendered.
+    static func written(about: String, platform: String, _ hashes: [(String, String)]) -> String {
+        // A JSON string, as JSON.stringify writes one
+        func quoted(_ text: String) -> String {
+            var out = "\""
+            for unit in text.unicodeScalars {
+                switch unit {
+                case "\"": out += "\\\""
+                case "\\": out += "\\\\"
+                case "\n": out += "\\n"
+                case "\r": out += "\\r"
+                case "\t": out += "\\t"
+                case "\u{08}": out += "\\b"
+                case "\u{0C}": out += "\\f"
+                case _ where unit.value < 0x20:
+                    let hex = String(unit.value, radix: 16)
+                    out += "\\u" + String(repeating: "0", count: 4 - hex.count) + hex
+                default: out.unicodeScalars.append(unit)
+                }
+            }
+            return out + "\""
+        }
+        let lines = hashes.map { "    \(quoted($0.0)): \(quoted($0.1))" }.joined(separator: ",\n")
+        return "{\n  \"about\": \(quoted(about)),\n  \"platform\": \(quoted(platform)),\n  \"renders\": {\n\(lines)\n  }\n}\n"
+    }
+
+    /// Writing the recorded hashes back out makes hashes.json again, to the
+    /// byte, what it says it is and the platform it was made on kept.
+    @Test func writesHashesJSONAsRecorded() throws {
+        let text = Corpus.text(Corpus.directory + "/render/hashes.json")
+        let recorded = try JSONValue(parsing: text)
+        let about = try #require(recorded["about"]?.string)
+        let platform = try #require(recorded["platform"]?.string)
+        let renders = try #require(recorded["renders"]?.members).map { ($0.key, $0.value.string!) }
+        #expect(Self.written(about: about, platform: platform, renders) == text)
+    }
+
     @Test func rendersEveryReferenceCueTheSameEveryTime() throws {
         let hashes = try Self.hashes()
         let recordedPath = Corpus.directory + "/render/hashes.json"
+        let recordedFile = try JSONValue(parsing: Corpus.text(recordedPath))
         if let out = getenv("CUE_HASHES_OUT").map({ String(cString: $0) }) {
-            let lines = hashes.map { "    \"\($0.0)\": \"\($0.1)\"" }.joined(separator: ",\n")
+            // What hashes.json says it is, and where it was made, kept as they are
+            let about = try #require(recordedFile["about"]?.string)
+            let platform = try #require(recordedFile["platform"]?.string)
             let file = fopen(out, "wb")!
-            fputs("{\n  \"renders\": {\n\(lines)\n  }\n}\n", file)
+            fputs(Self.written(about: about, platform: platform, hashes), file)
             fclose(file)
         }
-        let recorded = try #require(JSONValue(parsing: Corpus.text(recordedPath))["renders"]?.members)
+        let recorded = try #require(recordedFile["renders"]?.members)
         let expected = Dictionary(uniqueKeysWithValues: recorded.map { ($0.key, $0.value.string!) })
         let matching = hashes.filter { expected[$0.0] == $0.1 }.count
         #if os(Linux)
