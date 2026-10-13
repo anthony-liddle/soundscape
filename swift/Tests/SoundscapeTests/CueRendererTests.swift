@@ -56,11 +56,11 @@ import Testing
     }
 
     @Test func refusesTheWholeDocumentForAFeatureItCannotRender() throws {
-        let delayed = Self.peach.replacing(#""delayMix": 0,"#, with: #""delayMix": 0.2,"#)
-        #expect(throws: CueDocumentError.self) { try CueRenderer(parsing: delayed, sampleRate: 48000) }
-        let problems = CueRenderer.unsupported(try CueDocument(parsing: delayed))
-        #expect(problems.map(\.path) == ["instruments.sine.delayMix", "instruments.square.delayMix", "instruments.triangle.delayMix"])
-        #expect(problems.first?.message == "must be 0: delay is not rendered yet")
+        let distorted = Self.peach.replacing(#""distortion": 0,"#, with: #""distortion": 0.2,"#)
+        #expect(throws: CueDocumentError.self) { try CueRenderer(parsing: distorted, sampleRate: 48000) }
+        let problems = CueRenderer.unsupported(try CueDocument(parsing: distorted))
+        #expect(problems.map(\.path) == ["instruments.sine.distortion", "instruments.square.distortion", "instruments.triangle.distortion"])
+        #expect(problems.first?.message == "must be 0: distortion is not rendered yet")
     }
 
     @Test func rendersTheSameSamplesTwice() throws {

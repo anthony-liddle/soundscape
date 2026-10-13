@@ -23,6 +23,19 @@ and how an LFO reaches a param through its gain, follows:
   third_party/blink/renderer/modules/webaudio/audio_param_handler.cc
   third_party/blink/renderer/modules/webaudio/gain_handler.cc
 
+The delay, its feedback loop, and which render quanta each node of an
+effects chain processes, follow those last three and:
+
+  third_party/blink/renderer/platform/audio/delay.cc
+  third_party/blink/renderer/platform/audio/delay.h
+  third_party/blink/renderer/platform/audio/cpu/arm/delay_neon.cc
+  third_party/blink/renderer/modules/webaudio/delay_handler.cc
+  third_party/blink/renderer/modules/webaudio/delay_handler.h
+  third_party/blink/renderer/modules/webaudio/delay_node.cc
+  third_party/blink/renderer/modules/webaudio/audio_node_input.cc
+  third_party/blink/renderer/modules/webaudio/audio_node_output.cc
+  third_party/blink/renderer/platform/audio/audio_bus.cc
+
 The math functions the filter calls, ported so that it computes what
 Chromium computes on every platform, follow V8's fork of fdlibm as Chromium
 carries it, built as Chromium builds it:
@@ -35,12 +48,13 @@ carries it, built as Chromium builds it:
 
 All were read at Chromium revision 935133e72a654887fb49ffbe65c8b762bdff821f,
 the commit of that hash on Chromium's main branch, here fetched through its
-GitHub mirror, github.com/chromium/chromium. The Swift was written from
-reading them, not copied, and is close enough to their design to carry their
-notices, which follow: Chromium's own, which covers the files that carry no
-other; the two that biquad.cc, biquad.h and biquad_filter_node.cc carry; and
-fdlibm's, which ieee754.cc carries and swift/Sources/Soundscape/Render/
-FDLibm.swift repeats.
+GitHub mirror, github.com/chromium/chromium, or from
+chromium.googlesource.com. The Swift was written from reading them, not
+copied, and is close enough to their design to carry their notices, which
+follow: Chromium's own, which covers the files that carry no other; the two
+that biquad.cc, biquad.h and biquad_filter_node.cc carry, which audio_bus.cc
+and the delay's older files carry too; and fdlibm's, which ieee754.cc
+carries and swift/Sources/Soundscape/Render/FDLibm.swift repeats.
 
 Copyright 2015 The Chromium Authors
 
@@ -71,7 +85,8 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ----------------------------------------------------------------------------
-platform/audio/biquad.cc and platform/audio/biquad.h:
+platform/audio/biquad.cc, platform/audio/biquad.h and
+platform/audio/audio_bus.cc:
 
 Copyright (C) 2010 Google Inc. All rights reserved.
 
@@ -103,6 +118,34 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 modules/webaudio/biquad_filter_node.cc:
 
 Copyright (C) 2011, Google Inc. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1.  Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2.  Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY APPLE INC. AND ITS CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL APPLE INC. OR ITS CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
+
+----------------------------------------------------------------------------
+platform/audio/delay.cc, platform/audio/delay.h,
+modules/webaudio/delay_node.cc, modules/webaudio/audio_node_input.cc and
+modules/webaudio/audio_node_output.cc:
+
+Copyright (C) 2010, Google Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions

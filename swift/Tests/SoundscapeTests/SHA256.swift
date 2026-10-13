@@ -13,51 +13,65 @@ enum SHA256 {
     ]
 
     static func hex(_ bytes: [UInt8]) -> String {
-        var h: [UInt32] = [0x6a09_e667, 0xbb67_ae85, 0x3c6e_f372, 0xa54f_f53a, 0x510e_527f, 0x9b05_688c, 0x1f83_d9ab, 0x5be0_cd19]
-        var message = bytes
-        message.append(0x80)
-        while message.count % 64 != 56 { message.append(0) }
-        let bits = UInt64(bytes.count) * 8
-        for shift in stride(from: 56, through: 0, by: -8) { message.append(UInt8(truncatingIfNeeded: bits >> UInt64(shift))) }
-        func rotate(_ x: UInt32, _ n: UInt32) -> UInt32 { (x >> n) | (x << (32 - n)) }
-        var w = [UInt32](repeating: 0, count: 64)
-        for block in stride(from: 0, to: message.count, by: 64) {
-            for t in 0..<16 {
-                let i = block + t * 4
-                w[t] = UInt32(message[i]) << 24 | UInt32(message[i + 1]) << 16 | UInt32(message[i + 2]) << 8 | UInt32(message[i + 3])
-            }
-            for t in 16..<64 {
-                let s0 = rotate(w[t - 15], 7) ^ rotate(w[t - 15], 18) ^ (w[t - 15] >> 3)
-                let s1 = rotate(w[t - 2], 17) ^ rotate(w[t - 2], 19) ^ (w[t - 2] >> 10)
-                w[t] = w[t - 16] &+ s0 &+ w[t - 7] &+ s1
-            }
-            var (a, b, c, d, e, f, g, hh) = (h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7])
-            for t in 0..<64 {
-                let s1 = rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25)
-                let choose = (e & f) ^ (~e & g)
-                let t1 = hh &+ s1 &+ choose &+ k[t] &+ w[t]
-                let s0 = rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22)
-                let majority = (a & b) ^ (a & c) ^ (b & c)
-                let t2 = s0 &+ majority
-                (hh, g, f, e, d, c, b, a) = (g, f, e, d &+ t1, c, b, a, t1 &+ t2)
-            }
-            h = zip(h, [a, b, c, d, e, f, g, hh]).map { $0 &+ $1 }
-        }
-        let digits = Array("0123456789abcdef")
-        return String(h.flatMap { word in (0..<8).reversed().map { digits[Int((word >> UInt32($0 * 4)) & 0xF)] } })
+        bytes.withUnsafeBytes { hex($0) }
     }
 
     /// A render's hash: its float32 samples' bytes, little-endian, as written to disk.
     static func hex(_ samples: [Float]) -> String {
-        var bytes: [UInt8] = []
-        bytes.reserveCapacity(samples.count * 4)
-        for s in samples {
-            let bits = s.bitPattern
-            bytes.append(UInt8(truncatingIfNeeded: bits))
-            bytes.append(UInt8(truncatingIfNeeded: bits >> 8))
-            bytes.append(UInt8(truncatingIfNeeded: bits >> 16))
-            bytes.append(UInt8(truncatingIfNeeded: bits >> 24))
+        precondition(1.littleEndian == 1, "a render's bytes are hashed as they lie in memory, little-endian")
+        return samples.withUnsafeBytes { hex($0) }
+    }
+
+    /// Whole blocks straight from the bytes, then the last part padded, with
+    /// no copy: a render can be tens of megabytes, hashed in a debug build.
+    private static func hex(_ bytes: UnsafeRawBufferPointer) -> String {
+        var h: (UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32) =
+            (0x6a09_e667, 0xbb67_ae85, 0x3c6e_f372, 0xa54f_f53a, 0x510e_527f, 0x9b05_688c, 0x1f83_d9ab, 0x5be0_cd19)
+        var w = [UInt32](repeating: 0, count: 64)
+        k.withUnsafeBufferPointer { k in
+            w.withUnsafeMutableBufferPointer { w in
+                func rotate(_ x: UInt32, _ n: UInt32) -> UInt32 { (x >> n) | (x << (32 - n)) }
+                func compress(_ block: UnsafeRawBufferPointer) {
+                    for t in 0..<16 {
+                        let i = t * 4
+                        w[t] = UInt32(block[i]) << 24 | UInt32(block[i + 1]) << 16 | UInt32(block[i + 2]) << 8 | UInt32(block[i + 3])
+                    }
+                    for t in 16..<64 {
+                        let s0 = rotate(w[t - 15], 7) ^ rotate(w[t - 15], 18) ^ (w[t - 15] >> 3)
+                        let s1 = rotate(w[t - 2], 17) ^ rotate(w[t - 2], 19) ^ (w[t - 2] >> 10)
+                        w[t] = w[t - 16] &+ s0 &+ w[t - 7] &+ s1
+                    }
+                    var (a, b, c, d, e, f, g, hh) = h
+                    for t in 0..<64 {
+                        let s1 = rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25)
+                        let choose = (e & f) ^ (~e & g)
+                        let t1 = hh &+ s1 &+ choose &+ k[t] &+ w[t]
+                        let s0 = rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22)
+                        let majority = (a & b) ^ (a & c) ^ (b & c)
+                        let t2 = s0 &+ majority
+                        (hh, g, f, e, d, c, b, a) = (g, f, e, d &+ t1, c, b, a, t1 &+ t2)
+                    }
+                    h = (h.0 &+ a, h.1 &+ b, h.2 &+ c, h.3 &+ d, h.4 &+ e, h.5 &+ f, h.6 &+ g, h.7 &+ hh)
+                }
+                let whole = bytes.count / 64 * 64
+                for block in stride(from: 0, to: whole, by: 64) {
+                    compress(UnsafeRawBufferPointer(rebasing: bytes[block..<block + 64]))
+                }
+                // The rest, a 1 bit, zeros, and the length in bits, in one block or two
+                var last = Array(bytes[whole...])
+                last.append(0x80)
+                while last.count % 64 != 56 { last.append(0) }
+                let bits = UInt64(bytes.count) * 8
+                for shift in stride(from: 56, through: 0, by: -8) { last.append(UInt8(truncatingIfNeeded: bits >> UInt64(shift))) }
+                last.withUnsafeBytes { last in
+                    for block in stride(from: 0, to: last.count, by: 64) {
+                        compress(UnsafeRawBufferPointer(rebasing: last[block..<block + 64]))
+                    }
+                }
+            }
         }
-        return hex(bytes)
+        let digits = Array("0123456789abcdef")
+        let words = [h.0, h.1, h.2, h.3, h.4, h.5, h.6, h.7]
+        return String(words.flatMap { word in (0..<8).reversed().map { digits[Int((word >> UInt32($0 * 4)) & 0xF)] } })
     }
 }

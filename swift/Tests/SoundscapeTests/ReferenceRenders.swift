@@ -18,6 +18,8 @@ import Testing
         ("features", Corpus.directory + "/render/features.cues.json"),
         ("filters", Corpus.directory + "/render/filters.cues.json"),
         ("modulation", Corpus.directory + "/render/modulation.cues.json"),
+        ("delay", Corpus.directory + "/render/delay.cues.json"),
+        ("echo", Corpus.directory + "/render/echo.cues.json"),
     ]
     static let rates: [Double] = [48000, 44100]
     static let starts: [(String, Double)] = [("0", 0), ("8.0027", Double(3001 * 128) / 48000)]

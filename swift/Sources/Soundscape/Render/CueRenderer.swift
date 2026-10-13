@@ -8,13 +8,17 @@ import Glibc
 /// `playCue` sounds them in an `OfflineAudioContext`: each note one
 /// oscillator, or two in unison, through its own gain envelope and, unless
 /// its filter is `'none'`, a biquad, with an LFO on the oscillators' detune
-/// or the filter's frequency, summed at the cue output with its volume at 1.
+/// or the filter's frequency; then, for an instrument with any effect, through
+/// that instrument's effects chain, shared by all its notes; all summed at the
+/// cue output with its volume at 1.
 ///
-/// What it renders is everything but the effects: every waveform, every
-/// envelope shape, the pitch offset, every filter, the LFO on either target
-/// and unison. A document with any instrument that needs more is refused
-/// whole, as `loadCues` refuses an invalid one, with a problem for each field
-/// at fault (see ``unsupported(_:)``).
+/// What it renders is everything but distortion: every waveform, every
+/// envelope shape, the pitch offset, every filter, the LFO on either target,
+/// unison and the delay. A render through an effects chain runs until the
+/// engine would disconnect the chain, by its own 2^-24 rule (`EngineTails`).
+/// A document with any instrument that needs more is refused whole, as
+/// `loadCues` refuses an invalid one, with a problem for each field at fault
+/// (see ``unsupported(_:)``).
 ///
 /// Its tables are built once, for the waveforms the document uses at its rate,
 /// so a renderer, like a context, has one sample rate.
@@ -50,14 +54,8 @@ public struct CueRenderer: Sendable {
         try self.init(CueDocument(parsing: text), sampleRate: sampleRate)
     }
 
-    /// Every field that needs an effect, in the document's instrument order
-    /// and, within an instrument, in the order below. The line is the engine's
-    /// own:
-    ///
-    /// - `delayTime`, `delayFeedback`, `delayMix` or `distortion` other than
-    ///   exactly 0: the engine builds an effects chain unless every effect is 0
-    ///   (`asksForNoEffect`), so a delay time of 0.25 with a mix of 0, which
-    ///   would be silent, is still refused. `-0` is 0.
+    /// Every field that needs distortion, in the document's instrument order:
+    /// `distortion` other than exactly 0. `-0` is 0.
     ///
     /// Every instrument is checked, used by a cue or not, as `loadCues` builds
     /// a chain for every instrument.
@@ -66,10 +64,6 @@ public struct CueRenderer: Sendable {
         for name in document.instrumentNames {
             let i = document.instruments[name]!
             let base = "instruments.\(name)"
-            for (key, value) in [("delayTime", i.delayTime), ("delayFeedback", i.delayFeedback), ("delayMix", i.delayMix)]
-            where value != 0 {
-                problems.append(CueProblem(path: "\(base).\(key)", message: "must be 0: delay is not rendered yet"))
-            }
             if i.distortion != 0 {
                 problems.append(CueProblem(path: "\(base).distortion", message: "must be 0: distortion is not rendered yet"))
             }
@@ -87,7 +81,9 @@ public struct CueRenderer: Sendable {
     ///
     /// - Returns: mono float32 samples from the frame on or before `start`,
     ///   ``firstFrame(of:sampleRate:)``, through the last frame any note
-    ///   sounds, a filter's ring included.
+    ///   sounds, a filter's ring included, or the frame before the engine
+    ///   would disconnect an effects chain a note plays through, whichever is
+    ///   later.
     /// - Throws: ``CueRenderError/noCue(_:)`` for a name the document lacks.
     public func render(_ name: String, at start: Double = 0) throws -> [Float] {
         guard let cue = document.cues[name] else { throw CueRenderError.noCue(name) }
@@ -95,8 +91,11 @@ public struct CueRenderer: Sendable {
         let rate = sampleRate
         let first = Self.firstFrame(of: start, sampleRate: rate)
 
-        // Each note's voice: its samples from a frame, and the frame it ends on
-        var voices: [(from: Int, samples: [Float], end: Int)] = []
+        // Each note's voice: its samples from a frame, the frame it ends on, and
+        // the quanta its output sounds in; and the effects chain it plays
+        // through, if any, with the time the engine would disconnect it
+        var voices: [(from: Int, samples: [Float], end: Int, quanta: Range<Int>, chain: String?)] = []
+        var chains: [String: (chain: CueEffectsChain, ringsUntil: Double)] = [:]
         for note in cue.notes {
             let instrument = document.instruments[note.instrument]!
             let envelope = Envelope(instrument, level: note.level, releaseAt: note.duration)
@@ -148,21 +147,54 @@ public struct CueRenderer: Sendable {
                 }
             }
 
+            // A chain for every instrument with any effect, as loadCues builds
+            // one, and the time the engine would disconnect it: once every
+            // voice through it has stopped, and its filter rung out, and then
+            // the chain's own tail
+            if chains[note.instrument] == nil, let chain = CueEffectsChain(instrument, sampleRate: rate) {
+                chains[note.instrument] = (chain, 0)
+            }
+            if let (chain, ringsUntil) = chains[note.instrument] {
+                let silentAt = stopTime + EngineTails.filter(instrument, sampleRate: rate)
+                chains[note.instrument] = (chain, max(ringsUntil, silentAt + EngineTails.delay(instrument, sampleRate: rate)))
+            }
+            let chain = chains[note.instrument] == nil ? nil : note.instrument
+
             if instrument.filterType == .none || knockouts.contains(.noFilter) {
-                voices.append((sounding, gained, endFrame))
+                // The oscillators sound in every quantum their start and stop overlap
+                let quanta = endFrame > startFrame ? startFrame / 128..<(endFrame + 127) / 128 : 0..<0
+                voices.append((sounding, gained, endFrame, quanta, chain))
             } else {
                 let filter = VoiceFilter(instrument, sampleRate: rate, knockouts: knockouts)
                 let modulation = instrument.lfoTarget == .filter ? lfo?.at : nil
-                voices.append(filter.render(gained, from: sounding, oscillators: startFrame..<endFrame, modulation: modulation))
+                let (from, samples, end) = filter.render(
+                    gained, from: sounding, oscillators: startFrame..<endFrame, modulation: modulation)
+                voices.append((from, samples, end, from / 128..<(end + 127) / 128, chain))
             }
         }
 
-        let last = voices.map(\.end).max() ?? first
+        // Each voice summed at the cue output, or through its chain, in the
+        // order of each chain's first note, until the engine would disconnect it
+        var outputs: [(from: Int, samples: [Float], end: Int)] = []
+        var played = Set<String>()
+        for voice in voices {
+            guard let name = voice.chain else {
+                outputs.append((voice.from, voice.samples, voice.end))
+                continue
+            }
+            guard played.insert(name).inserted, let (chain, ringsUntil) = chains[name] else { continue }
+            let cut = frameRoundingUp(ringsUntil, sampleRate: rate)
+            let through = voices.filter { $0.chain == name }.map { (from: $0.from, samples: $0.samples, quanta: $0.quanta) }
+            let (from, samples) = chain.render(through, to: cut)
+            outputs.append((from, samples, cut))
+        }
+
+        let last = outputs.map(\.end).max() ?? first
         var out = [Float](repeating: 0, count: max(0, last - first))
         out.withUnsafeMutableBufferPointer { out in
-            for voice in voices {
-                for i in max(0, first - voice.from)..<voice.samples.count {
-                    out[voice.from + i - first] += voice.samples[i]
+            for output in outputs {
+                for i in max(0, first - output.from)..<output.samples.count {
+                    out[output.from + i - first] += output.samples[i]
                 }
             }
         }
