@@ -45,6 +45,8 @@ import Testing
         let matching = hashes.filter { expected[$0.0] == $0.1 }.count
         #if os(Linux)
         print("hashes: \(matching) of \(hashes.count) renders match macOS's")
+        let differing = hashes.filter { expected[$0.0] != $0.1 }.map(\.0)
+        if !differing.isEmpty { print("hashes: these differ from macOS's: \(differing.joined(separator: ", "))") }
         #else
         #expect(hashes.count == expected.count)
         #expect(matching == hashes.count, "\(hashes.count - matching) renders hash differently from hashes.json")

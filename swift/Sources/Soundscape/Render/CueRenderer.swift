@@ -114,25 +114,38 @@ public struct CueRenderer: Sendable {
                 ? LFO(instrument, tables: tables[.sine]!, from: startFrame, startOffset: offset, to: endFrame, knockouts: knockouts)
                 : nil
 
-            // Unison's two oscillators, detuned half its spread each way, or one
+            // Unison's two oscillators, detuned half its spread each way, or one,
+            // summed at the envelope's input and then through it
             let spread = instrument.unisonDetune * (knockouts.contains(.unisonHalfDetune) ? 25 : 50)
             let detunes: [Float] = spread > 0 ? [Float(-spread / 2), Float(spread / 2)] : [0]
-            let oscillators = detunes.map { detune -> [Float] in
-                let table = tables[instrument.waveform]!
-                if let lfo, instrument.lfoTarget == .pitch {
-                    let oscillator = ModulatedOscillator(table, frequency: frequency, detune: detune)
-                    return oscillator.render(from: startFrame, startOffset: offset, to: endFrame, input: lfo.at)
+            let table = tables[instrument.waveform]!
+            var gained: [Float] = []
+            gained.reserveCapacity(max(0, endFrame - sounding))
+            if let lfo, instrument.lfoTarget == .pitch {
+                // On an LFO's detune, each oscillator takes the a-rate path, quantum by quantum
+                let rendered = detunes.map {
+                    ModulatedOscillator(table, frequency: frequency, detune: $0)
+                        .render(from: startFrame, startOffset: offset, to: endFrame, input: lfo.at)
                 }
-                var oscillator = BandLimitedOscillator(table, frequency: frequency, detune: detune, startOffset: offset)
-                return (0..<max(0, endFrame - sounding)).map { _ in oscillator.next() }
-            }
-            // Summed at the envelope's input, then through it
-            var gained = oscillators[0]
-            for other in oscillators.dropFirst() {
-                for i in gained.indices { gained[i] += other[i] }
-            }
-            for i in gained.indices {
-                gained[i] *= envelope.value(at: Double(sounding + i) / rate, start: startTime)
+                for (i, sample) in rendered[0].enumerated() {
+                    let summed = rendered.count > 1 ? sample + rendered[1][i] : sample
+                    gained.append(summed * envelope.value(at: Double(sounding + i) / rate, start: startTime))
+                }
+            } else {
+                // Frame by frame, the envelope in the same pass: its pow overlaps
+                // the oscillators' reads, where a pass of its own made Peach's
+                // renders a sixth slower
+                var first = BandLimitedOscillator(table, frequency: frequency, detune: detunes[0], startOffset: offset)
+                if detunes.count > 1 {
+                    var second = BandLimitedOscillator(table, frequency: frequency, detune: detunes[1], startOffset: offset)
+                    for k in sounding..<max(sounding, endFrame) {
+                        gained.append((first.next() + second.next()) * envelope.value(at: Double(k) / rate, start: startTime))
+                    }
+                } else {
+                    for k in sounding..<max(sounding, endFrame) {
+                        gained.append(first.next() * envelope.value(at: Double(k) / rate, start: startTime))
+                    }
+                }
             }
 
             if instrument.filterType == .none || knockouts.contains(.noFilter) {
@@ -146,9 +159,11 @@ public struct CueRenderer: Sendable {
 
         let last = voices.map(\.end).max() ?? first
         var out = [Float](repeating: 0, count: max(0, last - first))
-        for voice in voices {
-            for (i, sample) in voice.samples.enumerated() where voice.from + i >= first {
-                out[voice.from + i - first] += sample
+        out.withUnsafeMutableBufferPointer { out in
+            for voice in voices {
+                for i in max(0, first - voice.from)..<voice.samples.count {
+                    out[voice.from + i - first] += voice.samples[i]
+                }
             }
         }
         return out
@@ -293,7 +308,7 @@ struct LFO {
         let depth = Float(instrument.lfoDepth * (instrument.lfoTarget == .filter ? 4000 : 100))
         var oscillator = BandLimitedOscillator(tables, frequency: rate, startOffset: startOffset)
         from = startOffset > 0 ? startFrame + 1 : startFrame
-        values = (0..<max(0, endFrame - from)).map { _ in oscillator.next() * depth }
+        values = oscillator.next(endFrame - from).map { $0 * depth }
     }
 
     /// What reaches the param it drives at a frame: 0 before it starts and after it stops.

@@ -183,15 +183,25 @@ struct BandLimitedOscillator {
         }
     }
 
-    mutating func next() -> Float {
-        let mask = size - 1
-        guard increment >= 0.3 else {
-            // Slower than about 3 Hz, as an LFO is: read by DoInterpolation
-            let sample = interpolate(index, increment: abs(increment), higher: higher, lower: lower, blend: blend, mask: mask)
-            index += Double(increment)
-            index -= (index / Double(size)).rounded(.down) * Double(size)
-            return sample
+    /// The next `count` samples. The read is chosen once, not frame by frame,
+    /// which would slow every audible oscillator by a quarter.
+    mutating func next(_ count: Int) -> [Float] {
+        var samples = [Float](repeating: 0, count: max(0, count))
+        if increment >= 0.3 {
+            for i in samples.indices { samples[i] = nextLinearly() }
+        } else {
+            for i in samples.indices { samples[i] = nextSlowly() }
         }
+        return samples
+    }
+
+    mutating func next() -> Float {
+        increment >= 0.3 ? nextLinearly() : nextSlowly()
+    }
+
+    /// At 0.3 of an entry a frame or more, about 3 Hz and up: linear within each table.
+    private mutating func nextLinearly() -> Float {
+        let mask = size - 1
         let whole = Int(index)
         let i0 = whole & mask
         let i1 = (i0 + 1) & mask
@@ -201,6 +211,14 @@ struct BandLimitedOscillator {
         index += Double(increment)
         index -= (index / Double(size)).rounded(.down) * Double(size)
         return h + blend * (l - h)
+    }
+
+    /// Slower than about 3 Hz, as an LFO is: read by DoInterpolation.
+    private mutating func nextSlowly() -> Float {
+        let sample = interpolate(index, increment: abs(increment), higher: higher, lower: lower, blend: blend, mask: size - 1)
+        index += Double(increment)
+        index -= (index / Double(size)).rounded(.down) * Double(size)
+        return sample
     }
 }
 
