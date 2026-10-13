@@ -101,12 +101,10 @@ public final class CuePlayer {
     /// the longest echo a cue can have, the most feedback at a 1 s delay,
     /// renders 158.5 s: 58 MB on a stereo output at 48 kHz.
     ///
-    /// - Throws: `CueDocumentError` for a feature ``CueRenderer`` cannot
-    ///   render yet, refusing the whole document and keeping the one loaded
-    ///   before, as the engine's `loadCues` keeps it when it throws.
+    /// - Throws: the output's error if it cannot be built, keeping the
+    ///   document loaded before, as the engine's `loadCues` keeps it when it
+    ///   throws. Every valid document renders.
     public func load(_ document: CueDocument) async throws {
-        let problems = CueRenderer.unsupported(document)
-        guard problems.isEmpty else { throw CueDocumentError(problems) }
         loads += 1
         let mine = loads
         while true {
@@ -286,7 +284,7 @@ public final class CuePlayer {
                 self.install(next)
                 self.onEvent?(.rebuilt(sampleRate: next.rate, channels: Int(next.outputChannels)))
             } catch {
-                // No output to build on, or a render refused: the next cue tries again
+                // No output to build on, or none at a rate a render can have: the next cue tries again
                 guard mine == self.generation else { return }
                 self.graph = nil
                 self.buffers = [:]

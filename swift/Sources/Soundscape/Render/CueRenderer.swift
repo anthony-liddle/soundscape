@@ -29,14 +29,12 @@ public struct CueRenderer: Sendable {
     /// The rates an `OfflineAudioContext` accepts.
     public static let sampleRates: ClosedRange<Double> = 3000...768_000
 
-    /// Readies a validated document for rendering at `sampleRate`.
+    /// Readies a validated document for rendering at `sampleRate`. Every field
+    /// a valid document can hold renders, so no document is refused.
     ///
-    /// - Throws: ``CueDocumentError`` listing every field this renderer cannot
-    ///   play yet, or ``CueRenderError/sampleRate(_:)``.
+    /// - Throws: ``CueRenderError/sampleRate(_:)``.
     public init(_ document: CueDocument, sampleRate: Double) throws {
         guard Self.sampleRates.contains(sampleRate) else { throw CueRenderError.sampleRate(sampleRate) }
-        let problems = Self.unsupported(document)
-        guard problems.isEmpty else { throw CueDocumentError(problems) }
         self.document = document
         self.sampleRate = sampleRate
         // An LFO is a sine oscillator
@@ -45,16 +43,12 @@ public struct CueRenderer: Sendable {
         tables = Dictionary(uniqueKeysWithValues: waveforms.map { ($0, BandLimitedTables($0, sampleRate: sampleRate)) })
     }
 
-    /// Reads, validates and readies a document in one step: the validator's
-    /// problems if it is invalid, otherwise this renderer's if it is unsupported.
+    /// Reads, validates and readies a document in one step.
+    ///
+    /// - Throws: ``CueDocumentError`` with the validator's problems for an
+    ///   invalid document, or ``CueRenderError/sampleRate(_:)``.
     public init(parsing text: String, sampleRate: Double) throws {
         try self.init(CueDocument(parsing: text), sampleRate: sampleRate)
-    }
-
-    /// Every field this renderer cannot play: none, as it plays every field a
-    /// valid document can hold.
-    public static func unsupported(_ document: CueDocument) -> [CueProblem] {
-        []
     }
 
     /// The frame a render starting at `start` begins on: the frame on or before it.
