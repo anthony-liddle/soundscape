@@ -23,10 +23,16 @@ import Testing
     }
 
     static let refused: [(String, String, String, String)] = [
+        // The smallest number above 0, at the edge where the engine builds its chain
+        ("delayTime", "5e-324", "instruments.square.delayTime", "must be 0: delay is not rendered yet"),
+        ("delayFeedback", "5e-324", "instruments.square.delayFeedback", "must be 0: delay is not rendered yet"),
+        ("delayMix", "5e-324", "instruments.square.delayMix", "must be 0: delay is not rendered yet"),
+        ("distortion", "5e-324", "instruments.square.distortion", "must be 0: distortion is not rendered yet"),
+        // And values that would sound
         ("delayTime", "0.25", "instruments.square.delayTime", "must be 0: delay is not rendered yet"),
         ("delayFeedback", "0.5", "instruments.square.delayFeedback", "must be 0: delay is not rendered yet"),
         ("delayMix", "0.35", "instruments.square.delayMix", "must be 0: delay is not rendered yet"),
-        ("distortion", "5e-324", "instruments.square.distortion", "must be 0: distortion is not rendered yet"),
+        ("distortion", "1", "instruments.square.distortion", "must be 0: distortion is not rendered yet"),
     ]
 
     @Test(arguments: refused)
@@ -51,6 +57,9 @@ import Testing
         ("unisonDetune", "0.0001"),  // and unison
         ("unisonDetune", "1"),
         ("delayTime", "-0"),  // -0 is 0 to the engine's every value === 0
+        ("delayFeedback", "-0"),
+        ("delayMix", "-0"),
+        ("distortion", "-0"),
         ("distortion", "0"),
     ]
 

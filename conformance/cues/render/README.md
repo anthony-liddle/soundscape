@@ -47,7 +47,7 @@ Notes on each row:
   - **From 0:** Firefox reads 0.03 dB louder on the sine cues and 0.10 dB on the triangle cues. At 48 kHz its sine cues were within 0.01 dB.
   - **From 8.0027 s, between frames:** Firefox rounds each note's start up to the next frame, starting it 0.4 of a frame (9 µs) late, where Chromium and WebKit keep the start's fraction, as the spec says to. Its samples are Chromium's shifted by 0.39 to 0.40 of a frame. Its `end` for `found-8-mythic-cute` moves 1.27 ms: that is the last sample within 40 dB of the peak, on a fading glint, where a small change in level moves the crossing.
   - The conditions are kept apart, so neither of these loosens a bar on the frame grid.
-- **Filters at 44.1 kHz** are wide in time, 14.52 ms, from two cues alone, `bandpass-low-q0` and `notch-low-q0`: the last frame each sounds on, `stop`, is 640 frames later in WebKit than in Chromium. At the least resonance a bandpass or notch has a repeated pole, and Chromium's tail time takes a different branch there, by the last bit of its `sin` and `cos`. At 48 kHz the two browsers end every ring on the same frame.
+- **Filters at 44.1 kHz** are wide in time, 14.52 ms, from two cues alone, `bandpass-low-q0` and `notch-low-q0`: the last frame each sounds on, `stop`, is 640 frames later in WebKit than in Chromium. At the least resonance a bandpass or notch has a repeated pole, and Chromium's tail time takes a different branch there, by the last bit of its `sin` and `cos`. At 48 kHz the two browsers end every ring on the same frame. So wide a bar cannot see a ring ended at a level on 8 of the 17 filter cues: see `--knockouts` below.
 - **Modulation at 44.1 kHz from 8.0027 s,** a start between frames, is wide on the pitch LFOs: up to 0.20 dB at an envelope point and 0.04 Hz on a partial. With an LFO on its detune, Chromium's oscillator drops the start's fraction of a frame; WebKit keeps it.
 - **The features** are held to Chromium and WebKit alone (`decisions.md`). They agree to 0 on every number, so each bar is one recording step.
 - **Every feature reference can see its feature.** Each feature knocked out and rendered in Chromium misses its bar against both references. `bar.json` records how:
@@ -62,6 +62,20 @@ Notes on each row:
 `judge.mjs <dir>` measures a set of renders, `<dir>/<set>-<rate>-<start>/<cue>.f32`, and holds each to its condition's bar. It prints one row per cue and one column per rate and start. Each cell is the worst gap to any reference and which reference it was. It exits 1 if any render misses.
 
 `judge.mjs <dir> --controls` checks the positive controls in `<dir>/controls/`: each mistake must miss the bar, and 0.05 dB louder must pass.
+
+`judge.mjs <dir> --knockouts` checks that the bar can see each feature the filters, LFOs and unison bring. The Swift renderer knocks each out in turn and renders every cue whose instrument has it, at both rates and both starts, into `<dir>/knockouts/<knockout>/`. Each render must miss:
+
+| Knockout | Renders | Missed | Nearest miss, in multiples of the bar |
+|---|---|---|---|
+| No filter | 84 | 84 | `notch-high-q1`, 44.1 kHz from 8.0027 s: 0.32 dB, 32 |
+| A lowpass's Q read as a ratio, not in dB | 36 | 36 | `lowpass-high-q1`, 44.1 kHz from 0: a partial 2.74 dB off, 274 |
+| The LFO at twice its rate | 24 | 24 | `lfo-pitch-slow`, 44.1 kHz from 8.0027 s: a partial 7.02 Hz off, 140 |
+| Unison detuned half as far | 12 | 12 | `unison-filter-lfo-decaying`, 44.1 kHz from 8.0027 s: a partial 14.66 dB off, 733 |
+| A ring ended where it falls to 2^-24 of its level, to the sample, not at Chromium's tail time | 84 | 68 | `notch-high-q1`, 44.1 kHz from 0: 18.10 ms, 1.2; at 48 kHz, 2.48 ms, 248 |
+
+The judge prints each knockout's nearest miss.
+
+**The bar cannot see the last one on 16 renders:** 8 of the 17 filter cues at 44.1 kHz, from each start. There the filters' bar allows 14.52 ms in time, the 640 frames WebKit rings past Chromium at a bandpass's or notch's least resonance, and a ring cut at a level lands 0.7 to 8.2 ms from Chromium's end. The judge names these two conditions as blind to that knockout and fails on any other render that passes. `RingEndTests` in the Swift package holds every ring to Chromium's last frame instead.
 
 ## Chromium's Math
 

@@ -32,9 +32,14 @@ struct BiquadCoefficients: Equatable, Sendable {
     /// A filter of `type` at `frequency`, normalized so Nyquist is 1, with the
     /// Q param's value, as the handler sets them: `frequency / nyquist` and Q
     /// both in double, Q in dB for a lowpass or highpass.
-    static func of(_ type: CueInstrument.FilterType, frequency: Double, q: Double) -> BiquadCoefficients {
+    ///
+    /// - Parameter linearLowpassQ: a knockout for the positive controls: a
+    ///   lowpass's Q read as a ratio.
+    static func of(
+        _ type: CueInstrument.FilterType, frequency: Double, q: Double, linearLowpassQ: Bool = false
+    ) -> BiquadCoefficients {
         switch type {
-        case .lowpass: lowpass(frequency, q)
+        case .lowpass: lowpass(frequency, q, linearQ: linearLowpassQ)
         case .highpass: highpass(frequency, q)
         case .bandpass: bandpass(frequency, q)
         case .notch: notch(frequency, q)
@@ -47,11 +52,11 @@ struct BiquadCoefficients: Equatable, Sendable {
         Double(FDLibm.expf(Float(x * 2.302585092994045684017991454684364208)))
     }
 
-    private static func lowpass(_ cutoff: Double, _ resonance: Double) -> BiquadCoefficients {
+    private static func lowpass(_ cutoff: Double, _ resonance: Double, linearQ: Bool) -> BiquadCoefficients {
         let cutoff = min(max(cutoff, 0), 1)
         if cutoff == 1 { return BiquadCoefficients(1, 0, 0, 1, 0, 0) }
         guard cutoff > 0 else { return BiquadCoefficients(0, 0, 0, 1, 0, 0) }
-        let resonance = pow10(resonance / 20)
+        let resonance = linearQ ? resonance : pow10(resonance / 20)
         let theta = Double.pi * cutoff
         let alpha = FDLibm.sin(theta) / (2 * resonance)
         let cosw = FDLibm.cos(theta)

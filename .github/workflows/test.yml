@@ -83,7 +83,7 @@ jobs:
       # Linux renders are held to the bar, not to macOS's hashes: glibc computes
       # sin, cos and pow differently from Darwin. The determinism test in swift
       # test above counts how many match.
-      - name: Render every reference cue, and the positive controls
+      - name: Render every reference cue, the positive controls and the knockouts
         run: CUE_RENDER_OUT=.build/renders swift test --filter ReferenceRenders
 
       - name: Every render within the bar, measured by Peach's measure()
@@ -91,6 +91,9 @@ jobs:
 
       - name: Every positive control misses the bar, and 0.05 dB louder passes
         run: node conformance/cues/render/judge.mjs .build/renders --controls
+
+      - name: Every feature knocked out misses the bar, except where the bar is known not to see it
+        run: node conformance/cues/render/judge.mjs .build/renders --knockouts
 
   # The Swift package on Apple's platforms: every suite on macOS, the player's
   # AVFoundation ones included, then every suite again in the iOS Simulator,

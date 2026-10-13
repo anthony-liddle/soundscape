@@ -22,6 +22,8 @@ public struct CueRenderer: Sendable {
     public let document: CueDocument
     public let sampleRate: Double
     private let tables: [CueInstrument.Waveform: BandLimitedTables]
+    /// Features knocked out on purpose, for the positive controls; none, in use.
+    var knockouts: Knockouts = []
 
     /// The rates an `OfflineAudioContext` accepts.
     public static let sampleRates: ClosedRange<Double> = 3000...768_000
@@ -109,11 +111,11 @@ public struct CueRenderer: Sendable {
             // A start rounded to just before its time sounds from the frame after
             let sounding = offset > 0 ? startFrame + 1 : startFrame
             let lfo = instrument.lfoDepth > 0
-                ? LFO(instrument, tables: tables[.sine]!, from: startFrame, startOffset: offset, to: endFrame)
+                ? LFO(instrument, tables: tables[.sine]!, from: startFrame, startOffset: offset, to: endFrame, knockouts: knockouts)
                 : nil
 
             // Unison's two oscillators, detuned half its spread each way, or one
-            let spread = instrument.unisonDetune * 50
+            let spread = instrument.unisonDetune * (knockouts.contains(.unisonHalfDetune) ? 25 : 50)
             let detunes: [Float] = spread > 0 ? [Float(-spread / 2), Float(spread / 2)] : [0]
             let oscillators = detunes.map { detune -> [Float] in
                 let table = tables[instrument.waveform]!
@@ -133,10 +135,10 @@ public struct CueRenderer: Sendable {
                 gained[i] *= envelope.value(at: Double(sounding + i) / rate, start: startTime)
             }
 
-            if instrument.filterType == .none {
+            if instrument.filterType == .none || knockouts.contains(.noFilter) {
                 voices.append((sounding, gained, endFrame))
             } else {
-                let filter = VoiceFilter(instrument, sampleRate: rate)
+                let filter = VoiceFilter(instrument, sampleRate: rate, knockouts: knockouts)
                 let modulation = instrument.lfoTarget == .filter ? lfo?.at : nil
                 voices.append(filter.render(gained, from: sounding, oscillators: startFrame..<endFrame, modulation: modulation))
             }
@@ -181,8 +183,10 @@ struct VoiceFilter {
     /// The context's rate, a float.
     let rate: Double
     let nyquist: Double
+    let knockouts: Knockouts
 
-    init(_ instrument: CueInstrument, sampleRate: Double) {
+    init(_ instrument: CueInstrument, sampleRate: Double, knockouts: Knockouts = []) {
+        self.knockouts = knockouts
         type = instrument.filterType
         rate = Double(Float(sampleRate))
         nyquist = 0.5 * rate
@@ -194,7 +198,9 @@ struct VoiceFilter {
 
     /// `NormalizeFrequency` and `SetBiquadParams`: a frequency over Nyquist, in double.
     private func coefficients(at frequency: Float) -> BiquadCoefficients {
-        BiquadCoefficients.of(type, frequency: Double(frequency) / nyquist, q: Double(q))
+        BiquadCoefficients.of(
+            type, frequency: Double(frequency) / nyquist, q: Double(q),
+            linearLowpassQ: knockouts.contains(.linearLowpassQ))
     }
 
     /// Seconds, as `BiquadFilterHandler` keeps it: `TailFrame` over the rate, at most 30.
@@ -221,11 +227,14 @@ struct VoiceFilter {
         var input = [Float](repeating: 0, count: quantum)
         var output = [Float](repeating: 0, count: quantum)
         var frequencies = [Float](repeating: 0, count: quantum)
+        // For the knockout that ends a ring at a level: its level when the input stopped
+        let toLevel = knockouts.contains(.ringToLevel)
+        var level: Float = 0
         var q = firstQuantum
         while true {
             let start = q * quantum
             let silent = oscillators.isEmpty || start >= oscillators.upperBound || start + quantum <= oscillators.lowerBound
-            if silent && lastNonSilentTime + tailTime < Double(start) / rate { break }
+            if !toLevel && silent && lastNonSilentTime + tailTime < Double(start) / rate { break }
             for k in 0..<quantum {
                 let i = start + k - sounding
                 input[k] = i >= 0 && i < gained.count ? gained[i] : 0
@@ -250,6 +259,16 @@ struct VoiceFilter {
             samples += output
             if !silent { lastNonSilentTime = Double(start + quantum) / rate }
             q += 1
+            if toLevel {
+                if !silent { level = output.map(abs).max()! }
+                let rungOut = level * 0x1p-24
+                if silent && (output.allSatisfy { abs($0) < rungOut } || Double(start) / rate > lastNonSilentTime + 30) {
+                    // Cut after the last sample still above it, wherever that falls
+                    let last = samples.lastIndex { abs($0) >= rungOut } ?? -1
+                    samples.removeSubrange((last + 1)...)
+                    return (firstQuantum * quantum, samples, firstQuantum * quantum + samples.count)
+                }
+            }
         }
         return (firstQuantum * quantum, samples, q * quantum)
     }
@@ -265,9 +284,12 @@ struct LFO {
     /// The gain's output, a float times a float.
     let values: [Float]
 
-    init(_ instrument: CueInstrument, tables: BandLimitedTables, from startFrame: Int, startOffset: Double, to endFrame: Int) {
+    init(
+        _ instrument: CueInstrument, tables: BandLimitedTables, from startFrame: Int, startOffset: Double, to endFrame: Int,
+        knockouts: Knockouts = []
+    ) {
         // normalizedToLfoRate, normalizedToLfoFilterDepth and normalizedToLfoPitchDepth
-        let rate = Float(0.1 * pow(20 / 0.1, instrument.lfoRate))
+        let rate = Float(0.1 * pow(20 / 0.1, instrument.lfoRate)) * (knockouts.contains(.lfoRateDoubled) ? 2 : 1)
         let depth = Float(instrument.lfoDepth * (instrument.lfoTarget == .filter ? 4000 : 100))
         var oscillator = BandLimitedOscillator(tables, frequency: rate, startOffset: startOffset)
         from = startOffset > 0 ? startFrame + 1 : startFrame
@@ -279,6 +301,25 @@ struct LFO {
         let i = frame - from
         return i >= 0 && i < values.count ? values[i] : 0
     }
+}
+
+/// Each feature filters, LFOs and unison bring, knocked out, for the positive
+/// controls in ReferenceRenders: each must miss the bar, or the bar cannot see
+/// that feature.
+struct Knockouts: OptionSet, Sendable {
+    let rawValue: Int
+    /// Every filter left out of the voice's path, as for `'none'`.
+    static let noFilter = Knockouts(rawValue: 1 << 0)
+    /// A lowpass's Q read as a ratio, where the spec reads it in dB.
+    static let linearLowpassQ = Knockouts(rawValue: 1 << 1)
+    /// The LFO at twice its rate.
+    static let lfoRateDoubled = Knockouts(rawValue: 1 << 2)
+    /// Unison's oscillators detuned half as far.
+    static let unisonHalfDetune = Knockouts(rawValue: 1 << 3)
+    /// A filter's ring ended where it falls to the engine's RUNG_OUT, 2^-24, of
+    /// its level when the input stopped, to the sample, rather than at the
+    /// tail time Chromium and WebKit end it at, on a quantum's edge.
+    static let ringToLevel = Knockouts(rawValue: 1 << 4)
 }
 
 /// Why a cue could not be rendered, once its document was accepted.
