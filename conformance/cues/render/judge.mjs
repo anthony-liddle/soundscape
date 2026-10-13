@@ -6,6 +6,12 @@
 //
 //   node conformance/cues/render/judge.mjs <dir>              <dir>/<set>-<rate>-<start>/<cue>.f32
 //   node conformance/cues/render/judge.mjs <dir> --controls   <dir>/controls/<control>/<cue>.f32
+//   node conformance/cues/render/judge.mjs <dir> --knockouts  <dir>/knockouts/<knockout>/<set>-<rate>-<start>/<cue>.f32
+//   node conformance/cues/render/judge.mjs <dir> --sets peach,features    only these sets
+//
+// A browser a condition records beside its references, Firefox for the filters,
+// LFOs and unison, is measured against too and shown in the cell, for the
+// record; it never fails a render.
 //
 // A render is float32, little-endian, mono, from the frame on or before the
 // cue's start; one shorter than the references' two seconds is read as silent
@@ -14,14 +20,22 @@
 // With --controls, the positive controls: each cue rendered wrong on purpose
 // must miss the bar, and 0.05 dB louder must pass, which places the bar's
 // resolution.
+//
+// With --knockouts, each feature the filters, LFOs and unison bring, knocked
+// out in turn: every cue whose instrument has it, at every rate and start,
+// must miss the bar. Where the bar is known not to see one, it is named and
+// counted, not hidden, and any it does not see elsewhere fails.
 import { existsSync, readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { measure } from '../measure/soundMeasure.ts';
 import { spreadBetween } from '../measure/renderSpread.ts';
-import { SECONDS, STARTS, cueNames, optionsFor, readFixture, readReferences } from './conditions.mjs';
+import { SECONDS, STARTS, cueNames, documentText, optionsFor, readFixture, readReferences } from './conditions.mjs';
 import { breaks, worstGap } from './rule.mjs';
 
-const { values, positionals } = parseArgs({ allowPositionals: true, options: { controls: { type: 'boolean' } } });
+const { values, positionals } = parseArgs({
+  allowPositionals: true,
+  options: { controls: { type: 'boolean' }, knockouts: { type: 'boolean' }, sets: { type: 'string' } },
+});
 const [dir] = positionals;
 if (!dir) throw new Error('usage: judge.mjs <dir> [--controls]');
 
@@ -52,7 +66,13 @@ function judge(path, condition, cue) {
     const gap = worstGap(spread, tolerance);
     if (gap.ratio > worst.ratio) worst = { ...gap, against: name };
   }
-  return { failures, worst };
+  // Beside the references, for the record only
+  const beside = (condition.recordedBeside ?? []).map((name) => {
+    const spread = spreadBetween(referencesFor(set, rate).cues[cue][start][name], m);
+    const broken = breaks(spread, tolerance);
+    return `${name}: ${broken.length ? `would miss, ${broken.join(', ')}` : worstGap(spread, tolerance).text}`;
+  });
+  return { failures, worst, beside };
 }
 
 if (values.controls) {
@@ -84,7 +104,65 @@ if (values.controls) {
   process.exit(wrong ? 1 : 0);
 }
 
-const columns = Object.entries(bar.conditions);
+if (values.knockouts) {
+  // The same cues ReferenceRenders.knockouts picks: those whose instrument has the feature
+  const KNOCKOUTS = {
+    'no-filter': (i) => i.filterType !== 'none',
+    'linear-lowpass-q': (i) => i.filterType === 'lowpass',
+    'lfo-rate-doubled': (i) => i.lfoDepth > 0,
+    'unison-half-detune': (i) => i.unisonDetune > 0,
+    'ring-to-level': (i) => i.filterType !== 'none',
+  };
+  // Where the bar cannot see a knockout. The filters' bar at 44.1 kHz allows
+  // 14.52 ms in time, the 640 frames WebKit rings on past Chromium at a
+  // bandpass's or notch's least resonance; a ring cut at a level lands within
+  // that of Chromium's end on about half the cues. RingEndTests holds every
+  // ring to Chromium's last frame instead.
+  const BLIND = { 'ring-to-level': ['filters-44100-0', 'filters-44100-8.0027'] };
+  let unseen = 0;
+  let blind = 0;
+  for (const [knockout, has] of Object.entries(KNOCKOUTS)) {
+    let missed = 0;
+    let judged = 0;
+    // The miss nearest the bar: the smallest worst gap, in multiples of the bar
+    let closest = null;
+    for (const set of ['filters', 'modulation']) {
+      const document = JSON.parse(documentText(set));
+      const cues = Object.keys(document.cues).filter((cue) =>
+        document.cues[cue].notes.some((note) => has(document.instruments[note.instrument])),
+      );
+      for (const [name, condition] of Object.entries(bar.conditions).filter(([, c]) => c.set === set)) {
+        for (const cue of cues) {
+          const path = `${dir}/knockouts/${knockout}/${name}/${cue}.f32`;
+          if (!existsSync(path)) throw new Error(`missing ${path}`);
+          const { failures, worst } = judge(path, condition, cue);
+          judged++;
+          if (failures.length) {
+            missed++;
+            if (!closest || worst.ratio < closest.ratio) closest = { ...worst, name, cue };
+            console.log(`misses   ${knockout.padEnd(19)} ${name.padEnd(22)} ${cue.padEnd(27)} ${failures[0]}`);
+          } else if (BLIND[knockout]?.includes(name)) {
+            blind++;
+            console.log(`blind    ${knockout.padEnd(19)} ${name.padEnd(22)} ${cue.padEnd(27)} worst ${worst.text} against ${worst.against}`);
+          } else {
+            unseen++;
+            console.log(`UNSEEN   ${knockout.padEnd(19)} ${name.padEnd(22)} ${cue.padEnd(27)} worst ${worst.text} against ${worst.against}`);
+          }
+        }
+      }
+    }
+    const nearest = closest
+      ? `, the nearest ${closest.cue} at ${closest.name}: ${closest.text} against ${closest.against}, ${closest.ratio.toFixed(1)} times the bar`
+      : '';
+    console.log(`${knockout}: ${missed} of ${judged} renders miss the bar${nearest}\n`);
+  }
+  if (blind) console.log(`${blind} knockout renders within the bar where it is known not to see them`);
+  console.log(unseen ? `${unseen} knockout renders the bar should see and does not` : 'every other knockout render misses the bar');
+  process.exit(unseen ? 1 : 0);
+}
+
+const chosen = values.sets?.split(',');
+const columns = Object.entries(bar.conditions).filter(([, c]) => !chosen || chosen.includes(c.set));
 const sets = [...new Set(columns.map(([, c]) => c.set))];
 let misses = 0;
 let cells = 0;
@@ -96,13 +174,14 @@ for (const set of sets) {
     for (const [name, condition] of columns.filter(([, c]) => c.set === set)) {
       const path = `${dir}/${name}/${cue}.f32`;
       if (!existsSync(path)) throw new Error(`missing ${path}`);
-      const { failures, worst } = judge(path, condition, cue);
+      const { failures, worst, beside } = judge(path, condition, cue);
       cells++;
+      const record = beside.length ? ` (${beside.join('; ')})` : '';
       if (failures.length) {
         misses++;
-        row.push(`**MISS** ${failures.join('; ')}`);
+        row.push(`**MISS** ${failures.join('; ')}${record}`);
       } else {
-        row.push(`${worst.text}, ${worst.against}`);
+        row.push(`${worst.text}, ${worst.against}${record}`);
       }
     }
     console.log(`| ${row.join(' | ')} |`);

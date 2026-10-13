@@ -1,0 +1,603 @@
+{
+  "format": "soundscape-cues",
+  "version": 1,
+  "instruments": {
+    "lowpass-low-q0": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "lowpass",
+      "filterCutoff": 0.3,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "lowpass-low-q1": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "lowpass",
+      "filterCutoff": 0.3,
+      "filterResonance": 1,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "lowpass-high-q0": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "lowpass",
+      "filterCutoff": 0.7,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "lowpass-high-q1": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "lowpass",
+      "filterCutoff": 0.7,
+      "filterResonance": 1,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "highpass-low-q0": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "highpass",
+      "filterCutoff": 0.3,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "highpass-low-q1": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "highpass",
+      "filterCutoff": 0.3,
+      "filterResonance": 1,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "highpass-high-q0": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "highpass",
+      "filterCutoff": 0.7,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "highpass-high-q1": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "highpass",
+      "filterCutoff": 0.7,
+      "filterResonance": 1,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "bandpass-low-q0": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "bandpass",
+      "filterCutoff": 0.3,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "bandpass-low-q1": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "bandpass",
+      "filterCutoff": 0.3,
+      "filterResonance": 1,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "bandpass-high-q0": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "bandpass",
+      "filterCutoff": 0.7,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "bandpass-high-q1": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "bandpass",
+      "filterCutoff": 0.7,
+      "filterResonance": 1,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "notch-low-q0": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "notch",
+      "filterCutoff": 0.3,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "notch-low-q1": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "notch",
+      "filterCutoff": 0.3,
+      "filterResonance": 1,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "notch-high-q0": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "notch",
+      "filterCutoff": 0.7,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "notch-high-q1": {
+      "waveform": "sawtooth",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decay": 0.25,
+      "sustain": 0.5,
+      "release": 0.1,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "notch",
+      "filterCutoff": 0.7,
+      "filterResonance": 1,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "ringing": {
+      "waveform": "sine",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "sustain": 0,
+      "release": 0,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "lowpass",
+      "filterCutoff": 0.05,
+      "filterResonance": 1,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0,
+      "decayUntilRelease": true
+    }
+  },
+  "cues": {
+    "lowpass-low-q0": {
+      "notes": [
+        {
+          "id": "lowpass-low-q0",
+          "instrument": "lowpass-low-q0",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "lowpass-low-q1": {
+      "notes": [
+        {
+          "id": "lowpass-low-q1",
+          "instrument": "lowpass-low-q1",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "lowpass-high-q0": {
+      "notes": [
+        {
+          "id": "lowpass-high-q0",
+          "instrument": "lowpass-high-q0",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "lowpass-high-q1": {
+      "notes": [
+        {
+          "id": "lowpass-high-q1",
+          "instrument": "lowpass-high-q1",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "highpass-low-q0": {
+      "notes": [
+        {
+          "id": "highpass-low-q0",
+          "instrument": "highpass-low-q0",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "highpass-low-q1": {
+      "notes": [
+        {
+          "id": "highpass-low-q1",
+          "instrument": "highpass-low-q1",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "highpass-high-q0": {
+      "notes": [
+        {
+          "id": "highpass-high-q0",
+          "instrument": "highpass-high-q0",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "highpass-high-q1": {
+      "notes": [
+        {
+          "id": "highpass-high-q1",
+          "instrument": "highpass-high-q1",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "bandpass-low-q0": {
+      "notes": [
+        {
+          "id": "bandpass-low-q0",
+          "instrument": "bandpass-low-q0",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "bandpass-low-q1": {
+      "notes": [
+        {
+          "id": "bandpass-low-q1",
+          "instrument": "bandpass-low-q1",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "bandpass-high-q0": {
+      "notes": [
+        {
+          "id": "bandpass-high-q0",
+          "instrument": "bandpass-high-q0",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "bandpass-high-q1": {
+      "notes": [
+        {
+          "id": "bandpass-high-q1",
+          "instrument": "bandpass-high-q1",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "notch-low-q0": {
+      "notes": [
+        {
+          "id": "notch-low-q0",
+          "instrument": "notch-low-q0",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "notch-low-q1": {
+      "notes": [
+        {
+          "id": "notch-low-q1",
+          "instrument": "notch-low-q1",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "notch-high-q0": {
+      "notes": [
+        {
+          "id": "notch-high-q0",
+          "instrument": "notch-high-q0",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "notch-high-q1": {
+      "notes": [
+        {
+          "id": "notch-high-q1",
+          "instrument": "notch-high-q1",
+          "start": 0,
+          "duration": 0.6,
+          "pitch": 57,
+          "level": 0.3
+        }
+      ]
+    },
+    "ring": {
+      "notes": [
+        {
+          "id": "ring",
+          "instrument": "ringing",
+          "start": 0,
+          "duration": 0.15,
+          "pitch": 55,
+          "level": 0.4
+        }
+      ]
+    }
+  }
+}

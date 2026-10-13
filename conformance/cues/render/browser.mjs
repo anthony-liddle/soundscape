@@ -1,10 +1,13 @@
 // Renders cues offline in Playwright's Chromium, Firefox and WebKit, through
-// the engine built from this checkout, exactly as a game plays them: one
+// the engine built from this checkout or one published on npm, exactly as a
+// game plays them: one
 // AudioEngine on an OfflineAudioContext, loadCues, then playCue at a start
 // time. Each render is the window of `seconds` that begins at the frame on or
 // before the start, so a start between frames keeps its fraction.
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -28,15 +31,47 @@ export function buildEngine() {
   };
 }
 
+/**
+ * A published engine, fetched from npm's registry, its tarball checked against
+ * the registry's sha512 before it is used. Returns where its bundle is and
+ * what was fetched.
+ */
+export async function npmEngine({ npm: name, version }) {
+  const meta = await (await fetch(`https://registry.npmjs.org/${name}/${version}`)).json();
+  const tarball = Buffer.from(await (await fetch(meta.dist.tarball)).arrayBuffer());
+  const integrity = `sha512-${createHash('sha512').update(tarball).digest('base64')}`;
+  if (integrity !== meta.dist.integrity)
+    throw new Error(`${name}@${version}: the tarball's sha512 is ${integrity}, the registry's ${meta.dist.integrity}`);
+  const dir = mkdtempSync(`${tmpdir()}/soundscape-engine-`);
+  writeFileSync(`${dir}/package.tgz`, tarball);
+  execFileSync('tar', ['-xzf', `${dir}/package.tgz`, '-C', dir]);
+  return {
+    bundle: `${dir}/package/dist/soundscape-engine.js`,
+    info: {
+      name,
+      version,
+      integrity,
+      shasum: meta.dist.shasum,
+      gitHead: meta.gitHead,
+      tarball: meta.dist.tarball,
+      built: "from npm by this script, the tarball's sha512 checked against the registry's",
+    },
+  };
+}
+
 /** The first frame of a render: the frame on or before the start. */
 export const firstFrame = (start, rate) => Math.floor(start * rate);
 
 /**
  * Renders every named cue of a document in one browser, each in a context of
  * its own. Returns the browser's version and each cue's samples.
+ *
+ * `bundle` is the engine to use, the build from this checkout by default. With
+ * `keepVoices`, no voice is ever disconnected: a render that shows whether the
+ * engine's own disposal cut anything.
  */
-export async function renderInBrowser(browserName, documentText, cues, rate, start, seconds) {
-  const engine = readFileSync(`${root}packages/engine/dist/soundscape-engine.js`);
+export async function renderInBrowser(browserName, documentText, cues, rate, start, seconds, { bundle, keepVoices = false } = {}) {
+  const engine = readFileSync(bundle ?? `${root}packages/engine/dist/soundscape-engine.js`);
   const files = {
     '/': ['text/html', '<!doctype html><meta charset="utf-8"><title>render</title>'],
     '/engine.js': ['text/javascript', engine],
@@ -53,8 +88,9 @@ export async function renderInBrowser(browserName, documentText, cues, rate, sta
     const page = await browser.newPage();
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const encoded = await page.evaluate(
-      async ({ cues, rate, start, seconds, from }) => {
-        const { AudioEngine } = await import('/engine.js');
+      async ({ cues, rate, start, seconds, from, keepVoices }) => {
+        const { AudioEngine, VoiceSynthesizer } = await import('/engine.js');
+        if (keepVoices) VoiceSynthesizer.prototype.dispose = () => {};
         const doc = await (await fetch('/cues.json')).json();
         const out = {};
         for (const cue of cues) {
@@ -71,7 +107,7 @@ export async function renderInBrowser(browserName, documentText, cues, rate, sta
         }
         return out;
       },
-      { cues, rate, start, seconds, from: firstFrame(start, rate) },
+      { cues, rate, start, seconds, from: firstFrame(start, rate), keepVoices },
     );
     const samples = {};
     for (const [cue, b64] of Object.entries(encoded)) {

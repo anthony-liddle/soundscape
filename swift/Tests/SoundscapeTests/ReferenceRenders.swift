@@ -3,7 +3,7 @@ import Darwin
 #elseif canImport(Glibc)
 import Glibc
 #endif
-import Soundscape
+@testable import Soundscape
 import Testing
 
 /// Renders every reference cue, at every rate and start the references cover,
@@ -16,6 +16,8 @@ import Testing
     static let sets = [
         ("peach", Corpus.directory + "/cases/peach-of-a-word.json"),
         ("features", Corpus.directory + "/render/features.cues.json"),
+        ("filters", Corpus.directory + "/render/filters.cues.json"),
+        ("modulation", Corpus.directory + "/render/modulation.cues.json"),
     ]
     static let rates: [Double] = [48000, 44100]
     static let starts: [(String, Double)] = [("0", 0), ("8.0027", Double(3001 * 128) / 48000)]
@@ -37,6 +39,42 @@ import Testing
             }
         }
         print("wrote \(written) renders to \(Self.out!)")
+    }
+
+    /// Each feature filters, LFOs and unison bring, knocked out, for judge.mjs
+    /// --knockouts: every cue whose instrument has the feature, at every rate
+    /// and start, each render of which must miss the bar.
+    static let knockouts: [(String, Knockouts, @Sendable (CueInstrument) -> Bool)] = [
+        ("no-filter", .noFilter, { $0.filterType != .none }),
+        ("linear-lowpass-q", .linearLowpassQ, { $0.filterType == .lowpass }),
+        ("lfo-rate-doubled", .lfoRateDoubled, { $0.lfoDepth > 0 }),
+        ("unison-half-detune", .unisonHalfDetune, { $0.unisonDetune > 0 }),
+        ("ring-to-level", .ringToLevel, { $0.filterType != .none }),
+    ]
+
+    @Test(.enabled(if: out != nil, "set CUE_RENDER_OUT to a directory for judge.mjs"))
+    func writesTheKnockouts() throws {
+        var written = 0
+        for (set, path) in Self.sets where set == "filters" || set == "modulation" {
+            for rate in Self.rates {
+                var renderer = try CueRenderer(parsing: Corpus.text(path), sampleRate: rate)
+                for (knockout, switches, has) in Self.knockouts {
+                    renderer.knockouts = switches
+                    let cues = renderer.document.cueNames.filter { name in
+                        renderer.document.cues[name]!.notes.contains { has(renderer.document.instruments[$0.instrument]!) }
+                    }
+                    for (label, start) in Self.starts {
+                        let dir = "\(Self.out!)/knockouts/\(knockout)/\(set)-\(Int(rate))-\(label)"
+                        Files.makeDirectory(dir)
+                        for name in cues {
+                            Files.write(try renderer.render(name, at: start), to: "\(dir)/\(name).f32")
+                            written += 1
+                        }
+                    }
+                }
+            }
+        }
+        print("wrote \(written) knockout renders to \(Self.out!)/knockouts")
     }
 
     /// The positive controls, for judge.mjs --controls: the discovery's three
