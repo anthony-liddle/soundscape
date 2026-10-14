@@ -98,13 +98,65 @@ jobs:
       - name: Every feature knocked out misses the bar, except where the bar is known not to see it
         run: node conformance/cues/render/judge.mjs .build/renders --knockouts
 
+  # Whether a pull request changes anything the apple job builds, tests or
+  # runs, the longest job: Package.swift; swift/, which holds the package's
+  # sources and tests and Cue Check; conformance/cues/, the corpus and
+  # references its tests read; and this workflow, which defines the job, so a
+  # pull request that breaks it is caught before the merge. Nothing else is
+  # read by swift test, xcodebuild or the Cue Check build. On main the job
+  # always runs, and where the diff cannot be read, it runs.
+  changes:
+    runs-on: ubuntu-latest
+
+    outputs:
+      apple: ${{ steps.diff.outputs.apple }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: What the pull request changes that the apple job depends on
+        id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT" != pull_request ]; then
+            echo "Not a pull request: the apple job runs."
+            echo "apple=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! changed=$(git diff --name-only --no-renames "$BASE...$HEAD"); then
+            echo "::warning::The pull request's changes could not be read, so the apple job runs."
+            echo "apple=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          counted=$(printf '%s\n' "$changed" | grep -E '^(Package\.swift$|swift/|conformance/cues/|\.github/workflows/test\.yml$)' || true)
+          if [ -n "$counted" ]; then
+            echo "Changed, which the apple job depends on:"
+            printf '%s\n' "$counted"
+            echo "apple=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Nothing the apple job depends on changed."
+            echo "apple=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # The Swift package on Apple's platforms: every suite on macOS, the player's
   # AVFoundation ones included, then every suite again in the iOS Simulator,
   # where the audio session lives. The runner's default Xcode is a 26, so this
   # is the player before the 27 SDKs: the iOS 17 to 26 interruption
   # notification, and AVFoundation's calls that do not throw. Xcode 27, and
   # iOS 27's notifications, are tested locally until a runner has them.
+  #
+  # Skipped, reported as such, when a pull request changes nothing it depends
+  # on; never by a paths filter, which would leave the workflow's required
+  # checks pending. If changes could not run, this runs.
   apple:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.apple != 'false' }}
     runs-on: macos-26
     timeout-minutes: 30
 
@@ -136,19 +188,52 @@ jobs:
         working-directory: swift/CueCheck.swiftpm
         run: xcodebuild build -scheme "Cue Check" -destination "generic/platform=iOS Simulator"
 
+  # The Playwright the repository resolves, read from the lockfile, for the
+  # browsers' image. One version, or the job fails: the engine and the editor
+  # each depend on Playwright, and one image carries one set of browsers.
+  playwright:
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.lockfile.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: /pnpm-lock.yaml
+          sparse-checkout-cone-mode: false
+
+      - name: The Playwright the lockfile resolves
+        id: lockfile
+        run: |
+          versions=$(sed -nE 's/^  playwright@([^:(]+):$/\1/p' pnpm-lock.yaml | sort -u)
+          if [ "$(printf '%s\n' "$versions" | grep -c .)" != 1 ]; then
+            echo "::error::pnpm-lock.yaml should resolve one Playwright, and resolves: $(echo ${versions:-none})"
+            exit 1
+          fi
+          echo "The repository resolves Playwright $versions."
+          echo "version=$versions" >> "$GITHUB_OUTPUT"
+
   # The committed cues held to the oracle in real browsers, each rendering
   # both offline, and the editor's Cues view driven in each. One job per
   # browser, in Playwright's own image, which carries every browser and the
   # system libraries they run on, so nothing is installed: no apt, whose
   # mirror once held a job for half an hour (#119).
   browsers:
+    needs: playwright
+    # Even if the lockfile's Playwright could not be read: then the image
+    # cannot be found and the job fails, where a skipped job would pass as a
+    # required check
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     container:
-      # The exact Playwright the repository resolves: the check below fails the
-      # job if the two ever differ. As the image's own user, which owns HOME, as
-      # Firefox needs; with the host's IPC, as Chromium's shared memory needs.
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      # The exact Playwright the repository resolves, so a Playwright update
+      # needs no other edit; the check below still fails the job if the two
+      # ever differ. As the image's own user, which owns HOME, as Firefox
+      # needs; with the host's IPC, as Chromium's shared memory needs.
+      image: mcr.microsoft.com/playwright:v${{ needs.playwright.outputs.version }}-noble
       options: --user 1001 --ipc=host
 
     strategy:
@@ -172,10 +257,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # The image's browsers are the ones its own Playwright drives. If the
-      # repository's Playwright moves on, as a dependency update can, the image
-      # must move with it, or the tests run against browsers they were not
-      # built for.
+      # The image's browsers are the ones its own Playwright drives, and the
+      # tests must run against the browsers they were built for. The image is
+      # chosen from the lockfile, and this holds it to what pnpm installed.
       - name: The image's Playwright is the repository's
         run: |
           image=$(node -p "JSON.parse(require('node:fs').readFileSync('/ms-playwright/.docker-info', 'utf8')).driverVersion")
@@ -183,7 +267,7 @@ jobs:
           editor=$(pnpm --filter editor exec playwright --version | awk '{print $2}')
           echo "The image's Playwright: $image. The engine's: $engine. The editor's: $editor."
           if [ "$image" != "$engine" ] || [ "$image" != "$editor" ]; then
-            echo "::error::The Playwright image is $image, but the repository resolves $engine (engine) and $editor (editor). Move the image in test.yml to v$engine."
+            echo "::error::The Playwright image is $image, but the repository resolves $engine (engine) and $editor (editor)."
             exit 1
           fi
 
