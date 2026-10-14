@@ -1,16 +1,20 @@
 # Cue Check
 
-The smallest app for hearing Soundscape's Swift cue player on an iPhone. It plays Peach of a Word's 34 cues through `CuePlayer`. It is for testing only: it is never submitted and never shipped.
+The smallest app for hearing Soundscape's Swift cue player on an iPhone. It plays Peach of a Word's 34 cues through `CuePlayer`, and every feature cue the renderer is held to: filters, LFOs, unison, delay and distortion. It is for testing only: it is never submitted and never shipped.
 
 It is an app playground, a Swift package Xcode opens as an app. That needs nothing installed but Xcode: no project to generate, and no project file to keep. It depends on this repository's Soundscape package by its path, so it always plays the library as it is in your clone.
 
 ## What It Shows
 
 - **Output.** *Now* is the output's sample rate, channel count and route, as the audio session reports them, read twice a second. *Player* is the rate the player read from the output and renders at, and the output's channels.
-- **Type a word fast.** Five ticks at 20 presses a second, the fastest bursts of the fastest typists, then the found cue for a five-letter word, as Peach plays them. *Cues asked for* counts every cue the app has asked for.
+- **Document.** *Peach's cues*, the default, or *Every feature*, the 55 cues of `examples/cues/every-feature.cues.json`. Choosing one loads it, rendering every cue.
+  - *Rendered in* is how long that load took.
+  - *Rendered cues hold* is the memory the player keeps their renders in: every frame of every cue, in every channel of the output, four bytes each.
+  - *App memory* is the app's whole footprint, as the system counts it against its limit, read twice a second.
+- **Type a word fast.** Five ticks at 20 presses a second, the fastest bursts of the fastest typists, then the found cue for a five-letter word, as Peach plays them, with Peach's cues loaded. *Cues asked for* counts every cue the app has asked for.
 - **Volume and Mute,** the player's `setCueVolume` and `cuesMuted`.
 - **The log, newest first.** Lines starting `player:` are what the player did: interruptions, output changes and rebuilds, a media services reset, going inactive, and the engine starting again. Lines starting `route:` and `app:` are the system's route changes and the app's own phase, shown beside them.
-- **Peach's cues.** A tap plays one.
+- **The cues** of the loaded document. A tap plays one.
 
 ## Run It On Your iPhone
 
@@ -33,7 +37,8 @@ An app signed with a free team stops opening after seven days. Run it from Xcode
 
 ## How It Stays Honest
 
-- **The cue file is a copy.** An app's resources must sit inside it, so `peach-of-a-word.json` is a copy of `conformance/cues/cases/peach-of-a-word.json`. `CueCheckTests` in the package's tests fails if the two ever differ by a byte.
+- **The cue files are copies.** An app's resources must sit inside it, so `peach-of-a-word.json` is a copy of `conformance/cues/cases/peach-of-a-word.json`, and `every-feature.cues.json` of `examples/cues/every-feature.cues.json`. `CueCheckTests` in the package's tests fails if either copy differs by a byte.
+- **The feature document is the references'.** `examples/cues/every-feature.cues.json` is the six reference sets' documents merged, every instrument and cue as its set has it; `CueCheckTests` holds it to them, and `conformance/cues/render/every-feature.mjs` writes it. The web page `examples/cues.html` plays the same file, so Safari on the same phone can be heard beside the app.
 - **CI builds it.** The `apple` job builds the app for the iOS Simulator on every push, so it cannot quietly stop compiling against the library.
 
 ## Antoine's Check
@@ -62,3 +67,21 @@ The phone check before any Swift release. Do these in order, on the phone, with 
 8. **The fast button never drops a cue.** Press *Type a word fast*, then press it again and again, as fast as you can.
    - *Hear:* every time, five quick ticks then the chime, with none missing and none cut short.
    - *See:* *Cues asked for* rises by 6 with each press.
+
+From `0.2.0`, the cue file can hold filters, LFOs, unison, delay and distortion, and these steps check them.
+
+9. **Every feature loads.** Under *Document*, choose *Every feature*, and wait for it to load.
+   - *See:* the 55 cues listed, and the log says `loaded Every feature, 55 cues`, with how long it took and what it holds. *Rendered in*, *Rendered cues hold* and *App memory* show the same, and the memory is the most this app has used.
+   - On a Mac, for scale: the load takes about 0.13 s, the renders hold 157.4 MiB on a stereo output at 48 kHz, 144.7 MiB at 44.1 kHz, and the app's footprint rises from about 19 MiB to about 300 MiB.
+10. **Each feature sounds the same here as in Safari.** On the same phone, open [the cue page](https://anthony-liddle.github.io/soundscape/examples/cues.html?document=every-feature) in Safari; it lists the same 55 cues. Play each cue below in Safari, then in Cue Check, through the same speaker, with nothing else changed.
+    - **Filters:** `lowpass-high-q1`, `notch-low-q1` and `ring`.
+    - **LFOs:** `lfo-pitch-fast` and `lfo-filter-slow`.
+    - **Unison:** `unison` and `unison-filter-lfo-decaying`.
+    - **Delay:** `middle-half-full`, `long-most-low` and `under-a-quantum`.
+    - **Distortion:** `sine-full`, `square-full`, `into-delay` and `voice-through-both`.
+    - *Hear:* each the same in both: its pitch and its tone, how the filter or the LFO moves it, every echo in the same place and fading the same way, and the same grit. Safari is WebKit, one of the two browsers the renders are held to.
+11. **The longest echo plays to its end.** In Cue Check, play `longest`, with the app in front.
+    - *Hear:* a short blip, then an echo of it every second, each a little quieter than the last, fading away until you can no longer hear it. The render runs 158.5 s, to the engine's own deadline, far past hearing; none of what you can hear is cut off.
+    - Tap a few other cues while it rings: they play over it.
+12. **What it costs on your phone.** Note down, with *Every feature* loaded: *Rendered in*, *Rendered cues hold*, *App memory*, and *Player*'s rate and channels. Then choose *Peach's cues* again, and note the same three.
+    - *See:* *Rendered cues hold* falls to Peach's few MiB. On a Mac, *App memory* falls to about 143 MiB and stays there, the same after every switch: the memory the feature renders used is kept, and the next load reuses it.

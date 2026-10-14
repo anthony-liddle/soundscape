@@ -9,7 +9,7 @@ struct CueCheckApp: App {
     }
 }
 
-/// One screen: the output, the controls, the log, and Peach's cues.
+/// One screen: the output, the document, the controls, the log, and the cues.
 struct ContentView: View {
     @State private var model = Model()
     @Environment(\.scenePhase) private var phase
@@ -22,10 +22,25 @@ struct ContentView: View {
                     LabeledContent("Player", value: model.rendering)
                 }
 
+                Section("Document") {
+                    Picker("Document", selection: Binding(
+                        get: { model.document },
+                        set: { next in Task { await model.load(next) } }
+                    )) {
+                        ForEach(Model.Document.allCases) { Text($0.rawValue).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    .disabled(model.loading)
+                    LabeledContent("Rendered in", value: model.loading ? "loading" : model.loadText)
+                    LabeledContent("Rendered cues hold", value: model.loading ? "loading" : model.heldText)
+                    LabeledContent("App memory", value: model.footprintText)
+                }
+
                 Section("Controls") {
                     Button("Type a word fast") {
                         Task { await model.typeFast() }
                     }
+                    .disabled(model.document != .peach)
                     LabeledContent("Cues asked for", value: "\(model.asked)")
                     LabeledContent("Volume") {
                         Slider(value: Binding(get: { model.volume }, set: { model.setVolume($0) }), in: 0...1)
@@ -48,7 +63,7 @@ struct ContentView: View {
                     }
                 }
 
-                Section("Peach's cues") {
+                Section(model.document.rawValue) {
                     if let problem = model.problem {
                         Text(problem).foregroundStyle(.red)
                     }
