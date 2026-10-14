@@ -4,6 +4,10 @@ The Swift package's changelog, for its bare semver tags. The npm engine's is in 
 
 ## Unreleased
 
+## 0.2.0 - 2026-10-14
+
+0.2.0 renders every feature a cue document can hold. The check on an iPhone in `swift/CueCheck.swiftpm/README.md`, which now plays every feature, passed on Antoine's iPhone on 2026-10-14. In a Release build, on a stereo output at 48 kHz, loading the 55 feature cues took 0.26 s, which covers reading the document and copying the renders into the player's buffers as well as rendering them. Their renders held 157.4 MiB, and the app used 178.9 MiB. With Peach of a Word's cues loaded again, they held 4.3 MiB, and the app 22.7 MiB.
+
 ### Added
 
 - **Filters,** every `filterType`: lowpass, highpass, bandpass and notch. They follow Chromium's biquad: the spec's coefficients, with Q in dB for a lowpass or highpass, worked out in double from Chromium's own copy of fdlibm, ported so they come out the same on every platform; its precision; and its ring, which ends at the tail time Chromium and WebKit give the filter, on a render quantum's edge.
@@ -14,6 +18,8 @@ The Swift package's changelog, for its bare semver tags. The npm engine's is in 
 - **Effects chains,** one for each instrument with any effect, shared by its notes, as the engine builds them. A render through one runs until the engine would disconnect it, by the engine's own 2^-24 rule: the longest, an echo at the most feedback and a 1 s delay, is 158.5 s.
 
 Each is held to Chromium and WebKit within the bar in `conformance/cues/render`, against references made with `soundscape-engine` 0.4.1.
+
+- **Cue Check plays every feature,** from `examples/cues/every-feature.cues.json`, every reference document merged, beside Peach of a Word's cues. It shows how long a load takes and how much memory the renders hold. The editor's cue page, `apps/editor/examples/cues.html`, plays the same document in a browser, for Safari on the same phone.
 
 ### Changed
 
