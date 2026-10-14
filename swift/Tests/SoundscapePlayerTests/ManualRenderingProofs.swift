@@ -1,5 +1,6 @@
 #if canImport(AVFoundation)
 import AVFoundation
+import Soundscape
 @testable import SoundscapePlayer
 import Testing
 
@@ -111,6 +112,30 @@ import Testing
         var expected = [Float](repeating: 0, count: 120000)
         lay(edition, into: &expected, at: 4800)
         #expect(firstDifference(head + tail, expected) == nil)
+    }
+
+    /// A cue through an effects chain, distortion into a delay with feedback,
+    /// plays as it renders, every echo to the engine's deadline: the player
+    /// holds each cue's render whole, however long its echoes ring.
+    @Test func aCueThroughAnEffectsChainComesOutAsItsRender() async throws {
+        let text = #"""
+            {"format": "soundscape-cues", "version": 1, "instruments": {"grit": {"waveform": "sine", "pitchOffset": 0,
+              "attack": 0.07418053232275866, "decay": 0.25, "sustain": 0.5, "release": 0.1, "envelopeCurve": "exponential",
+              "envelopeFloor": 0.000018, "filterType": "none", "filterCutoff": 1, "filterResonance": 0, "delayTime": 0.2,
+              "delayFeedback": 0.5, "delayMix": 0.4, "distortion": 0.5, "reverbMix": 0, "lfoRate": 0, "lfoDepth": 0,
+              "lfoTarget": "pitch", "unisonDetune": 0, "velocityResponse": 0}},
+             "cues": {"echo": {"notes": [{"id": "echo", "instrument": "grit", "start": 0, "duration": 0.15, "pitch": 57, "level": 0.8}]}}}
+            """#
+        let output = CuePlayer.ManualOutput(sampleRate: 48000, channels: 1)
+        let player = CuePlayer(output: .manual(output))
+        try await player.load(parsing: text)
+        let echo = try CueRenderer(parsing: text, sampleRate: 48000).render("echo")
+        // 4.5 s of echoes, rung out at the engine's 2^-24
+        #expect(echo.count == 214_993)
+        try player.play("echo", at: 0.1)
+        var expected = [Float](repeating: 0, count: 4800 + echo.count + 4800)
+        lay(echo, into: &expected, at: 4800)
+        #expect(firstDifference(try player.renderOffline(expected.count)[0], expected) == nil)
     }
 }
 #endif

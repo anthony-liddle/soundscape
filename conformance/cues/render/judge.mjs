@@ -21,8 +21,8 @@
 // must miss the bar, and 0.05 dB louder must pass, which places the bar's
 // resolution.
 //
-// With --knockouts, each feature the filters, LFOs and unison bring, knocked
-// out in turn: every cue whose instrument has it, at every rate and start,
+// With --knockouts, each feature the filters, LFOs, unison, the delay and
+// distortion bring, knocked out in turn: every cue whose instrument has it, at every rate and start,
 // must miss the bar. Where the bar is known not to see one, it is named and
 // counted, not hidden, and any it does not see elsewhere fails.
 import { existsSync, readFileSync } from 'node:fs';
@@ -105,13 +105,20 @@ if (values.controls) {
 }
 
 if (values.knockouts) {
-  // The same cues ReferenceRenders.knockouts picks: those whose instrument has the feature
+  // The same sets and cues ReferenceRenders.knockouts picks: those whose instrument has the feature
+  const FILTERS = ['filters', 'modulation'];
+  const EFFECTS = ['delay', 'echo', 'distortion'];
   const KNOCKOUTS = {
-    'no-filter': (i) => i.filterType !== 'none',
-    'linear-lowpass-q': (i) => i.filterType === 'lowpass',
-    'lfo-rate-doubled': (i) => i.lfoDepth > 0,
-    'unison-half-detune': (i) => i.unisonDetune > 0,
-    'ring-to-level': (i) => i.filterType !== 'none',
+    'no-filter': [FILTERS, (i) => i.filterType !== 'none'],
+    'linear-lowpass-q': [FILTERS, (i) => i.filterType === 'lowpass'],
+    'lfo-rate-doubled': [FILTERS, (i) => i.lfoDepth > 0],
+    'unison-half-detune': [FILTERS, (i) => i.unisonDetune > 0],
+    'ring-to-level': [FILTERS, (i) => i.filterType !== 'none'],
+    'no-extra-quantum': [EFFECTS, (i) => i.delayFeedback > 0 && i.delayMix > 0],
+    'no-oversampling': [['distortion'], (i) => i.distortion > 0],
+    'oversampling-without-delay': [['distortion'], (i) => i.distortion > 0],
+    'distortion-k-doubled': [['distortion'], (i) => i.distortion > 0],
+    'mix-on-wet-only': [EFFECTS, (i) => i.delayMix > 0],
   };
   // Where the bar cannot see a knockout. The filters' bar at 44.1 kHz allows
   // 14.52 ms in time, the 640 frames WebKit rings on past Chromium at a
@@ -121,12 +128,12 @@ if (values.knockouts) {
   const BLIND = { 'ring-to-level': ['filters-44100-0', 'filters-44100-8.0027'] };
   let unseen = 0;
   let blind = 0;
-  for (const [knockout, has] of Object.entries(KNOCKOUTS)) {
+  for (const [knockout, [sets, has]] of Object.entries(KNOCKOUTS)) {
     let missed = 0;
     let judged = 0;
     // The miss nearest the bar: the smallest worst gap, in multiples of the bar
     let closest = null;
-    for (const set of ['filters', 'modulation']) {
+    for (const set of sets) {
       const document = JSON.parse(documentText(set));
       const cues = Object.keys(document.cues).filter((cue) =>
         document.cues[cue].notes.some((note) => has(document.instruments[note.instrument])),
@@ -140,13 +147,13 @@ if (values.knockouts) {
           if (failures.length) {
             missed++;
             if (!closest || worst.ratio < closest.ratio) closest = { ...worst, name, cue };
-            console.log(`misses   ${knockout.padEnd(19)} ${name.padEnd(22)} ${cue.padEnd(27)} ${failures[0]}`);
+            console.log(`misses   ${knockout.padEnd(26)} ${name.padEnd(22)} ${cue.padEnd(27)} ${failures[0]}`);
           } else if (BLIND[knockout]?.includes(name)) {
             blind++;
-            console.log(`blind    ${knockout.padEnd(19)} ${name.padEnd(22)} ${cue.padEnd(27)} worst ${worst.text} against ${worst.against}`);
+            console.log(`blind    ${knockout.padEnd(26)} ${name.padEnd(22)} ${cue.padEnd(27)} worst ${worst.text} against ${worst.against}`);
           } else {
             unseen++;
-            console.log(`UNSEEN   ${knockout.padEnd(19)} ${name.padEnd(22)} ${cue.padEnd(27)} worst ${worst.text} against ${worst.against}`);
+            console.log(`UNSEEN   ${knockout.padEnd(26)} ${name.padEnd(22)} ${cue.padEnd(27)} worst ${worst.text} against ${worst.against}`);
           }
         }
       }

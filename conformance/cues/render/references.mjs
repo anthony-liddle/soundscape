@@ -85,12 +85,16 @@ for (const rate of RATES) {
     const cues = cueNames(set);
     const measured = Object.fromEntries(cues.map((cue) => [cue, {}]));
     const lastSound = Object.fromEntries(cues.map((cue) => [cue, {}]));
+    const untilTheChainGoes = Boolean(SETS[set].untilTheChainGoes);
+    const cuts = Object.fromEntries(cues.map((cue) => [cue, {}]));
     const versions = {};
     for (const [label, start] of Object.entries(STARTS)) {
       for (const browser of browsers) {
-        const render = (options) => renderInBrowser(browser, documentText(set), cues, rate, start, SECONDS, { bundle, ...options });
-        const { version, samples } = await render();
+        const render = (options) =>
+          renderInBrowser(browser, documentText(set), cues, rate, start, SECONDS, { bundle, untilTheChainGoes, ...options });
+        const { version, samples, cutFrames } = await render();
         versions[browser] = version;
+        if (untilTheChainGoes) for (const cue of cues) (cuts[cue][label] ??= {})[browser] = cutFrames[cue];
         if (checked) {
           const again = (await render()).samples;
           const kept = (await render({ keepVoices: true })).samples;
@@ -128,6 +132,20 @@ for (const rate of RATES) {
           'Every render here came out the same twice, and the same again with no voice ever disconnected, so neither a race nor the engine cutting a voice short is in it.',
         lastSound: 'The frame each render last sounds on, from the frame on or before its start, by cue, start and browser.',
         lastSoundFrames: lastSound,
+      });
+    }
+    if (untilTheChainGoes) {
+      // Each browser works out the deadline with its own JavaScript math library
+      for (const cue of cues) {
+        for (const [label, byBrowser] of Object.entries(cuts[cue])) {
+          const frames = new Set(Object.values(byBrowser));
+          if (frames.size > 1) console.log(`NOTE: ${set} ${cue} at ${rate} Hz from ${label} s is cut at different frames: ${JSON.stringify(byBrowser)}`);
+        }
+      }
+      Object.assign(head, {
+        until:
+          "Each cue renders until the engine would disconnect its effects chain, by the engine's own 2^-24 rule: the chain's ringsUntil, on the frame it rounds up to, read from the engine in each browser. Each render is silent from that frame on, and runs at least the seconds above.",
+        cutFrames: cuts,
       });
     }
     writeLines(referencePath(set, rate), head, measured);

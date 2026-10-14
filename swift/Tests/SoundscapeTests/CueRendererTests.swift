@@ -3,7 +3,7 @@ import Testing
 
 /// The renderer's own behaviour. Whether it sounds right is judge.mjs's to
 /// say, against the browsers; these pin where samples start and stop, and what
-/// it refuses.
+/// it refuses: a name it lacks, a rate no context could have.
 @Suite struct CueRendererTests {
     static let peach = Corpus.caseText("peach-of-a-word")
 
@@ -53,14 +53,6 @@ import Testing
         #expect(throws: CueDocumentError([CueProblem(path: "", message: "must be a JSON object")])) {
             try CueRenderer(parsing: "[]", sampleRate: 48000)
         }
-    }
-
-    @Test func refusesTheWholeDocumentForAFeatureItCannotRender() throws {
-        let delayed = Self.peach.replacing(#""delayMix": 0,"#, with: #""delayMix": 0.2,"#)
-        #expect(throws: CueDocumentError.self) { try CueRenderer(parsing: delayed, sampleRate: 48000) }
-        let problems = CueRenderer.unsupported(try CueDocument(parsing: delayed))
-        #expect(problems.map(\.path) == ["instruments.sine.delayMix", "instruments.square.delayMix", "instruments.triangle.delayMix"])
-        #expect(problems.first?.message == "must be 0: delay is not rendered yet")
     }
 
     @Test func rendersTheSameSamplesTwice() throws {

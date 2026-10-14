@@ -67,7 +67,8 @@ A `@MainActor` class, mirroring the engine's cue methods:
 
 **Loading.**
 - `load` renders every cue when the document loads, off the main thread, at the output's sample rate, and renders them again if that rate changes.
-- It refuses a document the library cannot render with `CueDocumentError`, keeping the document loaded before.
+- Every valid document loads. `load(parsing:)` throws the validator's `CueDocumentError` for an invalid one, keeping the document loaded before.
+- Each cue's render is held whole, in every channel of the output, for as long as its document is loaded: four bytes a frame a channel. A cue through a delay rings until the engine would disconnect its effects chain, so an echo can be long: the longest a cue can have, the most feedback at a 1 s delay, is 158.5 s, 58 MiB on a stereo output at 48 kHz.
 - Cues still ringing from the previous document play out.
 
 **Playing.**
@@ -101,25 +102,23 @@ The JSON reader is the library's own, with `JSON.parse`'s rules, not Foundation'
 ### Rendering: `CueRenderer`, In `Soundscape`
 
 - `CueRenderer(_:sampleRate:)` and `CueRenderer(parsing:sampleRate:)` take any rate in `CueRenderer.sampleRates`, 3 to 768 kHz.
-- `render(_:at:)` returns a cue's samples, mono, from its start through its last note's stop, or the end of its filter's ring. It keeps a start's fraction of a frame, as Chromium and WebKit do, but for a note whose LFO is on its pitch, where it drops the fraction, as Chromium does.
+- `render(_:at:)` returns a cue's samples, mono, from its start through its last note's stop, or the end of its filter's ring, or the frame before the engine would disconnect an effects chain the cue plays through, whichever is later. It keeps a start's fraction of a frame, as Chromium and WebKit do, but for a note whose LFO is on its pitch, where it drops the fraction, as Chromium does.
 
-## What It Plays, And What It Refuses
+## What It Plays
 
-**It plays cue format version 1:**
+**It plays cue format version 1, every field a valid document can hold:**
 - every waveform: sine, square, sawtooth and triangle;
 - every envelope shape: linear or exponential curves, a fixed decay, or `decayUntilRelease`;
 - the pitch offset;
 - every filter, lowpass, highpass, bandpass and notch, at any cutoff and resonance, with Chromium's coefficients and precision. A filter rings on after its notes stop until the tail time Chromium and WebKit give it, ending on a render quantum's edge;
 - the LFO, on the filter's cutoff or on the oscillators' pitch, at any rate and depth;
-- unison, a second oscillator, each detuned half the spread away.
+- unison, a second oscillator, each detuned half the spread away;
+- the delay, at any time, feedback and mix, with Chromium's delay line: each frame read between two, its place worked out in float as Chromium does on arm64, and a render quantum more than the delay time for every pass round a feedback loop, as Chromium and WebKit take;
+- distortion, the engine's curve, oversampled 2x with Chromium's resamplers, 128 frames late as theirs are.
+
+An instrument with any effect plays its notes through one effects chain, as the engine builds it, and a render through one runs until the engine would disconnect it, by the engine's own 2^-24 rule.
 
 A note's level is its peak, and velocity plays no part, as in the engine. Reverb is not part of the cue format; the engine refuses it too.
-
-**It refuses, with the whole document and a problem at each path:**
-- delay, any of `delayTime`, `delayFeedback` or `delayMix` not 0;
-- distortion, a `distortion` not 0.
-
-A cue played without its delay or distortion would sound wrong and say nothing, so it fails at load, where it can be explained.
 
 ## Platforms
 
@@ -131,7 +130,7 @@ A cue played without its delay or distortion would sound wrong and say nothing, 
 
 The package is MIT licensed: see `LICENSE`.
 
-Its band-limited oscillator and its filter, in `swift/Sources/Soundscape/Render/`, follow the design of Chromium's, and the math functions the filter calls port Chromium's copy of fdlibm. So Chromium's BSD notices apply to those parts: its own, and the two its biquad files carry. fdlibm's notice applies too. All are in `LICENSE-CHROMIUM`.
+Its band-limited oscillator, its filter, its delay and its waveshaper with its resamplers, in `swift/Sources/Soundscape/Render/`, follow the design of Chromium's, and the math functions they call port Chromium's copy of fdlibm. So Chromium's BSD notices apply to those parts: its own, the two its biquad and delay files carry, and the ones its resamplers and its direct convolver carry. fdlibm's notice applies too. All are in `LICENSE-CHROMIUM`.
 
 **An app that ships Soundscape must carry those notices as well as the MIT licence,** for example on its acknowledgements screen.
 

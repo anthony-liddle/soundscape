@@ -1,0 +1,65 @@
+{
+  "about": "What measure() reads from each browser's offline render of each cue, at 44100 Hz, started at each time in starts.",
+  "engine": {
+    "name": "soundscape-engine",
+    "version": "0.4.1",
+    "integrity": "sha512-ylI7EACHs7T46KXspZiP0X/FCN9F/wRDOMM+V42gaqK2RD1GmiO3Zp/BBwbMkt4EtA5AG7qOBjGVjRUNaAkfBw==",
+    "shasum": "21aef62f5338fbeaab69f94c47737f56a4529c34",
+    "gitHead": "77e914551750462b8a35c5b4a975e9020895474b",
+    "tarball": "https://registry.npmjs.org/soundscape-engine/-/soundscape-engine-0.4.1.tgz",
+    "built": "from npm by this script, the tarball's sha512 checked against the registry's"
+  },
+  "playwright": "1.63.0",
+  "browsers": {
+    "chromium": "153.0.8010.12",
+    "webkit": "26.6",
+    "firefox": "155.0"
+  },
+  "rate": 44100,
+  "seconds": 2,
+  "starts": {
+    "0": 0,
+    "8.0027": 8.002666666666666
+  },
+  "heldTo": [
+    "chromium",
+    "webkit"
+  ],
+  "recordedOnly": [
+    "firefox"
+  ],
+  "checks": "Every render here came out the same twice, and the same again with no voice ever disconnected, so neither a race nor the engine cutting a voice short is in it.",
+  "lastSound": "The frame each render last sounds on, from the frame on or before its start, by cue, start and browser.",
+  "lastSoundFrames": {
+    "longest": {
+      "0": {
+        "chromium": 6990100,
+        "webkit": 6990100,
+        "firefox": 6970004
+      },
+      "8.0027": {
+        "chromium": 6990101,
+        "webkit": 6990101,
+        "firefox": 6970005
+      }
+    }
+  },
+  "until": "Each cue renders until the engine would disconnect its effects chain, by the engine's own 2^-24 rule: the chain's ringsUntil, on the frame it rounds up to, read from the engine in each browser. Each render is silent from that frame on, and runs at least the seconds above.",
+  "cutFrames": {
+    "longest": {
+      "0": {
+        "chromium": 6990515,
+        "webkit": 6990515,
+        "firefox": 6990515
+      },
+      "8.0027": {
+        "chromium": 6990516,
+        "webkit": 6990516,
+        "firefox": 6990516
+      }
+    }
+  },
+  "cues": {
+    "longest": {"0":{"chromium":{"onset":0.00671,"end":44.13698,"duration":44.13027,"stop":158.50569,"peakDbfs":-16.83,"rmsDbfs":-55.83,"fundamentalHz":395,"envelopeDbfs":[-33.14,-16.83,-33.53,-100.92,null,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":-36.57,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":44.13698,"duration":44.13027,"stop":158.50569,"peakDbfs":-16.83,"rmsDbfs":-55.83,"fundamentalHz":395,"envelopeDbfs":[-33.14,-16.83,-33.53,-100.92,null,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":-36.57,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":44.01218,"duration":44.00546,"stop":158.05,"peakDbfs":-16.85,"rmsDbfs":-55.82,"fundamentalHz":394.99,"envelopeDbfs":[-33.12,-16.85,-33.55,-100.92,null,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":-36.58,"partials":[{"hz":391.54,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}},"8.0027":{"chromium":{"onset":0.00671,"end":44.13698,"duration":44.13027,"stop":158.50571,"peakDbfs":-16.82,"rmsDbfs":-55.83,"fundamentalHz":395,"envelopeDbfs":[-33.14,-16.82,-33.19,-100.92,null,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":-36.55,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":44.13698,"duration":44.13027,"stop":158.50571,"peakDbfs":-16.82,"rmsDbfs":-55.83,"fundamentalHz":395,"envelopeDbfs":[-33.14,-16.82,-33.19,-100.92,null,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":-36.55,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00673,"end":44.0122,"duration":44.00546,"stop":158.05002,"peakDbfs":-16.85,"rmsDbfs":-55.82,"fundamentalHz":394.99,"envelopeDbfs":[-33.12,-16.85,-32.98,-100.92,null,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":-36.54,"partials":[{"hz":391.54,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}}}
+  }
+}
