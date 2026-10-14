@@ -24,50 +24,65 @@ enum SHA256 {
 
     /// Whole blocks straight from the bytes, then the last part padded, with
     /// no copy: a render can be tens of megabytes, hashed in a debug build.
+    /// Raw pointers and rotations written out, as a debug build turns neither
+    /// into a call.
     private static func hex(_ bytes: UnsafeRawBufferPointer) -> String {
         var h: (UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32, UInt32) =
             (0x6a09_e667, 0xbb67_ae85, 0x3c6e_f372, 0xa54f_f53a, 0x510e_527f, 0x9b05_688c, 0x1f83_d9ab, 0x5be0_cd19)
-        var w = [UInt32](repeating: 0, count: 64)
-        k.withUnsafeBufferPointer { k in
-            w.withUnsafeMutableBufferPointer { w in
-                func rotate(_ x: UInt32, _ n: UInt32) -> UInt32 { (x >> n) | (x << (32 - n)) }
-                func compress(_ block: UnsafeRawBufferPointer) {
-                    for t in 0..<16 {
-                        let i = t * 4
-                        w[t] = UInt32(block[i]) << 24 | UInt32(block[i + 1]) << 16 | UInt32(block[i + 2]) << 8 | UInt32(block[i + 3])
-                    }
-                    for t in 16..<64 {
-                        let s0 = rotate(w[t - 15], 7) ^ rotate(w[t - 15], 18) ^ (w[t - 15] >> 3)
-                        let s1 = rotate(w[t - 2], 17) ^ rotate(w[t - 2], 19) ^ (w[t - 2] >> 10)
-                        w[t] = w[t - 16] &+ s0 &+ w[t - 7] &+ s1
-                    }
-                    var (a, b, c, d, e, f, g, hh) = h
-                    for t in 0..<64 {
-                        let s1 = rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25)
-                        let choose = (e & f) ^ (~e & g)
-                        let t1 = hh &+ s1 &+ choose &+ k[t] &+ w[t]
-                        let s0 = rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22)
-                        let majority = (a & b) ^ (a & c) ^ (b & c)
-                        let t2 = s0 &+ majority
-                        (hh, g, f, e, d, c, b, a) = (g, f, e, d &+ t1, c, b, a, t1 &+ t2)
-                    }
-                    h = (h.0 &+ a, h.1 &+ b, h.2 &+ c, h.3 &+ d, h.4 &+ e, h.5 &+ f, h.6 &+ g, h.7 &+ hh)
+        let w = UnsafeMutablePointer<UInt32>.allocate(capacity: 64)
+        defer { w.deallocate() }
+        k.withUnsafeBufferPointer { kb in
+            let k = kb.baseAddress!
+            func compress(_ block: UnsafePointer<UInt8>) {
+                var t = 0
+                while t < 16 {
+                    let i = t &* 4
+                    w[t] = UInt32(block[i]) << 24 | UInt32(block[i &+ 1]) << 16 | UInt32(block[i &+ 2]) << 8 | UInt32(block[i &+ 3])
+                    t &+= 1
                 }
-                let whole = bytes.count / 64 * 64
-                for block in stride(from: 0, to: whole, by: 64) {
-                    compress(UnsafeRawBufferPointer(rebasing: bytes[block..<block + 64]))
+                while t < 64 {
+                    let x = w[t &- 15], y = w[t &- 2]
+                    let s0 = (x >> 7 | x << 25) ^ (x >> 18 | x << 14) ^ (x >> 3)
+                    let s1 = (y >> 17 | y << 15) ^ (y >> 19 | y << 13) ^ (y >> 10)
+                    w[t] = w[t &- 16] &+ s0 &+ w[t &- 7] &+ s1
+                    t &+= 1
                 }
-                // The rest, a 1 bit, zeros, and the length in bits, in one block or two
-                var last = Array(bytes[whole...])
-                last.append(0x80)
-                while last.count % 64 != 56 { last.append(0) }
-                let bits = UInt64(bytes.count) * 8
-                for shift in stride(from: 56, through: 0, by: -8) { last.append(UInt8(truncatingIfNeeded: bits >> UInt64(shift))) }
-                last.withUnsafeBytes { last in
-                    for block in stride(from: 0, to: last.count, by: 64) {
-                        compress(UnsafeRawBufferPointer(rebasing: last[block..<block + 64]))
-                    }
+                var (a, b, c, d, e, f, g, hh) = h
+                t = 0
+                while t < 64 {
+                    let s1 = (e >> 6 | e << 26) ^ (e >> 11 | e << 21) ^ (e >> 25 | e << 7)
+                    let choose = (e & f) ^ (~e & g)
+                    let t1 = hh &+ s1 &+ choose &+ k[t] &+ w[t]
+                    let s0 = (a >> 2 | a << 30) ^ (a >> 13 | a << 19) ^ (a >> 22 | a << 10)
+                    let majority = (a & b) ^ (a & c) ^ (b & c)
+                    hh = g
+                    g = f
+                    f = e
+                    e = d &+ t1
+                    d = c
+                    c = b
+                    b = a
+                    a = t1 &+ s0 &+ majority
+                    t &+= 1
                 }
+                h = (h.0 &+ a, h.1 &+ b, h.2 &+ c, h.3 &+ d, h.4 &+ e, h.5 &+ f, h.6 &+ g, h.7 &+ hh)
+            }
+            let whole = bytes.count / 64 * 64
+            if let base = bytes.baseAddress?.assumingMemoryBound(to: UInt8.self) {
+                var block = 0
+                while block < whole {
+                    compress(base + block)
+                    block &+= 64
+                }
+            }
+            // The rest, a 1 bit, zeros, and the length in bits, in one block or two
+            var last = Array(bytes[whole...])
+            last.append(0x80)
+            while last.count % 64 != 56 { last.append(0) }
+            let bits = UInt64(bytes.count) * 8
+            for shift in stride(from: 56, through: 0, by: -8) { last.append(UInt8(truncatingIfNeeded: bits >> UInt64(shift))) }
+            last.withUnsafeBufferPointer { last in
+                for block in stride(from: 0, to: last.count, by: 64) { compress(last.baseAddress! + block) }
             }
         }
         let digits = Array("0123456789abcdef")

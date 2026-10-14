@@ -30,14 +30,25 @@ struct DirectConvolver {
     mutating func process(_ source: UnsafeBufferPointer<Float>, into destination: UnsafeMutableBufferPointer<Float>) {
         let history = kernel.count - 1
         let size = kernel.count
-        buffer.withUnsafeMutableBufferPointer { buffer in
+        buffer.withUnsafeMutableBufferPointer { bufferFrames in
+            let buffer = bufferFrames.baseAddress!
             for i in 0..<blockSize { buffer[history + i] = source[i] }
-            kernel.withUnsafeBufferPointer { kernel in
-                // vDSP_conv with the filter read backwards: sum of A[n + p] F[P - 1 - p]
-                for n in 0..<blockSize {
+            kernel.withUnsafeBufferPointer { taps in
+                // vDSP_conv with the filter read backwards: sum of A[n + p] F[P - 1 - p].
+                // Raw pointers, as a debug build makes calls of buffer subscripts.
+                let reversed = taps.baseAddress! + (size - 1)
+                let output = destination.baseAddress!
+                var n = 0
+                while n < blockSize {
+                    let window = buffer + n
                     var sum = 0.0
-                    for p in 0..<size { sum += Double(buffer[n + p]) * Double(kernel[size - 1 - p]) }
-                    destination[n] = Float(sum)
+                    var p = 0
+                    while p < size {
+                        sum += Double(window[p]) * Double(reversed[-p])
+                        p &+= 1
+                    }
+                    output[n] = Float(sum)
+                    n &+= 1
                 }
             }
             for i in 0..<history { buffer[i] = buffer[blockSize + i] }

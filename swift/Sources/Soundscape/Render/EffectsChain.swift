@@ -142,12 +142,21 @@ struct WaveShaper {
     static func shape(_ samples: UnsafeMutableBufferPointer<Float>, _ curve: UnsafeBufferPointer<Float>) {
         let last = curve.count - 1
         let scale = Float(0.5 * Double(last))
-        for k in samples.indices {
-            let index = max(min((samples[k] + 1) * scale, Float(last)), 0)
-            let i1 = min(max(Int(index), 0), last)
-            let i2 = min(max(i1 + 1, 0), last)
+        let lastF = Float(last)
+        let points = curve.baseAddress!
+        let frames = samples.baseAddress!
+        var k = 0
+        while k < samples.count {
+            var index = (frames[k] + 1) * scale
+            if !(index <= lastF) { index = lastF }
+            if !(index >= 0) { index = 0 }
+            var i1 = Int(index)
+            if i1 > last { i1 = last }
+            if i1 < 0 { i1 = 0 }
+            let i2 = i1 < last ? i1 &+ 1 : last
             let f = index - Float(i1)
-            samples[k] = f * (curve[i2] - curve[i1]) + curve[i1]
+            frames[k] = f * (points[i2] - points[i1]) + points[i1]
+            k &+= 1
         }
     }
 
@@ -190,22 +199,44 @@ struct DelayLine {
         let length = buffer.count
         let lengthF = Float(length)
         let offset = lengthF - delayFrames
+        let count = input.count
         let start = writeIndex
-        buffer.withUnsafeMutableBufferPointer { buffer in
-            for k in 0..<input.count { buffer[(start + k) % length] = input[k] }
-            for k in 0..<input.count {
-                var position = Float((start + k) % length) + offset
-                if position >= lengthF { position -= lengthF }
-                var r1 = Int(position)
-                if r1 >= length { r1 -= length }
-                var r2 = r1 + 1
-                if r2 >= length { r2 -= length }
-                let f = position - Float(r1)
-                let s1 = buffer[r1]
-                output[k] = s1 + f * (buffer[r2] - s1)
+        // Raw pointers and a wrapped index, not buffer subscripts and a
+        // remainder, which a debug build makes calls of at every frame
+        buffer.withUnsafeMutableBufferPointer { bufferFrames in
+            input.withUnsafeBufferPointer { inputFrames in
+                output.withUnsafeMutableBufferPointer { outputFrames in
+                    let buffer = bufferFrames.baseAddress!
+                    let input = inputFrames.baseAddress!
+                    let output = outputFrames.baseAddress!
+                    var w = start
+                    var k = 0
+                    while k < count {
+                        buffer[w] = input[k]
+                        w &+= 1
+                        if w == length { w = 0 }
+                        k &+= 1
+                    }
+                    w = start
+                    k = 0
+                    while k < count {
+                        var position = Float(w) + offset
+                        if position >= lengthF { position -= lengthF }
+                        var r1 = Int(position)
+                        if r1 >= length { r1 -= length }
+                        var r2 = r1 &+ 1
+                        if r2 >= length { r2 -= length }
+                        let f = position - Float(r1)
+                        let s1 = buffer[r1]
+                        output[k] = s1 + f * (buffer[r2] - s1)
+                        w &+= 1
+                        if w == length { w = 0 }
+                        k &+= 1
+                    }
+                }
             }
         }
-        writeIndex = (start + input.count) % length
+        writeIndex = (start + count) % length
     }
 
     /// For the knockout that leaves out the quantum every pass round the loop
@@ -304,11 +335,25 @@ struct CueEffectsChain {
             // The chain's input: every voice sounding in this quantum, summed
             let inputSilent = q >= idle && !voices.contains { $0.quanta.contains(q) }
             guard !(inputSilent && shaperLastSound + shaper.latency + shaper.tail < time(q)) else { return false }
-            for k in 0..<quantum { shaped[k] = 0 }
-            for voice in voices where voice.quanta.contains(q) {
-                for k in 0..<quantum {
-                    let i = q * quantum + k - voice.from
-                    if i >= 0 && i < voice.samples.count { shaped[k] += voice.samples[i] }
+            shaped.withUnsafeMutableBufferPointer { shapedFrames in
+                let input = shapedFrames.baseAddress!
+                var k = 0
+                while k < quantum {
+                    input[k] = 0
+                    k &+= 1
+                }
+                for voice in voices where voice.quanta.contains(q) {
+                    voice.samples.withUnsafeBufferPointer { voiceFrames in
+                        // The frames of this quantum the voice has samples for
+                        let offset = q * quantum - voice.from
+                        var k = max(0, -offset)
+                        let end = min(quantum, voiceFrames.count - offset)
+                        guard k < end, let samples = voiceFrames.baseAddress else { return }
+                        while k < end {
+                            input[k] += samples[offset + k]
+                            k &+= 1
+                        }
+                    }
                 }
             }
             shaper.process(&shaped)
@@ -333,9 +378,20 @@ struct CueEffectsChain {
                 line.process(delayInput, feedingBack: feedbackGain, into: &delayed)
                 delayedSilent = false
             } else if !(delayInputSilent && delayLastSound + 2.0 < time(q)) {
-                for k in 0..<quantum {
-                    let fed: Float = feedbackSilent ? 0 : delayed[k] * feedbackGain
-                    delayInput[k] = shaperRuns ? (feedbackSilent ? shaped[k] : shaped[k] + fed) : fed
+                shaped.withUnsafeBufferPointer { shapedFrames in
+                    delayed.withUnsafeBufferPointer { delayedFrames in
+                        delayInput.withUnsafeMutableBufferPointer { inputFrames in
+                            let shaped = shapedFrames.baseAddress!
+                            let delayed = delayedFrames.baseAddress!
+                            let input = inputFrames.baseAddress!
+                            var k = 0
+                            while k < quantum {
+                                let fed: Float = feedbackSilent ? 0 : delayed[k] * feedbackGain
+                                input[k] = shaperRuns ? (feedbackSilent ? shaped[k] : shaped[k] + fed) : fed
+                                k &+= 1
+                            }
+                        }
+                    }
                 }
                 line.process(delayInput, into: &delayed)
                 delayedSilent = false
@@ -348,14 +404,36 @@ struct CueEffectsChain {
             guard q >= first else { continue }
             let dry = shaperRuns && (!silencesAtZero(q) || dryGain != 0)
             let wet = !delayedSilent && (!silencesAtZero(q) || wetGain != 0)
-            for k in 0..<min(quantum, cut - q * quantum) {
-                let value: Float = switch (dry, wet) {
-                case (true, true): shaped[k] * dryGain + delayed[k] * wetGain
-                case (true, false): shaped[k] * dryGain
-                case (false, true): delayed[k] * wetGain
-                case (false, false): 0
+            let frames = min(quantum, cut - q * quantum)
+            let at = q * quantum - first * quantum
+            samples.withUnsafeMutableBufferPointer { outputFrames in
+                shaped.withUnsafeBufferPointer { shapedFrames in
+                    delayed.withUnsafeBufferPointer { delayedFrames in
+                        let output = outputFrames.baseAddress! + at
+                        let shaped = shapedFrames.baseAddress!
+                        let delayed = delayedFrames.baseAddress!
+                        var k = 0
+                        switch (dry, wet) {
+                        case (true, true):
+                            while k < frames {
+                                output[k] = shaped[k] * dryGain + delayed[k] * wetGain
+                                k &+= 1
+                            }
+                        case (true, false):
+                            while k < frames {
+                                output[k] = shaped[k] * dryGain
+                                k &+= 1
+                            }
+                        case (false, true):
+                            while k < frames {
+                                output[k] = delayed[k] * wetGain
+                                k &+= 1
+                            }
+                        case (false, false):
+                            break
+                        }
+                    }
                 }
-                samples[q * quantum + k - first * quantum] = value
             }
         }
         return (first * quantum, samples)
