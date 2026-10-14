@@ -1,0 +1,515 @@
+{
+  "about": "What measure() reads from each browser's offline render of each cue, at 48000 Hz, started at each time in starts.",
+  "engine": {
+    "name": "soundscape-engine",
+    "version": "0.4.1",
+    "integrity": "sha512-ylI7EACHs7T46KXspZiP0X/FCN9F/wRDOMM+V42gaqK2RD1GmiO3Zp/BBwbMkt4EtA5AG7qOBjGVjRUNaAkfBw==",
+    "shasum": "21aef62f5338fbeaab69f94c47737f56a4529c34",
+    "gitHead": "77e914551750462b8a35c5b4a975e9020895474b",
+    "tarball": "https://registry.npmjs.org/soundscape-engine/-/soundscape-engine-0.4.1.tgz",
+    "built": "from npm by this script, the tarball's sha512 checked against the registry's"
+  },
+  "playwright": "1.63.0",
+  "browsers": {
+    "chromium": "153.0.8010.12",
+    "webkit": "26.6",
+    "firefox": "155.0"
+  },
+  "rate": 48000,
+  "seconds": 2,
+  "starts": {
+    "0": 0,
+    "8.0027": 8.002666666666666
+  },
+  "heldTo": [
+    "chromium",
+    "webkit"
+  ],
+  "recordedOnly": [
+    "firefox"
+  ],
+  "checks": "Every render here came out the same twice, and the same again with no voice ever disconnected, so neither a race nor the engine cutting a voice short is in it.",
+  "lastSound": "The frame each render last sounds on, from the frame on or before its start, by cue, start and browser.",
+  "lastSoundFrames": {
+    "short-none-low": {
+      "0": {
+        "chromium": 4799,
+        "webkit": 4800,
+        "firefox": 4799
+      },
+      "8.0027": {
+        "chromium": 4799,
+        "webkit": 4800,
+        "firefox": 4799
+      }
+    },
+    "short-none-full": {
+      "0": {
+        "chromium": 4799,
+        "webkit": 4800,
+        "firefox": 4799
+      },
+      "8.0027": {
+        "chromium": 4799,
+        "webkit": 4800,
+        "firefox": 4799
+      }
+    },
+    "short-half-low": {
+      "0": {
+        "chromium": 55636,
+        "webkit": 55636,
+        "firefox": 55636
+      },
+      "8.0027": {
+        "chromium": 55636,
+        "webkit": 55636,
+        "firefox": 55636
+      }
+    },
+    "short-half-full": {
+      "0": {
+        "chromium": 55636,
+        "webkit": 55636,
+        "firefox": 55636
+      },
+      "8.0027": {
+        "chromium": 55636,
+        "webkit": 55636,
+        "firefox": 55636
+      }
+    },
+    "short-most-low": {
+      "0": {
+        "chromium": 402109,
+        "webkit": 402109,
+        "firefox": 402109
+      },
+      "8.0027": {
+        "chromium": 402109,
+        "webkit": 402109,
+        "firefox": 402109
+      }
+    },
+    "short-most-full": {
+      "0": {
+        "chromium": 402109,
+        "webkit": 402109,
+        "firefox": 402109
+      },
+      "8.0027": {
+        "chromium": 402109,
+        "webkit": 402109,
+        "firefox": 402109
+      }
+    },
+    "middle-none-low": {
+      "0": {
+        "chromium": 11999,
+        "webkit": 12000,
+        "firefox": 11999
+      },
+      "8.0027": {
+        "chromium": 11999,
+        "webkit": 12000,
+        "firefox": 11999
+      }
+    },
+    "middle-none-full": {
+      "0": {
+        "chromium": 11999,
+        "webkit": 12000,
+        "firefox": 11999
+      },
+      "8.0027": {
+        "chromium": 11999,
+        "webkit": 12000,
+        "firefox": 11999
+      }
+    },
+    "middle-half-low": {
+      "0": {
+        "chromium": 206559,
+        "webkit": 206568,
+        "firefox": 203999
+      },
+      "8.0027": {
+        "chromium": 206559,
+        "webkit": 206568,
+        "firefox": 203999
+      }
+    },
+    "middle-half-full": {
+      "0": {
+        "chromium": 206559,
+        "webkit": 206568,
+        "firefox": 203999
+      },
+      "8.0027": {
+        "chromium": 206559,
+        "webkit": 206568,
+        "firefox": 203999
+      }
+    },
+    "middle-most-low": {
+      "0": {
+        "chromium": 1539295,
+        "webkit": 1539308,
+        "firefox": 1538399
+      },
+      "8.0027": {
+        "chromium": 1539295,
+        "webkit": 1539308,
+        "firefox": 1538399
+      }
+    },
+    "middle-most-full": {
+      "0": {
+        "chromium": 1539295,
+        "webkit": 1539308,
+        "firefox": 1538399
+      },
+      "8.0027": {
+        "chromium": 1539295,
+        "webkit": 1539308,
+        "firefox": 1538399
+      }
+    },
+    "long-none-low": {
+      "0": {
+        "chromium": 21599,
+        "webkit": 21600,
+        "firefox": 21599
+      },
+      "8.0027": {
+        "chromium": 21599,
+        "webkit": 21600,
+        "firefox": 21599
+      }
+    },
+    "long-none-full": {
+      "0": {
+        "chromium": 21599,
+        "webkit": 21600,
+        "firefox": 21599
+      },
+      "8.0027": {
+        "chromium": 21599,
+        "webkit": 21600,
+        "firefox": 21599
+      }
+    },
+    "long-half-low": {
+      "0": {
+        "chromium": 408159,
+        "webkit": 408169,
+        "firefox": 405599
+      },
+      "8.0027": {
+        "chromium": 408159,
+        "webkit": 408169,
+        "firefox": 405599
+      }
+    },
+    "long-half-full": {
+      "0": {
+        "chromium": 408159,
+        "webkit": 408169,
+        "firefox": 405599
+      },
+      "8.0027": {
+        "chromium": 408159,
+        "webkit": 408169,
+        "firefox": 405599
+      }
+    },
+    "long-most-low": {
+      "0": {
+        "chromium": 3056095,
+        "webkit": 3056109,
+        "firefox": 3055199
+      },
+      "8.0027": {
+        "chromium": 3056095,
+        "webkit": 3056109,
+        "firefox": 3055199
+      }
+    },
+    "long-most-full": {
+      "0": {
+        "chromium": 3056095,
+        "webkit": 3056109,
+        "firefox": 3055199
+      },
+      "8.0027": {
+        "chromium": 3056095,
+        "webkit": 3056109,
+        "firefox": 3055199
+      }
+    },
+    "under-a-quantum": {
+      "0": {
+        "chromium": 43133,
+        "webkit": 43133,
+        "firefox": 43133
+      },
+      "8.0027": {
+        "chromium": 43133,
+        "webkit": 43133,
+        "firefox": 43133
+      }
+    }
+  },
+  "until": "Each cue renders until the engine would disconnect its effects chain, by the engine's own 2^-24 rule: the chain's ringsUntil, on the frame it rounds up to, read from the engine in each browser. Each render is silent from that frame on, and runs at least the seconds above.",
+  "cutFrames": {
+    "short-none-low": {
+      "0": {
+        "chromium": 5057,
+        "webkit": 5057,
+        "firefox": 5057
+      },
+      "8.0027": {
+        "chromium": 5057,
+        "webkit": 5057,
+        "firefox": 5057
+      }
+    },
+    "short-none-full": {
+      "0": {
+        "chromium": 5057,
+        "webkit": 5057,
+        "firefox": 5057
+      },
+      "8.0027": {
+        "chromium": 5057,
+        "webkit": 5057,
+        "firefox": 5057
+      }
+    },
+    "short-half-low": {
+      "0": {
+        "chromium": 55637,
+        "webkit": 55637,
+        "firefox": 55637
+      },
+      "8.0027": {
+        "chromium": 55637,
+        "webkit": 55637,
+        "firefox": 55637
+      }
+    },
+    "short-half-full": {
+      "0": {
+        "chromium": 55637,
+        "webkit": 55637,
+        "firefox": 55637
+      },
+      "8.0027": {
+        "chromium": 55637,
+        "webkit": 55637,
+        "firefox": 55637
+      }
+    },
+    "short-most-low": {
+      "0": {
+        "chromium": 402110,
+        "webkit": 402110,
+        "firefox": 402110
+      },
+      "8.0027": {
+        "chromium": 402110,
+        "webkit": 402110,
+        "firefox": 402110
+      }
+    },
+    "short-most-full": {
+      "0": {
+        "chromium": 402110,
+        "webkit": 402110,
+        "firefox": 402110
+      },
+      "8.0027": {
+        "chromium": 402110,
+        "webkit": 402110,
+        "firefox": 402110
+      }
+    },
+    "middle-none-low": {
+      "0": {
+        "chromium": 12257,
+        "webkit": 12257,
+        "firefox": 12257
+      },
+      "8.0027": {
+        "chromium": 12257,
+        "webkit": 12257,
+        "firefox": 12257
+      }
+    },
+    "middle-none-full": {
+      "0": {
+        "chromium": 12257,
+        "webkit": 12257,
+        "firefox": 12257
+      },
+      "8.0027": {
+        "chromium": 12257,
+        "webkit": 12257,
+        "firefox": 12257
+      }
+    },
+    "middle-half-low": {
+      "0": {
+        "chromium": 206837,
+        "webkit": 206837,
+        "firefox": 206837
+      },
+      "8.0027": {
+        "chromium": 206837,
+        "webkit": 206837,
+        "firefox": 206837
+      }
+    },
+    "middle-half-full": {
+      "0": {
+        "chromium": 206837,
+        "webkit": 206837,
+        "firefox": 206837
+      },
+      "8.0027": {
+        "chromium": 206837,
+        "webkit": 206837,
+        "firefox": 206837
+      }
+    },
+    "middle-most-low": {
+      "0": {
+        "chromium": 1539710,
+        "webkit": 1539710,
+        "firefox": 1539710
+      },
+      "8.0027": {
+        "chromium": 1539710,
+        "webkit": 1539710,
+        "firefox": 1539710
+      }
+    },
+    "middle-most-full": {
+      "0": {
+        "chromium": 1539710,
+        "webkit": 1539710,
+        "firefox": 1539710
+      },
+      "8.0027": {
+        "chromium": 1539710,
+        "webkit": 1539710,
+        "firefox": 1539710
+      }
+    },
+    "long-none-low": {
+      "0": {
+        "chromium": 21857,
+        "webkit": 21857,
+        "firefox": 21857
+      },
+      "8.0027": {
+        "chromium": 21857,
+        "webkit": 21857,
+        "firefox": 21857
+      }
+    },
+    "long-none-full": {
+      "0": {
+        "chromium": 21857,
+        "webkit": 21857,
+        "firefox": 21857
+      },
+      "8.0027": {
+        "chromium": 21857,
+        "webkit": 21857,
+        "firefox": 21857
+      }
+    },
+    "long-half-low": {
+      "0": {
+        "chromium": 408437,
+        "webkit": 408437,
+        "firefox": 408437
+      },
+      "8.0027": {
+        "chromium": 408437,
+        "webkit": 408437,
+        "firefox": 408437
+      }
+    },
+    "long-half-full": {
+      "0": {
+        "chromium": 408437,
+        "webkit": 408437,
+        "firefox": 408437
+      },
+      "8.0027": {
+        "chromium": 408437,
+        "webkit": 408437,
+        "firefox": 408437
+      }
+    },
+    "long-most-low": {
+      "0": {
+        "chromium": 3056510,
+        "webkit": 3056510,
+        "firefox": 3056510
+      },
+      "8.0027": {
+        "chromium": 3056510,
+        "webkit": 3056510,
+        "firefox": 3056510
+      }
+    },
+    "long-most-full": {
+      "0": {
+        "chromium": 3056510,
+        "webkit": 3056510,
+        "firefox": 3056510
+      },
+      "8.0027": {
+        "chromium": 3056510,
+        "webkit": 3056510,
+        "firefox": 3056510
+      }
+    },
+    "under-a-quantum": {
+      "0": {
+        "chromium": 43134,
+        "webkit": 43134,
+        "firefox": 43134
+      },
+      "8.0027": {
+        "chromium": 43134,
+        "webkit": 43134,
+        "firefox": 43134
+      }
+    }
+  },
+  "cues": {
+    "short-none-low": {"0":{"chromium":{"onset":0.00671,"end":0.0675,"duration":0.06079,"stop":0.1,"peakDbfs":-12.74,"rmsDbfs":-30.85,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-108.87,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":0.0675,"duration":0.06079,"stop":0.10002,"peakDbfs":-12.74,"rmsDbfs":-30.85,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-108.87,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":0.0675,"duration":0.06079,"stop":0.1,"peakDbfs":-12.74,"rmsDbfs":-30.85,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-108.87,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}},"8.0027":{"chromium":{"onset":0.00671,"end":0.0675,"duration":0.06079,"stop":0.1,"peakDbfs":-12.74,"rmsDbfs":-30.85,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-108.87,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":0.0675,"duration":0.06079,"stop":0.10002,"peakDbfs":-12.74,"rmsDbfs":-30.85,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-108.87,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":0.0675,"duration":0.06079,"stop":0.1,"peakDbfs":-12.74,"rmsDbfs":-30.85,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-108.87,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}}},
+    "short-none-full": {"0":{"chromium":{"onset":0.05671,"end":0.07006,"duration":0.01335,"stop":0.1,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,-63.02,-94.89,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.05671,"end":0.07006,"duration":0.01335,"stop":0.10002,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,-63.02,-94.89,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.05671,"end":0.07006,"duration":0.01335,"stop":0.1,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,-63.02,-94.89,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}},"8.0027":{"chromium":{"onset":0.05671,"end":0.07006,"duration":0.01335,"stop":0.1,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,-63.02,-94.89,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.05671,"end":0.07006,"duration":0.01335,"stop":0.10002,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,-63.02,-94.89,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.05671,"end":0.07006,"duration":0.01335,"stop":0.1,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,-63.02,-94.89,null,null,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}}},
+    "short-half-low": {"0":{"chromium":{"onset":0.00671,"end":0.27277,"duration":0.26606,"stop":1.1591,"peakDbfs":-12.74,"rmsDbfs":-37.19,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-101.89,-122.75,-148.44,-121.88,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-48.2,"partials":[{"hz":391.71,"db":0}]},{"t":0.155,"dbfs":-72.45,"partials":[{"hz":393.62,"db":0}]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":0.27277,"duration":0.26606,"stop":1.1591,"peakDbfs":-12.74,"rmsDbfs":-37.19,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-101.89,-122.75,-148.44,-121.88,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-48.2,"partials":[{"hz":391.71,"db":0}]},{"t":0.155,"dbfs":-72.45,"partials":[{"hz":393.62,"db":0}]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":0.2621,"duration":0.2554,"stop":1.1591,"peakDbfs":-12.74,"rmsDbfs":-37.02,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-83.94,-97.81,-125.55,-181.04,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-45.84,"partials":[{"hz":391.57,"db":0}]},{"t":0.155,"dbfs":-58.64,"partials":[{"hz":391.93,"db":0}]},{"t":0.3,"dbfs":-92.13,"partials":[{"hz":393.51,"db":0}]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}},"8.0027":{"chromium":{"onset":0.00671,"end":0.27277,"duration":0.26606,"stop":1.1591,"peakDbfs":-12.74,"rmsDbfs":-37.19,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-101.89,-122.75,-148.44,-121.88,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-48.2,"partials":[{"hz":391.71,"db":0}]},{"t":0.155,"dbfs":-72.45,"partials":[{"hz":393.62,"db":0}]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":0.27277,"duration":0.26606,"stop":1.1591,"peakDbfs":-12.74,"rmsDbfs":-37.19,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-101.89,-122.75,-148.44,-121.88,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-48.2,"partials":[{"hz":391.71,"db":0}]},{"t":0.155,"dbfs":-72.45,"partials":[{"hz":393.62,"db":0}]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":0.2621,"duration":0.2554,"stop":1.1591,"peakDbfs":-12.74,"rmsDbfs":-37.02,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-83.94,-97.81,-125.55,-181.04,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-45.84,"partials":[{"hz":391.57,"db":0}]},{"t":0.155,"dbfs":-58.64,"partials":[{"hz":391.93,"db":0}]},{"t":0.3,"dbfs":-92.13,"partials":[{"hz":393.51,"db":0}]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}}},
+    "short-half-full": {"0":{"chromium":{"onset":0.05671,"end":0.32579,"duration":0.26908,"stop":1.1591,"peakDbfs":-10.8,"rmsDbfs":-34.65,"fundamentalHz":395,"envelopeDbfs":[null,null,null,-63.02,-87.91,-108.77,-134.46,-107.9,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-34.22,"partials":[{"hz":391.71,"db":0}]},{"t":0.155,"dbfs":-58.47,"partials":[{"hz":393.62,"db":0},{"hz":2492.41,"db":-48.8},{"hz":2562.81,"db":-49.31},{"hz":2630.81,"db":-49.8},{"hz":2696.96,"db":-50.27},{"hz":2766.13,"db":-50.71},{"hz":2836.42,"db":-51.15},{"hz":2906.49,"db":-51.58}]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-107.12,"partials":[{"hz":391.68,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.05671,"end":0.32579,"duration":0.26908,"stop":1.1591,"peakDbfs":-10.8,"rmsDbfs":-34.65,"fundamentalHz":395,"envelopeDbfs":[null,null,null,-63.02,-87.91,-108.77,-134.46,-107.9,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-34.22,"partials":[{"hz":391.71,"db":0}]},{"t":0.155,"dbfs":-58.47,"partials":[{"hz":393.62,"db":0},{"hz":2492.41,"db":-48.8},{"hz":2562.81,"db":-49.31},{"hz":2630.81,"db":-49.8},{"hz":2696.96,"db":-50.27},{"hz":2766.13,"db":-50.71},{"hz":2836.42,"db":-51.15},{"hz":2906.49,"db":-51.58}]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-107.12,"partials":[{"hz":391.68,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.05671,"end":0.31246,"duration":0.25575,"stop":1.1591,"peakDbfs":-10.8,"rmsDbfs":-34.43,"fundamentalHz":394.99,"envelopeDbfs":[null,null,null,-63.02,-69.96,-83.83,-111.57,-167.06,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-31.86,"partials":[{"hz":391.57,"db":0}]},{"t":0.155,"dbfs":-44.66,"partials":[{"hz":391.93,"db":0}]},{"t":0.3,"dbfs":-78.15,"partials":[{"hz":393.51,"db":0}]},{"t":0.6,"dbfs":-119.76,"partials":[{"hz":393.51,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]}},"8.0027":{"chromium":{"onset":0.05671,"end":0.32579,"duration":0.26908,"stop":1.1591,"peakDbfs":-10.8,"rmsDbfs":-34.65,"fundamentalHz":395,"envelopeDbfs":[null,null,null,-63.02,-87.91,-108.77,-134.46,-107.9,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-34.22,"partials":[{"hz":391.71,"db":0}]},{"t":0.155,"dbfs":-58.47,"partials":[{"hz":393.62,"db":0},{"hz":2492.41,"db":-48.8},{"hz":2562.81,"db":-49.31},{"hz":2630.81,"db":-49.8},{"hz":2696.96,"db":-50.27},{"hz":2766.13,"db":-50.71},{"hz":2836.42,"db":-51.15},{"hz":2906.49,"db":-51.58}]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-107.12,"partials":[{"hz":391.68,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.05671,"end":0.32579,"duration":0.26908,"stop":1.1591,"peakDbfs":-10.8,"rmsDbfs":-34.65,"fundamentalHz":395,"envelopeDbfs":[null,null,null,-63.02,-87.91,-108.77,-134.46,-107.9,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-34.22,"partials":[{"hz":391.71,"db":0}]},{"t":0.155,"dbfs":-58.47,"partials":[{"hz":393.62,"db":0},{"hz":2492.41,"db":-48.8},{"hz":2562.81,"db":-49.31},{"hz":2630.81,"db":-49.8},{"hz":2696.96,"db":-50.27},{"hz":2766.13,"db":-50.71},{"hz":2836.42,"db":-51.15},{"hz":2906.49,"db":-51.58}]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-107.12,"partials":[{"hz":391.68,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.05671,"end":0.31246,"duration":0.25575,"stop":1.1591,"peakDbfs":-10.8,"rmsDbfs":-34.43,"fundamentalHz":394.99,"envelopeDbfs":[null,null,null,-63.02,-69.96,-83.83,-111.57,-167.06,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-31.86,"partials":[{"hz":391.57,"db":0}]},{"t":0.155,"dbfs":-44.66,"partials":[{"hz":391.93,"db":0}]},{"t":0.3,"dbfs":-78.15,"partials":[{"hz":393.51,"db":0}]},{"t":0.6,"dbfs":-119.76,"partials":[{"hz":393.51,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]}}},
+    "short-most-low": {"0":{"chromium":{"onset":0.00671,"end":1.64217,"duration":1.63546,"stop":8.37729,"peakDbfs":-12.74,"rmsDbfs":-44.17,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-95.86,-110.7,-112.31,-37.6,-81.24],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-42.18,"partials":[{"hz":391.7,"db":0}]},{"t":0.155,"dbfs":-60.4,"partials":[{"hz":392.9,"db":0},{"hz":3309.65,"db":-53.98},{"hz":3582.54,"db":-55.38},{"hz":3654.22,"db":-55.72},{"hz":3722.5,"db":-56.05},{"hz":3788.8,"db":-56.38},{"hz":3854.21,"db":-56.68},{"hz":3925.22,"db":-56.98}]},{"t":0.3,"dbfs":-111.26,"partials":[{"hz":393.25,"db":0}]},{"t":0.6,"dbfs":-60.89,"partials":[{"hz":391.68,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":1.64217,"duration":1.63546,"stop":8.37729,"peakDbfs":-12.74,"rmsDbfs":-44.17,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-95.86,-110.7,-112.31,-37.6,-81.24],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-42.18,"partials":[{"hz":391.7,"db":0}]},{"t":0.155,"dbfs":-60.4,"partials":[{"hz":392.9,"db":0},{"hz":3309.65,"db":-53.98},{"hz":3582.54,"db":-55.38},{"hz":3654.22,"db":-55.72},{"hz":3722.5,"db":-56.05},{"hz":3788.8,"db":-56.38},{"hz":3854.2,"db":-56.68},{"hz":3925.22,"db":-56.98}]},{"t":0.3,"dbfs":-111.26,"partials":[{"hz":393.25,"db":0}]},{"t":0.6,"dbfs":-60.89,"partials":[{"hz":391.68,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":1.56217,"duration":1.55546,"stop":8.37729,"peakDbfs":-12.74,"rmsDbfs":-43.96,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-77.92,-79.75,-83.41,-90.73,-105.37],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-39.82,"partials":[{"hz":391.57,"db":0}]},{"t":0.155,"dbfs":-46.6,"partials":[{"hz":391.88,"db":0}]},{"t":0.3,"dbfs":-62.01,"partials":[{"hz":392.81,"db":0},{"hz":4045.56,"db":-57.41},{"hz":4130.73,"db":-57.76}]},{"t":0.6,"dbfs":-67.51,"partials":[{"hz":392.81,"db":0}]},{"t":1.2,"dbfs":-78.49,"partials":[{"hz":392.81,"db":0}]}]}},"8.0027":{"chromium":{"onset":0.00671,"end":1.64217,"duration":1.63546,"stop":8.37729,"peakDbfs":-12.74,"rmsDbfs":-44.17,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-95.86,-110.7,-112.31,-37.6,-81.24],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-42.18,"partials":[{"hz":391.7,"db":0}]},{"t":0.155,"dbfs":-60.4,"partials":[{"hz":392.9,"db":0},{"hz":3309.65,"db":-53.98},{"hz":3582.54,"db":-55.38},{"hz":3654.22,"db":-55.72},{"hz":3722.5,"db":-56.05},{"hz":3788.8,"db":-56.38},{"hz":3854.21,"db":-56.68},{"hz":3925.22,"db":-56.98}]},{"t":0.3,"dbfs":-111.26,"partials":[{"hz":393.25,"db":0}]},{"t":0.6,"dbfs":-60.89,"partials":[{"hz":391.68,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":1.64217,"duration":1.63546,"stop":8.37729,"peakDbfs":-12.74,"rmsDbfs":-44.17,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-95.86,-110.7,-112.31,-37.6,-81.24],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-42.18,"partials":[{"hz":391.7,"db":0}]},{"t":0.155,"dbfs":-60.4,"partials":[{"hz":392.9,"db":0},{"hz":3309.65,"db":-53.98},{"hz":3582.54,"db":-55.38},{"hz":3654.22,"db":-55.72},{"hz":3722.5,"db":-56.05},{"hz":3788.8,"db":-56.38},{"hz":3854.2,"db":-56.68},{"hz":3925.22,"db":-56.98}]},{"t":0.3,"dbfs":-111.26,"partials":[{"hz":393.25,"db":0}]},{"t":0.6,"dbfs":-60.89,"partials":[{"hz":391.68,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":1.56217,"duration":1.55546,"stop":8.37729,"peakDbfs":-12.74,"rmsDbfs":-43.96,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-77,-77.92,-79.75,-83.41,-90.73,-105.37],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":-38.86,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-39.82,"partials":[{"hz":391.57,"db":0}]},{"t":0.155,"dbfs":-46.6,"partials":[{"hz":391.88,"db":0}]},{"t":0.3,"dbfs":-62.01,"partials":[{"hz":392.81,"db":0},{"hz":4045.56,"db":-57.41},{"hz":4130.73,"db":-57.76}]},{"t":0.6,"dbfs":-67.51,"partials":[{"hz":392.81,"db":0}]},{"t":1.2,"dbfs":-78.49,"partials":[{"hz":392.81,"db":0}]}]}}},
+    "short-most-full": {"0":{"chromium":{"onset":0.05671,"end":2.32683,"duration":2.27013,"stop":8.37729,"peakDbfs":-10.8,"rmsDbfs":-37.68,"fundamentalHz":395,"envelopeDbfs":[null,null,null,-63.02,-81.89,-96.72,-98.33,-23.62,-67.26],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-28.2,"partials":[{"hz":391.7,"db":0}]},{"t":0.155,"dbfs":-46.42,"partials":[{"hz":392.9,"db":0},{"hz":3309.65,"db":-53.98},{"hz":3582.54,"db":-55.38},{"hz":3654.22,"db":-55.72},{"hz":3722.5,"db":-56.05},{"hz":3788.8,"db":-56.38},{"hz":3854.21,"db":-56.68},{"hz":3925.22,"db":-56.98}]},{"t":0.3,"dbfs":-97.28,"partials":[{"hz":393.25,"db":0},{"hz":341.97,"db":-12.34},{"hz":439.91,"db":-13.62},{"hz":305.36,"db":-19.93}]},{"t":0.6,"dbfs":-46.92,"partials":[{"hz":391.68,"db":0}]},{"t":1.2,"dbfs":-106.95,"partials":[{"hz":409.87,"db":0},{"hz":359.18,"db":-1.51},{"hz":454.93,"db":-8.15}]}]},"webkit":{"onset":0.05671,"end":2.32683,"duration":2.27013,"stop":8.37729,"peakDbfs":-10.8,"rmsDbfs":-37.68,"fundamentalHz":395,"envelopeDbfs":[null,null,null,-63.02,-81.89,-96.72,-98.33,-23.62,-67.26],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-28.2,"partials":[{"hz":391.7,"db":0}]},{"t":0.155,"dbfs":-46.42,"partials":[{"hz":392.9,"db":0},{"hz":3309.65,"db":-53.98},{"hz":3582.54,"db":-55.38},{"hz":3654.22,"db":-55.72},{"hz":3722.5,"db":-56.05},{"hz":3788.8,"db":-56.38},{"hz":3854.2,"db":-56.68},{"hz":3925.22,"db":-56.98}]},{"t":0.3,"dbfs":-97.28,"partials":[{"hz":393.25,"db":0},{"hz":341.97,"db":-12.34},{"hz":439.91,"db":-13.62},{"hz":305.36,"db":-19.93}]},{"t":0.6,"dbfs":-46.92,"partials":[{"hz":391.68,"db":0}]},{"t":1.2,"dbfs":-106.95,"partials":[{"hz":409.87,"db":0},{"hz":359.18,"db":-1.51},{"hz":454.93,"db":-8.15}]}]},"firefox":{"onset":0.05671,"end":2.21217,"duration":2.15546,"stop":8.37729,"peakDbfs":-10.8,"rmsDbfs":-37.46,"fundamentalHz":394.99,"envelopeDbfs":[null,null,null,-63.02,-63.94,-65.77,-69.43,-76.75,-91.39],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-25.84,"partials":[{"hz":391.57,"db":0}]},{"t":0.155,"dbfs":-32.62,"partials":[{"hz":391.88,"db":0}]},{"t":0.3,"dbfs":-48.04,"partials":[{"hz":392.81,"db":0},{"hz":4045.56,"db":-57.41},{"hz":4130.73,"db":-57.76},{"hz":4214.45,"db":-58.11},{"hz":4298.6,"db":-58.45},{"hz":4382.95,"db":-58.78},{"hz":4466.42,"db":-59.11},{"hz":4550.21,"db":-59.42}]},{"t":0.6,"dbfs":-53.53,"partials":[{"hz":392.81,"db":0},{"hz":4045.56,"db":-57.41},{"hz":4130.73,"db":-57.76},{"hz":4214.45,"db":-58.11},{"hz":4298.6,"db":-58.45},{"hz":4382.95,"db":-58.78},{"hz":4466.42,"db":-59.11},{"hz":4550.2,"db":-59.42}]},{"t":1.2,"dbfs":-64.51,"partials":[{"hz":392.81,"db":0}]}]}},"8.0027":{"chromium":{"onset":0.05671,"end":2.32683,"duration":2.27013,"stop":8.37729,"peakDbfs":-10.8,"rmsDbfs":-37.68,"fundamentalHz":395,"envelopeDbfs":[null,null,null,-63.02,-81.89,-96.72,-98.33,-23.62,-67.26],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-28.2,"partials":[{"hz":391.7,"db":0}]},{"t":0.155,"dbfs":-46.42,"partials":[{"hz":392.9,"db":0},{"hz":3309.65,"db":-53.98},{"hz":3582.54,"db":-55.38},{"hz":3654.22,"db":-55.72},{"hz":3722.5,"db":-56.05},{"hz":3788.8,"db":-56.38},{"hz":3854.21,"db":-56.68},{"hz":3925.22,"db":-56.98}]},{"t":0.3,"dbfs":-97.28,"partials":[{"hz":393.25,"db":0},{"hz":341.97,"db":-12.34},{"hz":439.91,"db":-13.62},{"hz":305.36,"db":-19.93}]},{"t":0.6,"dbfs":-46.92,"partials":[{"hz":391.68,"db":0}]},{"t":1.2,"dbfs":-106.95,"partials":[{"hz":409.87,"db":0},{"hz":359.18,"db":-1.51},{"hz":454.93,"db":-8.15}]}]},"webkit":{"onset":0.05671,"end":2.32683,"duration":2.27013,"stop":8.37729,"peakDbfs":-10.8,"rmsDbfs":-37.68,"fundamentalHz":395,"envelopeDbfs":[null,null,null,-63.02,-81.89,-96.72,-98.33,-23.62,-67.26],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-28.2,"partials":[{"hz":391.7,"db":0}]},{"t":0.155,"dbfs":-46.42,"partials":[{"hz":392.9,"db":0},{"hz":3309.65,"db":-53.98},{"hz":3582.54,"db":-55.38},{"hz":3654.22,"db":-55.72},{"hz":3722.5,"db":-56.05},{"hz":3788.8,"db":-56.38},{"hz":3854.2,"db":-56.68},{"hz":3925.22,"db":-56.98}]},{"t":0.3,"dbfs":-97.28,"partials":[{"hz":393.25,"db":0},{"hz":341.97,"db":-12.34},{"hz":439.91,"db":-13.62},{"hz":305.36,"db":-19.93}]},{"t":0.6,"dbfs":-46.92,"partials":[{"hz":391.68,"db":0}]},{"t":1.2,"dbfs":-106.95,"partials":[{"hz":409.87,"db":0},{"hz":359.18,"db":-1.51},{"hz":454.93,"db":-8.15}]}]},"firefox":{"onset":0.05671,"end":2.21217,"duration":2.15546,"stop":8.37729,"peakDbfs":-10.8,"rmsDbfs":-37.46,"fundamentalHz":394.99,"envelopeDbfs":[null,null,null,-63.02,-63.94,-65.77,-69.43,-76.75,-91.39],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":-24.88,"partials":[{"hz":391.48,"db":0}]},{"t":0.11,"dbfs":-25.84,"partials":[{"hz":391.57,"db":0}]},{"t":0.155,"dbfs":-32.62,"partials":[{"hz":391.88,"db":0}]},{"t":0.3,"dbfs":-48.04,"partials":[{"hz":392.81,"db":0},{"hz":4045.56,"db":-57.41},{"hz":4130.73,"db":-57.76},{"hz":4214.45,"db":-58.11},{"hz":4298.6,"db":-58.45},{"hz":4382.95,"db":-58.78},{"hz":4466.42,"db":-59.11},{"hz":4550.21,"db":-59.42}]},{"t":0.6,"dbfs":-53.53,"partials":[{"hz":392.81,"db":0},{"hz":4045.56,"db":-57.41},{"hz":4130.73,"db":-57.76},{"hz":4214.45,"db":-58.11},{"hz":4298.6,"db":-58.45},{"hz":4382.95,"db":-58.78},{"hz":4466.42,"db":-59.11},{"hz":4550.2,"db":-59.42}]},{"t":1.2,"dbfs":-64.51,"partials":[{"hz":392.81,"db":0}]}]}}},
+    "middle-none-low": {"0":{"chromium":{"onset":0.00671,"end":0.2175,"duration":0.21079,"stop":0.25,"peakDbfs":-12.74,"rmsDbfs":-36.25,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,null,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":0.2175,"duration":0.21079,"stop":0.25002,"peakDbfs":-12.74,"rmsDbfs":-36.25,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,null,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":0.2175,"duration":0.21079,"stop":0.25,"peakDbfs":-12.74,"rmsDbfs":-36.25,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,null,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}},"8.0027":{"chromium":{"onset":0.00671,"end":0.2175,"duration":0.21079,"stop":0.25,"peakDbfs":-12.74,"rmsDbfs":-36.25,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,null,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":0.2175,"duration":0.21079,"stop":0.25002,"peakDbfs":-12.74,"rmsDbfs":-36.25,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,null,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":0.2175,"duration":0.21079,"stop":0.25,"peakDbfs":-12.74,"rmsDbfs":-36.25,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,null,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}}},
+    "middle-none-full": {"0":{"chromium":{"onset":0.20671,"end":0.22006,"duration":0.01335,"stop":0.25,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,null,null,-63.02,null,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.20671,"end":0.22006,"duration":0.01335,"stop":0.25002,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,null,null,-63.02,null,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.20671,"end":0.22006,"duration":0.01335,"stop":0.25,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,null,null,-63.02,null,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}},"8.0027":{"chromium":{"onset":0.20671,"end":0.22006,"duration":0.01335,"stop":0.25,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,null,null,-63.02,null,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.20671,"end":0.22006,"duration":0.01335,"stop":0.25002,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,null,null,-63.02,null,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.20671,"end":0.22006,"duration":0.01335,"stop":0.25,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,null,null,-63.02,null,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}}},
+    "middle-half-low": {"0":{"chromium":{"onset":0.00671,"end":1.02277,"duration":1.01606,"stop":4.30333,"peakDbfs":-12.74,"rmsDbfs":-43.01,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,-101.89,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-95.29,"partials":[{"hz":392.4,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":1.02277,"duration":1.01606,"stop":4.30352,"peakDbfs":-12.74,"rmsDbfs":-43.01,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,-101.89,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-95.29,"partials":[{"hz":392.4,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":1.0121,"duration":1.0054,"stop":4.25,"peakDbfs":-12.74,"rmsDbfs":-42.97,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,-83.94,-97.81,-125.55],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-71.3,"partials":[{"hz":392.22,"db":0}]},{"t":1.2,"dbfs":-92.11,"partials":[{"hz":392.22,"db":0}]}]}},"8.0027":{"chromium":{"onset":0.00671,"end":1.02277,"duration":1.01606,"stop":4.30333,"peakDbfs":-12.74,"rmsDbfs":-43.01,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,-101.89,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-95.29,"partials":[{"hz":392.4,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":1.02277,"duration":1.01606,"stop":4.30352,"peakDbfs":-12.74,"rmsDbfs":-43.01,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,-101.89,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-95.29,"partials":[{"hz":392.4,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":1.0121,"duration":1.0054,"stop":4.25,"peakDbfs":-12.74,"rmsDbfs":-42.97,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,-83.94,-97.81,-125.55],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-71.3,"partials":[{"hz":392.22,"db":0}]},{"t":1.2,"dbfs":-92.11,"partials":[{"hz":392.22,"db":0}]}]}}},
+    "middle-half-full": {"0":{"chromium":{"onset":0.20671,"end":1.22579,"duration":1.01908,"stop":4.30333,"peakDbfs":-10.8,"rmsDbfs":-40.43,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,-63.02,-87.91,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-81.31,"partials":[{"hz":392.4,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.20671,"end":1.22579,"duration":1.01908,"stop":4.30352,"peakDbfs":-10.8,"rmsDbfs":-40.43,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,-63.02,-87.91,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-81.31,"partials":[{"hz":392.4,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.20671,"end":1.21246,"duration":1.00575,"stop":4.25,"peakDbfs":-10.8,"rmsDbfs":-40.38,"fundamentalHz":394.99,"envelopeDbfs":[null,null,null,null,null,-63.02,-69.96,-83.83,-111.57],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-57.32,"partials":[{"hz":392.22,"db":0}]},{"t":1.2,"dbfs":-78.13,"partials":[{"hz":392.22,"db":0}]}]}},"8.0027":{"chromium":{"onset":0.20671,"end":1.22579,"duration":1.01908,"stop":4.30333,"peakDbfs":-10.8,"rmsDbfs":-40.43,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,-63.02,-87.91,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-81.31,"partials":[{"hz":392.4,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.20671,"end":1.22579,"duration":1.01908,"stop":4.30352,"peakDbfs":-10.8,"rmsDbfs":-40.43,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,-63.02,-87.91,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-81.31,"partials":[{"hz":392.4,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.20671,"end":1.21246,"duration":1.00575,"stop":4.25,"peakDbfs":-10.8,"rmsDbfs":-40.38,"fundamentalHz":394.99,"envelopeDbfs":[null,null,null,null,null,-63.02,-69.96,-83.83,-111.57],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-57.32,"partials":[{"hz":392.22,"db":0}]},{"t":1.2,"dbfs":-78.13,"partials":[{"hz":392.22,"db":0}]}]}}},
+    "middle-most-low": {"0":{"chromium":{"onset":0.00671,"end":6.29217,"duration":6.28546,"stop":32.06867,"peakDbfs":-12.74,"rmsDbfs":-50.02,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,-95.86,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-83.25,"partials":[{"hz":392.4,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":6.29217,"duration":6.28546,"stop":32.06894,"peakDbfs":-12.74,"rmsDbfs":-50.02,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,-95.86,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-83.25,"partials":[{"hz":392.4,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":6.21217,"duration":6.20546,"stop":32.05,"peakDbfs":-12.74,"rmsDbfs":-49.97,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,-77.92,-79.75,-83.41],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-59.26,"partials":[{"hz":392.22,"db":0}]},{"t":1.2,"dbfs":-62,"partials":[{"hz":392.22,"db":0}]}]}},"8.0027":{"chromium":{"onset":0.00671,"end":6.29217,"duration":6.28546,"stop":32.06867,"peakDbfs":-12.74,"rmsDbfs":-50.02,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,-95.86,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-83.25,"partials":[{"hz":392.4,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":6.29217,"duration":6.28546,"stop":32.06894,"peakDbfs":-12.74,"rmsDbfs":-50.02,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,-95.86,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-83.25,"partials":[{"hz":392.4,"db":0}]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":6.21217,"duration":6.20546,"stop":32.05,"peakDbfs":-12.74,"rmsDbfs":-49.97,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,-77,-77.92,-79.75,-83.41],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-59.26,"partials":[{"hz":392.22,"db":0}]},{"t":1.2,"dbfs":-62,"partials":[{"hz":392.22,"db":0}]}]}}},
+    "middle-most-full": {"0":{"chromium":{"onset":0.20671,"end":8.92683,"duration":8.72013,"stop":32.06867,"peakDbfs":-10.8,"rmsDbfs":-43.53,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,-63.02,-81.89,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-69.27,"partials":[{"hz":392.4,"db":0},{"hz":1486.1,"db":-43.76},{"hz":1568.17,"db":-44.68},{"hz":1825.87,"db":-48.05},{"hz":1911.61,"db":-48.61},{"hz":1988.12,"db":-49.29}]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.20671,"end":8.92683,"duration":8.72013,"stop":32.06894,"peakDbfs":-10.8,"rmsDbfs":-43.53,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,-63.02,-81.89,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-69.27,"partials":[{"hz":392.4,"db":0},{"hz":1486.1,"db":-43.76},{"hz":1568.17,"db":-44.68},{"hz":1825.87,"db":-48.05},{"hz":1911.61,"db":-48.61},{"hz":1988.12,"db":-49.29}]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.20671,"end":8.81217,"duration":8.60546,"stop":32.05,"peakDbfs":-10.8,"rmsDbfs":-43.47,"fundamentalHz":394.99,"envelopeDbfs":[null,null,null,null,null,-63.02,-63.94,-65.77,-69.43],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-45.28,"partials":[{"hz":392.22,"db":0}]},{"t":1.2,"dbfs":-48.03,"partials":[{"hz":392.22,"db":0}]}]}},"8.0027":{"chromium":{"onset":0.20671,"end":8.92683,"duration":8.72013,"stop":32.06867,"peakDbfs":-10.8,"rmsDbfs":-43.53,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,-63.02,-81.89,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-69.27,"partials":[{"hz":392.4,"db":0},{"hz":1486.1,"db":-43.76},{"hz":1568.17,"db":-44.68},{"hz":1825.87,"db":-48.05},{"hz":1911.61,"db":-48.61},{"hz":1988.12,"db":-49.29}]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.20671,"end":8.92683,"duration":8.72013,"stop":32.06894,"peakDbfs":-10.8,"rmsDbfs":-43.53,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,-63.02,-81.89,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-69.27,"partials":[{"hz":392.4,"db":0},{"hz":1486.1,"db":-43.76},{"hz":1568.17,"db":-44.68},{"hz":1825.87,"db":-48.05},{"hz":1911.61,"db":-48.61},{"hz":1988.12,"db":-49.29}]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.20671,"end":8.81217,"duration":8.60546,"stop":32.05,"peakDbfs":-10.8,"rmsDbfs":-43.47,"fundamentalHz":394.99,"envelopeDbfs":[null,null,null,null,null,-63.02,-63.94,-65.77,-69.43],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":-45.28,"partials":[{"hz":392.22,"db":0}]},{"t":1.2,"dbfs":-48.03,"partials":[{"hz":392.22,"db":0}]}]}}},
+    "long-none-low": {"0":{"chromium":{"onset":0.00671,"end":0.4175,"duration":0.41079,"stop":0.45,"peakDbfs":-12.74,"rmsDbfs":-39.14,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":0.4175,"duration":0.41079,"stop":0.45002,"peakDbfs":-12.74,"rmsDbfs":-39.14,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":0.4175,"duration":0.41079,"stop":0.45,"peakDbfs":-12.74,"rmsDbfs":-39.14,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}},"8.0027":{"chromium":{"onset":0.00671,"end":0.4175,"duration":0.41079,"stop":0.45,"peakDbfs":-12.74,"rmsDbfs":-39.14,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00671,"end":0.4175,"duration":0.41079,"stop":0.45002,"peakDbfs":-12.74,"rmsDbfs":-39.14,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00671,"end":0.4175,"duration":0.41079,"stop":0.45,"peakDbfs":-12.74,"rmsDbfs":-39.14,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,null,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}}},
+    "long-none-full": {"0":{"chromium":{"onset":0.40671,"end":0.42006,"duration":0.01335,"stop":0.45,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,null,null,null,-63.02,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.40671,"end":0.42006,"duration":0.01335,"stop":0.45002,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,null,null,null,-63.02,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.40671,"end":0.42006,"duration":0.01335,"stop":0.45,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,null,null,null,-63.02,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}},"8.0027":{"chromium":{"onset":0.40671,"end":0.42006,"duration":0.01335,"stop":0.45,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,null,null,null,-63.02,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.40671,"end":0.42006,"duration":0.01335,"stop":0.45002,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,null,null,null,-63.02,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.40671,"end":0.42006,"duration":0.01335,"stop":0.45,"peakDbfs":-10.8,"rmsDbfs":-22.6,"fundamentalHz":394.1,"envelopeDbfs":[null,null,null,null,null,null,-63.02,null,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}}},
+    "long-half-low": {"0":{"chromium":{"onset":0.00671,"end":2.02277,"duration":2.01606,"stop":8.50333,"peakDbfs":-12.74,"rmsDbfs":-45.99,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,-101.89,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-95.29,"partials":[{"hz":392.4,"db":0}]}]},"webkit":{"onset":0.00671,"end":2.02277,"duration":2.01606,"stop":8.50354,"peakDbfs":-12.74,"rmsDbfs":-45.99,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,-101.89,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-95.29,"partials":[{"hz":392.4,"db":0}]}]},"firefox":{"onset":0.00671,"end":2.0121,"duration":2.0054,"stop":8.45,"peakDbfs":-12.74,"rmsDbfs":-45.97,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,-83.94,-97.81],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-71.3,"partials":[{"hz":392.22,"db":0}]}]}},"8.0027":{"chromium":{"onset":0.00671,"end":2.02277,"duration":2.01606,"stop":8.50333,"peakDbfs":-12.74,"rmsDbfs":-45.99,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,-101.89,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-95.29,"partials":[{"hz":392.4,"db":0}]}]},"webkit":{"onset":0.00671,"end":2.02277,"duration":2.01606,"stop":8.50354,"peakDbfs":-12.74,"rmsDbfs":-45.99,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,-101.89,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-95.29,"partials":[{"hz":392.4,"db":0}]}]},"firefox":{"onset":0.00671,"end":2.0121,"duration":2.0054,"stop":8.45,"peakDbfs":-12.74,"rmsDbfs":-45.97,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,-83.94,-97.81],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-71.3,"partials":[{"hz":392.22,"db":0}]}]}}},
+    "long-half-full": {"0":{"chromium":{"onset":0.40671,"end":2.42579,"duration":2.01908,"stop":8.50333,"peakDbfs":-10.8,"rmsDbfs":-43.4,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,null,-63.02,-87.91,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-81.31,"partials":[{"hz":392.4,"db":0}]}]},"webkit":{"onset":0.40671,"end":2.42579,"duration":2.01908,"stop":8.50354,"peakDbfs":-10.8,"rmsDbfs":-43.4,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,null,-63.02,-87.91,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-81.31,"partials":[{"hz":392.4,"db":0}]}]},"firefox":{"onset":0.40671,"end":2.41246,"duration":2.00575,"stop":8.45,"peakDbfs":-10.8,"rmsDbfs":-43.37,"fundamentalHz":394.99,"envelopeDbfs":[null,null,null,null,null,null,-63.02,-69.96,-83.83],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-57.32,"partials":[{"hz":392.22,"db":0}]}]}},"8.0027":{"chromium":{"onset":0.40671,"end":2.42579,"duration":2.01908,"stop":8.50333,"peakDbfs":-10.8,"rmsDbfs":-43.4,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,null,-63.02,-87.91,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-81.31,"partials":[{"hz":392.4,"db":0}]}]},"webkit":{"onset":0.40671,"end":2.42579,"duration":2.01908,"stop":8.50354,"peakDbfs":-10.8,"rmsDbfs":-43.4,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,null,-63.02,-87.91,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-81.31,"partials":[{"hz":392.4,"db":0}]}]},"firefox":{"onset":0.40671,"end":2.41246,"duration":2.00575,"stop":8.45,"peakDbfs":-10.8,"rmsDbfs":-43.37,"fundamentalHz":394.99,"envelopeDbfs":[null,null,null,null,null,null,-63.02,-69.96,-83.83],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-57.32,"partials":[{"hz":392.22,"db":0}]}]}}},
+    "long-most-low": {"0":{"chromium":{"onset":0.00671,"end":12.49217,"duration":12.48546,"stop":63.66867,"peakDbfs":-12.74,"rmsDbfs":-53,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,-95.86,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-83.25,"partials":[{"hz":392.4,"db":0}]}]},"webkit":{"onset":0.00671,"end":12.49217,"duration":12.48546,"stop":63.66896,"peakDbfs":-12.74,"rmsDbfs":-53,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,-95.86,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-83.25,"partials":[{"hz":392.4,"db":0}]}]},"firefox":{"onset":0.00671,"end":12.41217,"duration":12.40546,"stop":63.65,"peakDbfs":-12.74,"rmsDbfs":-52.97,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,-77.92,-79.75],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-59.26,"partials":[{"hz":392.22,"db":0}]}]}},"8.0027":{"chromium":{"onset":0.00671,"end":12.49217,"duration":12.48546,"stop":63.66867,"peakDbfs":-12.74,"rmsDbfs":-53,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,-95.86,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-83.25,"partials":[{"hz":392.4,"db":0}]}]},"webkit":{"onset":0.00671,"end":12.49217,"duration":12.48546,"stop":63.66896,"peakDbfs":-12.74,"rmsDbfs":-53,"fundamentalHz":395,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,-95.86,null],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-83.25,"partials":[{"hz":392.4,"db":0}]}]},"firefox":{"onset":0.00671,"end":12.41217,"duration":12.40546,"stop":63.65,"peakDbfs":-12.74,"rmsDbfs":-52.97,"fundamentalHz":394.99,"envelopeDbfs":[-29.06,-12.74,-29.76,-96.83,null,null,-77,-77.92,-79.75],"spectrum":[{"t":0.02,"dbfs":-32.49,"partials":[{"hz":391.56,"db":0}]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-59.26,"partials":[{"hz":392.22,"db":0}]}]}}},
+    "long-most-full": {"0":{"chromium":{"onset":0.40671,"end":17.72683,"duration":17.32013,"stop":63.66867,"peakDbfs":-10.8,"rmsDbfs":-46.51,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,null,-63.02,-81.89,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-69.27,"partials":[{"hz":392.4,"db":0},{"hz":1486.1,"db":-43.76},{"hz":1568.17,"db":-44.68},{"hz":1825.87,"db":-48.05},{"hz":1911.61,"db":-48.61},{"hz":1988.12,"db":-49.29}]}]},"webkit":{"onset":0.40671,"end":17.72683,"duration":17.32013,"stop":63.66896,"peakDbfs":-10.8,"rmsDbfs":-46.51,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,null,-63.02,-81.89,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-69.27,"partials":[{"hz":392.4,"db":0},{"hz":1486.1,"db":-43.76},{"hz":1568.17,"db":-44.68},{"hz":1825.87,"db":-48.05},{"hz":1911.61,"db":-48.61},{"hz":1988.12,"db":-49.29}]}]},"firefox":{"onset":0.40671,"end":17.61217,"duration":17.20546,"stop":63.65,"peakDbfs":-10.8,"rmsDbfs":-46.48,"fundamentalHz":394.99,"envelopeDbfs":[null,null,null,null,null,null,-63.02,-63.94,-65.77],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-45.28,"partials":[{"hz":392.22,"db":0}]}]}},"8.0027":{"chromium":{"onset":0.40671,"end":17.72683,"duration":17.32013,"stop":63.66867,"peakDbfs":-10.8,"rmsDbfs":-46.51,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,null,-63.02,-81.89,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-69.27,"partials":[{"hz":392.4,"db":0},{"hz":1486.1,"db":-43.76},{"hz":1568.17,"db":-44.68},{"hz":1825.87,"db":-48.05},{"hz":1911.61,"db":-48.61},{"hz":1988.12,"db":-49.29}]}]},"webkit":{"onset":0.40671,"end":17.72683,"duration":17.32013,"stop":63.66896,"peakDbfs":-10.8,"rmsDbfs":-46.51,"fundamentalHz":395,"envelopeDbfs":[null,null,null,null,null,null,-63.02,-81.89,null],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-69.27,"partials":[{"hz":392.4,"db":0},{"hz":1486.1,"db":-43.76},{"hz":1568.17,"db":-44.68},{"hz":1825.87,"db":-48.05},{"hz":1911.61,"db":-48.61},{"hz":1988.12,"db":-49.29}]}]},"firefox":{"onset":0.40671,"end":17.61217,"duration":17.20546,"stop":63.65,"peakDbfs":-10.8,"rmsDbfs":-46.48,"fundamentalHz":394.99,"envelopeDbfs":[null,null,null,null,null,null,-63.02,-63.94,-65.77],"spectrum":[{"t":0.02,"dbfs":null,"partials":[]},{"t":0.065,"dbfs":null,"partials":[]},{"t":0.11,"dbfs":null,"partials":[]},{"t":0.155,"dbfs":null,"partials":[]},{"t":0.3,"dbfs":null,"partials":[]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":-45.28,"partials":[{"hz":392.22,"db":0}]}]}}},
+    "under-a-quantum": {"0":{"chromium":{"onset":0.00683,"end":0.17446,"duration":0.16763,"stop":0.89863,"peakDbfs":-19.15,"rmsDbfs":-35.14,"fundamentalHz":139.97,"envelopeDbfs":[-35,-21.15,-19.15,-26.59,-39.4,-64.11,-114.44,-214.19,null],"spectrum":[{"t":0.02,"dbfs":-27.46,"partials":[{"hz":268.09,"db":0},{"hz":542.66,"db":-3.67},{"hz":413.99,"db":-12.86},{"hz":822.46,"db":-16.3},{"hz":1087.92,"db":-23.36},{"hz":1356.12,"db":-29.87},{"hz":1642.62,"db":-33.89},{"hz":1911.56,"db":-35.42}]},{"t":0.065,"dbfs":-37.73,"partials":[{"hz":272.73,"db":0},{"hz":545.46,"db":-2.93},{"hz":818.18,"db":-17.07},{"hz":1090.91,"db":-24.67},{"hz":1363.64,"db":-29.76},{"hz":1636.37,"db":-33.57},{"hz":1909.09,"db":-36.65},{"hz":2181.82,"db":-39.22}]},{"t":0.11,"dbfs":-48.96,"partials":[{"hz":272.73,"db":0},{"hz":545.45,"db":-2.93},{"hz":818.18,"db":-17.07},{"hz":1090.91,"db":-24.67},{"hz":1363.64,"db":-29.76},{"hz":1636.37,"db":-33.57},{"hz":1909.1,"db":-36.65},{"hz":2181.84,"db":-39.22}]},{"t":0.155,"dbfs":-60.19,"partials":[{"hz":272.73,"db":0},{"hz":545.45,"db":-2.93},{"hz":818.18,"db":-17.07},{"hz":1090.91,"db":-24.67},{"hz":1363.64,"db":-29.76},{"hz":1636.37,"db":-33.57},{"hz":1909.09,"db":-36.65},{"hz":2181.81,"db":-39.22}]},{"t":0.3,"dbfs":-96.38,"partials":[{"hz":272.73,"db":0},{"hz":545.46,"db":-2.93},{"hz":818.18,"db":-17.07}]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00683,"end":0.17446,"duration":0.16763,"stop":0.89863,"peakDbfs":-19.15,"rmsDbfs":-35.14,"fundamentalHz":139.97,"envelopeDbfs":[-35,-21.15,-19.15,-26.59,-39.4,-64.11,-114.44,-214.19,null],"spectrum":[{"t":0.02,"dbfs":-27.46,"partials":[{"hz":268.09,"db":0},{"hz":542.66,"db":-3.67},{"hz":413.99,"db":-12.86},{"hz":822.46,"db":-16.3},{"hz":1087.92,"db":-23.36},{"hz":1356.12,"db":-29.87},{"hz":1642.62,"db":-33.89},{"hz":1911.56,"db":-35.42}]},{"t":0.065,"dbfs":-37.73,"partials":[{"hz":272.73,"db":0},{"hz":545.46,"db":-2.93},{"hz":818.18,"db":-17.07},{"hz":1090.91,"db":-24.67},{"hz":1363.64,"db":-29.76},{"hz":1636.37,"db":-33.57},{"hz":1909.09,"db":-36.65},{"hz":2181.82,"db":-39.22}]},{"t":0.11,"dbfs":-48.96,"partials":[{"hz":272.73,"db":0},{"hz":545.45,"db":-2.93},{"hz":818.18,"db":-17.07},{"hz":1090.91,"db":-24.67},{"hz":1363.64,"db":-29.76},{"hz":1636.37,"db":-33.57},{"hz":1909.1,"db":-36.65},{"hz":2181.84,"db":-39.22}]},{"t":0.155,"dbfs":-60.19,"partials":[{"hz":272.73,"db":0},{"hz":545.45,"db":-2.93},{"hz":818.18,"db":-17.07},{"hz":1090.91,"db":-24.67},{"hz":1363.64,"db":-29.76},{"hz":1636.37,"db":-33.57},{"hz":1909.09,"db":-36.65},{"hz":2181.81,"db":-39.22}]},{"t":0.3,"dbfs":-96.38,"partials":[{"hz":272.73,"db":0},{"hz":545.46,"db":-2.93},{"hz":818.18,"db":-17.07}]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00677,"end":0.13215,"duration":0.12537,"stop":0.89863,"peakDbfs":-14.23,"rmsDbfs":-27.26,"fundamentalHz":375.34,"envelopeDbfs":[-32.04,-14.23,-14.6,-24.52,-41.91,-75.77,-144.41,-281.68,null],"spectrum":[{"t":0.02,"dbfs":-17.77,"partials":[{"hz":375.99,"db":0},{"hz":748.65,"db":-21.05},{"hz":1124.32,"db":-32.05},{"hz":1499.54,"db":-38.44},{"hz":1874.66,"db":-42.95},{"hz":2249.72,"db":-46.45},{"hz":2624.78,"db":-49.32},{"hz":2999.79,"db":-51.75}]},{"t":0.065,"dbfs":-32.15,"partials":[{"hz":375,"db":0},{"hz":750,"db":-21.46},{"hz":1125,"db":-32.43},{"hz":1500.01,"db":-38.8},{"hz":1874.99,"db":-43.3},{"hz":2250,"db":-46.8},{"hz":2625.02,"db":-49.69},{"hz":2999.98,"db":-52.11}]},{"t":0.11,"dbfs":-47.59,"partials":[{"hz":375,"db":0},{"hz":750,"db":-21.46},{"hz":1125,"db":-32.43},{"hz":1500,"db":-38.8},{"hz":1875.01,"db":-43.29},{"hz":2249.99,"db":-46.8},{"hz":2624.99,"db":-49.69},{"hz":3000.01,"db":-52.11}]},{"t":0.155,"dbfs":-63.04,"partials":[{"hz":375,"db":0},{"hz":750,"db":-21.46},{"hz":1125,"db":-32.43},{"hz":1499.98,"db":-38.8},{"hz":1874.98,"db":-43.29},{"hz":2249.99,"db":-46.8},{"hz":2625.01,"db":-49.69},{"hz":3000.04,"db":-52.11}]},{"t":0.3,"dbfs":-112.8,"partials":[{"hz":375,"db":0}]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}},"8.0027":{"chromium":{"onset":0.00683,"end":0.17446,"duration":0.16763,"stop":0.89863,"peakDbfs":-19.15,"rmsDbfs":-35.14,"fundamentalHz":139.97,"envelopeDbfs":[-35,-21.15,-19.15,-26.59,-39.4,-64.11,-114.44,-214.19,null],"spectrum":[{"t":0.02,"dbfs":-27.46,"partials":[{"hz":268.09,"db":0},{"hz":542.66,"db":-3.67},{"hz":413.99,"db":-12.86},{"hz":822.46,"db":-16.3},{"hz":1087.92,"db":-23.36},{"hz":1356.12,"db":-29.87},{"hz":1642.62,"db":-33.89},{"hz":1911.56,"db":-35.42}]},{"t":0.065,"dbfs":-37.73,"partials":[{"hz":272.73,"db":0},{"hz":545.46,"db":-2.93},{"hz":818.18,"db":-17.07},{"hz":1090.91,"db":-24.67},{"hz":1363.64,"db":-29.76},{"hz":1636.37,"db":-33.57},{"hz":1909.09,"db":-36.65},{"hz":2181.82,"db":-39.22}]},{"t":0.11,"dbfs":-48.96,"partials":[{"hz":272.73,"db":0},{"hz":545.45,"db":-2.93},{"hz":818.18,"db":-17.07},{"hz":1090.91,"db":-24.67},{"hz":1363.64,"db":-29.76},{"hz":1636.37,"db":-33.57},{"hz":1909.1,"db":-36.65},{"hz":2181.84,"db":-39.22}]},{"t":0.155,"dbfs":-60.19,"partials":[{"hz":272.73,"db":0},{"hz":545.45,"db":-2.93},{"hz":818.18,"db":-17.07},{"hz":1090.91,"db":-24.67},{"hz":1363.64,"db":-29.76},{"hz":1636.37,"db":-33.57},{"hz":1909.09,"db":-36.65},{"hz":2181.81,"db":-39.22}]},{"t":0.3,"dbfs":-96.38,"partials":[{"hz":272.73,"db":0},{"hz":545.46,"db":-2.93},{"hz":818.18,"db":-17.07}]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"webkit":{"onset":0.00683,"end":0.17446,"duration":0.16763,"stop":0.89863,"peakDbfs":-19.15,"rmsDbfs":-35.14,"fundamentalHz":139.97,"envelopeDbfs":[-35,-21.15,-19.15,-26.59,-39.4,-64.11,-114.44,-214.19,null],"spectrum":[{"t":0.02,"dbfs":-27.46,"partials":[{"hz":268.09,"db":0},{"hz":542.66,"db":-3.67},{"hz":413.99,"db":-12.86},{"hz":822.46,"db":-16.3},{"hz":1087.92,"db":-23.36},{"hz":1356.12,"db":-29.87},{"hz":1642.62,"db":-33.89},{"hz":1911.56,"db":-35.42}]},{"t":0.065,"dbfs":-37.73,"partials":[{"hz":272.73,"db":0},{"hz":545.46,"db":-2.93},{"hz":818.18,"db":-17.07},{"hz":1090.91,"db":-24.67},{"hz":1363.64,"db":-29.76},{"hz":1636.37,"db":-33.57},{"hz":1909.09,"db":-36.65},{"hz":2181.82,"db":-39.22}]},{"t":0.11,"dbfs":-48.96,"partials":[{"hz":272.73,"db":0},{"hz":545.45,"db":-2.93},{"hz":818.18,"db":-17.07},{"hz":1090.91,"db":-24.67},{"hz":1363.64,"db":-29.76},{"hz":1636.37,"db":-33.57},{"hz":1909.1,"db":-36.65},{"hz":2181.84,"db":-39.22}]},{"t":0.155,"dbfs":-60.19,"partials":[{"hz":272.73,"db":0},{"hz":545.45,"db":-2.93},{"hz":818.18,"db":-17.07},{"hz":1090.91,"db":-24.67},{"hz":1363.64,"db":-29.76},{"hz":1636.37,"db":-33.57},{"hz":1909.09,"db":-36.65},{"hz":2181.81,"db":-39.22}]},{"t":0.3,"dbfs":-96.38,"partials":[{"hz":272.73,"db":0},{"hz":545.46,"db":-2.93},{"hz":818.18,"db":-17.07}]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]},"firefox":{"onset":0.00677,"end":0.13215,"duration":0.12537,"stop":0.89863,"peakDbfs":-14.23,"rmsDbfs":-27.26,"fundamentalHz":375.34,"envelopeDbfs":[-32.04,-14.23,-14.6,-24.52,-41.91,-75.77,-144.41,-281.68,null],"spectrum":[{"t":0.02,"dbfs":-17.77,"partials":[{"hz":375.99,"db":0},{"hz":748.65,"db":-21.05},{"hz":1124.32,"db":-32.05},{"hz":1499.54,"db":-38.44},{"hz":1874.66,"db":-42.95},{"hz":2249.72,"db":-46.45},{"hz":2624.78,"db":-49.32},{"hz":2999.79,"db":-51.75}]},{"t":0.065,"dbfs":-32.15,"partials":[{"hz":375,"db":0},{"hz":750,"db":-21.46},{"hz":1125,"db":-32.43},{"hz":1500.01,"db":-38.8},{"hz":1874.99,"db":-43.3},{"hz":2250,"db":-46.8},{"hz":2625.02,"db":-49.69},{"hz":2999.98,"db":-52.11}]},{"t":0.11,"dbfs":-47.59,"partials":[{"hz":375,"db":0},{"hz":750,"db":-21.46},{"hz":1125,"db":-32.43},{"hz":1500,"db":-38.8},{"hz":1875.01,"db":-43.29},{"hz":2249.99,"db":-46.8},{"hz":2624.99,"db":-49.69},{"hz":3000.01,"db":-52.11}]},{"t":0.155,"dbfs":-63.04,"partials":[{"hz":375,"db":0},{"hz":750,"db":-21.46},{"hz":1125,"db":-32.43},{"hz":1499.98,"db":-38.8},{"hz":1874.98,"db":-43.29},{"hz":2249.99,"db":-46.8},{"hz":2625.01,"db":-49.69},{"hz":3000.04,"db":-52.11}]},{"t":0.3,"dbfs":-112.8,"partials":[{"hz":375,"db":0}]},{"t":0.6,"dbfs":null,"partials":[]},{"t":1.2,"dbfs":null,"partials":[]}]}}}
+  }
+}

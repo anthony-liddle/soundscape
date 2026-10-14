@@ -1,0 +1,43 @@
+{
+  "format": "soundscape-cues",
+  "version": 1,
+  "instruments": {
+    "longest": {
+      "waveform": "sine",
+      "pitchOffset": 0,
+      "attack": 0.07418049,
+      "decay": 0.05172575,
+      "sustain": 0,
+      "release": 0,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 1.8e-05,
+      "filterType": "none",
+      "filterCutoff": 1,
+      "filterResonance": 0,
+      "delayTime": 1,
+      "delayFeedback": 1,
+      "delayMix": 0.5,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    }
+  },
+  "cues": {
+    "longest": {
+      "notes": [
+        {
+          "id": "longest",
+          "instrument": "longest",
+          "start": 0,
+          "duration": 0.03,
+          "pitch": 67,
+          "level": 0.3
+        }
+      ]
+    }
+  }
+}

@@ -8,13 +8,14 @@ import Glibc
 /// `playCue` sounds them in an `OfflineAudioContext`: each note one
 /// oscillator, or two in unison, through its own gain envelope and, unless
 /// its filter is `'none'`, a biquad, with an LFO on the oscillators' detune
-/// or the filter's frequency, summed at the cue output with its volume at 1.
+/// or the filter's frequency; then, for an instrument with any effect, through
+/// that instrument's effects chain, shared by all its notes; all summed at the
+/// cue output with its volume at 1.
 ///
-/// What it renders is everything but the effects: every waveform, every
-/// envelope shape, the pitch offset, every filter, the LFO on either target
-/// and unison. A document with any instrument that needs more is refused
-/// whole, as `loadCues` refuses an invalid one, with a problem for each field
-/// at fault (see ``unsupported(_:)``).
+/// It renders everything a cue can ask for: every waveform, every envelope
+/// shape, the pitch offset, every filter, the LFO on either target, unison,
+/// the delay and distortion. A render through an effects chain runs until the
+/// engine would disconnect the chain, by its own 2^-24 rule (`EngineTails`).
 ///
 /// Its tables are built once, for the waveforms the document uses at its rate,
 /// so a renderer, like a context, has one sample rate.
@@ -28,14 +29,12 @@ public struct CueRenderer: Sendable {
     /// The rates an `OfflineAudioContext` accepts.
     public static let sampleRates: ClosedRange<Double> = 3000...768_000
 
-    /// Readies a validated document for rendering at `sampleRate`.
+    /// Readies a validated document for rendering at `sampleRate`. Every field
+    /// a valid document can hold renders, so no document is refused.
     ///
-    /// - Throws: ``CueDocumentError`` listing every field this renderer cannot
-    ///   play yet, or ``CueRenderError/sampleRate(_:)``.
+    /// - Throws: ``CueRenderError/sampleRate(_:)``.
     public init(_ document: CueDocument, sampleRate: Double) throws {
         guard Self.sampleRates.contains(sampleRate) else { throw CueRenderError.sampleRate(sampleRate) }
-        let problems = Self.unsupported(document)
-        guard problems.isEmpty else { throw CueDocumentError(problems) }
         self.document = document
         self.sampleRate = sampleRate
         // An LFO is a sine oscillator
@@ -44,37 +43,12 @@ public struct CueRenderer: Sendable {
         tables = Dictionary(uniqueKeysWithValues: waveforms.map { ($0, BandLimitedTables($0, sampleRate: sampleRate)) })
     }
 
-    /// Reads, validates and readies a document in one step: the validator's
-    /// problems if it is invalid, otherwise this renderer's if it is unsupported.
+    /// Reads, validates and readies a document in one step.
+    ///
+    /// - Throws: ``CueDocumentError`` with the validator's problems for an
+    ///   invalid document, or ``CueRenderError/sampleRate(_:)``.
     public init(parsing text: String, sampleRate: Double) throws {
         try self.init(CueDocument(parsing: text), sampleRate: sampleRate)
-    }
-
-    /// Every field that needs an effect, in the document's instrument order
-    /// and, within an instrument, in the order below. The line is the engine's
-    /// own:
-    ///
-    /// - `delayTime`, `delayFeedback`, `delayMix` or `distortion` other than
-    ///   exactly 0: the engine builds an effects chain unless every effect is 0
-    ///   (`asksForNoEffect`), so a delay time of 0.25 with a mix of 0, which
-    ///   would be silent, is still refused. `-0` is 0.
-    ///
-    /// Every instrument is checked, used by a cue or not, as `loadCues` builds
-    /// a chain for every instrument.
-    public static func unsupported(_ document: CueDocument) -> [CueProblem] {
-        var problems: [CueProblem] = []
-        for name in document.instrumentNames {
-            let i = document.instruments[name]!
-            let base = "instruments.\(name)"
-            for (key, value) in [("delayTime", i.delayTime), ("delayFeedback", i.delayFeedback), ("delayMix", i.delayMix)]
-            where value != 0 {
-                problems.append(CueProblem(path: "\(base).\(key)", message: "must be 0: delay is not rendered yet"))
-            }
-            if i.distortion != 0 {
-                problems.append(CueProblem(path: "\(base).distortion", message: "must be 0: distortion is not rendered yet"))
-            }
-        }
-        return problems
     }
 
     /// The frame a render starting at `start` begins on: the frame on or before it.
@@ -87,7 +61,9 @@ public struct CueRenderer: Sendable {
     ///
     /// - Returns: mono float32 samples from the frame on or before `start`,
     ///   ``firstFrame(of:sampleRate:)``, through the last frame any note
-    ///   sounds, a filter's ring included.
+    ///   sounds, a filter's ring included, or the frame before the engine
+    ///   would disconnect an effects chain a note plays through, whichever is
+    ///   later.
     /// - Throws: ``CueRenderError/noCue(_:)`` for a name the document lacks.
     public func render(_ name: String, at start: Double = 0) throws -> [Float] {
         guard let cue = document.cues[name] else { throw CueRenderError.noCue(name) }
@@ -95,8 +71,11 @@ public struct CueRenderer: Sendable {
         let rate = sampleRate
         let first = Self.firstFrame(of: start, sampleRate: rate)
 
-        // Each note's voice: its samples from a frame, and the frame it ends on
-        var voices: [(from: Int, samples: [Float], end: Int)] = []
+        // Each note's voice: its samples from a frame, the frame it ends on, and
+        // the quanta its output sounds in; and the effects chain it plays
+        // through, if any, with the time the engine would disconnect it
+        var voices: [(from: Int, samples: [Float], end: Int, quanta: Range<Int>, chain: String?)] = []
+        var chains: [String: (chain: CueEffectsChain, ringsUntil: Double)] = [:]
         for note in cue.notes {
             let instrument = document.instruments[note.instrument]!
             let envelope = Envelope(instrument, level: note.level, releaseAt: note.duration)
@@ -148,21 +127,57 @@ public struct CueRenderer: Sendable {
                 }
             }
 
+            // A chain for every instrument with any effect, as loadCues builds
+            // one, and the time the engine would disconnect it: once every
+            // voice through it has stopped, and its filter rung out, and then
+            // the chain's own tail
+            if chains[note.instrument] == nil, let chain = CueEffectsChain(instrument, sampleRate: rate, knockouts: knockouts) {
+                chains[note.instrument] = (chain, 0)
+            }
+            if let (chain, ringsUntil) = chains[note.instrument] {
+                let silentAt = stopTime + EngineTails.filter(instrument, sampleRate: rate)
+                chains[note.instrument] = (chain, max(ringsUntil, silentAt + EngineTails.delay(instrument, sampleRate: rate)))
+            }
+            let chain = chains[note.instrument] == nil ? nil : note.instrument
+
             if instrument.filterType == .none || knockouts.contains(.noFilter) {
-                voices.append((sounding, gained, endFrame))
+                // The oscillators sound in every quantum their start and stop overlap
+                let quanta = endFrame > startFrame ? startFrame / 128..<(endFrame + 127) / 128 : 0..<0
+                voices.append((sounding, gained, endFrame, quanta, chain))
             } else {
                 let filter = VoiceFilter(instrument, sampleRate: rate, knockouts: knockouts)
                 let modulation = instrument.lfoTarget == .filter ? lfo?.at : nil
-                voices.append(filter.render(gained, from: sounding, oscillators: startFrame..<endFrame, modulation: modulation))
+                let (from, samples, end) = filter.render(
+                    gained, from: sounding, oscillators: startFrame..<endFrame, modulation: modulation)
+                voices.append((from, samples, end, from / 128..<(end + 127) / 128, chain))
             }
         }
 
-        let last = voices.map(\.end).max() ?? first
+        // Each voice summed at the cue output, or through its chain, in the
+        // order of each chain's first note, until the engine would disconnect it
+        var outputs: [(from: Int, samples: [Float], end: Int)] = []
+        var played = Set<String>()
+        for voice in voices {
+            guard let name = voice.chain else {
+                outputs.append((voice.from, voice.samples, voice.end))
+                continue
+            }
+            guard played.insert(name).inserted, let (chain, ringsUntil) = chains[name] else { continue }
+            let cut = frameRoundingUp(ringsUntil, sampleRate: rate)
+            let through = voices.filter { $0.chain == name }.map { (from: $0.from, samples: $0.samples, quanta: $0.quanta) }
+            // Every voice's biquad wakes the chain's input in the context's first quanta
+            let idle = cue.notes.filter { $0.instrument == name }
+                .map { VoiceFilter.idleQuanta(document.instruments[$0.instrument]!, sampleRate: rate) }.max() ?? 0
+            let (from, samples) = chain.render(through, idle: idle, to: cut)
+            outputs.append((from, samples, cut))
+        }
+
+        let last = outputs.map(\.end).max() ?? first
         var out = [Float](repeating: 0, count: max(0, last - first))
         out.withUnsafeMutableBufferPointer { out in
-            for voice in voices {
-                for i in max(0, first - voice.from)..<voice.samples.count {
-                    out[voice.from + i - first] += voice.samples[i]
+            for output in outputs {
+                for i in max(0, first - output.from)..<output.samples.count {
+                    out[output.from + i - first] += output.samples[i]
                 }
             }
         }
@@ -209,6 +224,24 @@ struct VoiceFilter {
         // float, and the frequency clamped to the param's range, 0 to Nyquist
         frequency = min(max(Float(20 * pow(1000, instrument.filterCutoff)), 0), Float(nyquist))
         q = Float(0.5 + instrument.filterResonance * 19.5)
+    }
+
+    /// How many render quanta, from the context's first, a voice's biquad
+    /// processes before its note, hearing only silence: while its tail time
+    /// has not passed since the context began, `PropagatesSilence` fails, so
+    /// it processes and marks its output as sounding, zeros though it is.
+    /// With no filter the engine routes around the biquad but leaves its
+    /// output connected, and Chromium's default, a lowpass at 350 Hz with a Q
+    /// of 1, does the same.
+    static func idleQuanta(_ instrument: CueInstrument, sampleRate: Double) -> Int {
+        let filter = VoiceFilter(instrument, sampleRate: sampleRate)
+        let c = instrument.filterType == .none
+            ? BiquadCoefficients.of(.lowpass, frequency: Double(Float(350)) / filter.nyquist, q: 1)
+            : filter.coefficients(at: filter.frequency)
+        let tail = filter.tailTime(c)
+        var quanta = 0
+        while !(0 + tail < Double(quanta * 128) / filter.rate) { quanta += 1 }
+        return quanta
     }
 
     /// `NormalizeFrequency` and `SetBiquadParams`: a frequency over Nyquist, in double.
@@ -318,9 +351,9 @@ struct LFO {
     }
 }
 
-/// Each feature filters, LFOs and unison bring, knocked out, for the positive
-/// controls in ReferenceRenders: each must miss the bar, or the bar cannot see
-/// that feature.
+/// Each feature filters, LFOs, unison, the delay and distortion bring,
+/// knocked out, for the positive controls in ReferenceRenders: each must miss
+/// the bar, or the bar cannot see that feature.
 struct Knockouts: OptionSet, Sendable {
     let rawValue: Int
     /// Every filter left out of the voice's path, as for `'none'`.
@@ -335,6 +368,17 @@ struct Knockouts: OptionSet, Sendable {
     /// its level when the input stopped, to the sample, rather than at the
     /// tail time Chromium and WebKit end it at, on a quantum's edge.
     static let ringToLevel = Knockouts(rawValue: 1 << 4)
+    /// A delay with feedback whose every pass round the loop takes the delay
+    /// time alone, without the render quantum Chromium and WebKit add.
+    static let noExtraQuantum = Knockouts(rawValue: 1 << 5)
+    /// Distortion's curve read at the context's rate, not oversampled 2x.
+    static let noOversampling = Knockouts(rawValue: 1 << 6)
+    /// Oversampled 2x, but with the resamplers' 128 frames of latency taken out.
+    static let oversamplingWithoutDelay = Knockouts(rawValue: 1 << 7)
+    /// Distortion's k, 100 times the amount, doubled.
+    static let distortionKDoubled = Knockouts(rawValue: 1 << 8)
+    /// The delay's mix applied to the wet path alone, the dry path left at 1.
+    static let mixOnWetOnly = Knockouts(rawValue: 1 << 9)
 }
 
 /// Why a cue could not be rendered, once its document was accepted.
