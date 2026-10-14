@@ -41,6 +41,14 @@ the cute theme, five notes up to a glint at five times the pitch. With the dev
 server running, **`/examples/cues.html`** has a button per cue, played through
 a real `AudioContext`.
 
+### 6. Every Feature Cue (`cues/every-feature.cues.json`)
+Every feature cue the Swift renderer is held to, 55 in all: filters, LFOs,
+unison, delay and distortion, the six reference documents in
+`conformance/cues/render` merged by `every-feature.mjs` there. The same page
+plays it, chosen from its document menu or opened with
+`/examples/cues.html?document=every-feature`, and Cue Check, the Swift test
+app, plays the same file, so the two can be heard side by side on an iPhone.
+
 ## Using the Examples
 
 These examples are written in TypeScript and designed to be integrated into a project that includes Soundscape.

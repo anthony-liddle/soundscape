@@ -89,6 +89,17 @@
       width: 1.25rem;
       height: 1.25rem;
     }
+    select {
+      min-height: 44px;
+      font-size: 1rem;
+      padding: 0.5rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+    }
+    select:focus-visible {
+      outline: 2px solid #a78bfa;
+      outline-offset: 2px;
+    }
     code {
       color: #c4b5fd;
     }
@@ -98,12 +109,17 @@
   <h1>Soundscape Cues</h1>
   <p class="subtitle">
     Short sound effects from a cue document, each note scheduled on the audio
-    clock. These two are Peach of a Word's tick and its length 8 mythic found
-    word in the cute theme, from <code>examples/cues/peach.cues.json</code>.
+    clock. Two of Peach of a Word's sounds, its tick and its length 8 mythic
+    found word in the cute theme, from <code>examples/cues/peach.cues.json</code>;
+    or every feature cue the Swift renderer is held to, filters, LFOs, unison,
+    delay and distortion, from <code>examples/cues/every-feature.cues.json</code>,
+    the document Cue Check plays.
   </p>
 
   <section class="section" aria-labelledby="cues-heading">
     <h2 id="cues-heading">Cues</h2>
+    <label for="document">Document</label>
+    <select id="document"></select>
     <ul id="cues"></ul>
     <label><input type="checkbox" id="mute"> Mute cues</label>
   </section>

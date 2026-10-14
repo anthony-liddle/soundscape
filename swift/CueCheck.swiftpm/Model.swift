@@ -4,8 +4,8 @@ import Soundscape
 import SoundscapePlayer
 import SwiftUI
 
-/// The player, Peach's cues, what the output is doing, and a log of every
-/// session event the player handles.
+/// The player, the cues of the document it has loaded, what the output is
+/// doing, and a log of every session event the player handles.
 @MainActor
 @Observable
 final class Model {
@@ -15,8 +15,34 @@ final class Model {
         let text: String
     }
 
+    /// The documents the app plays: Peach's, as the game does, and every
+    /// feature cue the Swift renderer is held to, to hear beside Safari.
+    enum Document: String, CaseIterable, Identifiable {
+        case peach = "Peach's cues"
+        case everyFeature = "Every feature"
+
+        var id: Self { self }
+
+        /// Its file in the app's bundle, a copy of the repository's.
+        var resource: String {
+            switch self {
+            case .peach: "peach-of-a-word"
+            case .everyFeature: "every-feature.cues"
+            }
+        }
+    }
+
     let player = CuePlayer()
+    private(set) var document = Document.peach
+    private(set) var loading = false
     private(set) var names: [String] = []
+    /// How long the last load took, rendering every cue at the output's rate.
+    private(set) var loadTime: Duration?
+    /// Bytes the loaded document's renders hold: every frame of every cue, in
+    /// every channel of the output, four bytes each, as the player keeps them.
+    private(set) var held: Int?
+    /// The app's whole memory footprint, as the system counts it against its limit.
+    private(set) var footprint: UInt64?
     private(set) var problem: String?
     private(set) var log: [Entry] = []
     private(set) var asked = 0
@@ -49,20 +75,52 @@ final class Model {
         }
     }
 
+    /// Peach's cues, the first time the app opens.
     func load() async {
         guard names.isEmpty else { return }
-        guard let url = Bundle.main.url(forResource: "peach-of-a-word", withExtension: "json") else {
-            problem = "Peach's cue file is missing from the app."
+        await load(.peach)
+    }
+
+    /// Loads a document, rendering every cue, and times it.
+    func load(_ next: Document) async {
+        guard !loading else { return }
+        loading = true
+        defer { loading = false }
+        guard let url = Bundle.main.url(forResource: next.resource, withExtension: "json") else {
+            problem = "\(next.rawValue) are missing from the app."
             return
         }
         do {
-            try await player.load(parsing: String(contentsOf: url, encoding: .utf8))
+            let text = try String(contentsOf: url, encoding: .utf8)
+            let start = ContinuousClock.now
+            try await player.load(parsing: text)
+            loadTime = ContinuousClock.now - start
+            document = next
+            problem = nil
             names = player.cueNames
-            note("loaded \(names.count) cues")
+            held = names.reduce(0) { total, name in
+                let frames = Int(((player.duration(of: name) ?? 0) * player.sampleRate).rounded())
+                return total + max(1, frames) * player.outputChannelCount * MemoryLayout<Float>.size
+            }
+            note("loaded \(next.rawValue), \(names.count) cues, in \(loadText), holding \(heldText)")
         } catch {
             problem = "\(error)"
         }
         refreshOutput()
+    }
+
+    var loadText: String {
+        guard let loadTime else { return "not yet" }
+        let seconds = Double(loadTime.components.seconds) + Double(loadTime.components.attoseconds) / 1e18
+        return "\(seconds.formatted(.number.precision(.fractionLength(2)))) s"
+    }
+
+    var heldText: String { held.map(Self.mebibytes) ?? "not yet" }
+
+    var footprintText: String { footprint.map { Self.mebibytes(Int($0)) } ?? "unknown" }
+
+    nonisolated static func mebibytes(_ bytes: Int) -> String {
+        "\((Double(bytes) / 1_048_576).formatted(.number.precision(.fractionLength(1)))) MiB"
     }
 
     func play(_ name: String) {
@@ -110,6 +168,20 @@ final class Model {
         rendering = player.sampleRate > 0
             ? "\(Int(player.sampleRate)) Hz, \(player.outputChannelCount) ch"
             : "not built yet"
+        footprint = Self.footprint()
+    }
+
+    /// The app's memory footprint, as Xcode's memory gauge and the system's
+    /// limit count it.
+    nonisolated static func footprint() -> UInt64? {
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size)
+        let result = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+            }
+        }
+        return result == KERN_SUCCESS ? info.phys_footprint : nil
     }
 
     nonisolated static func describe(_ reason: AVAudioSession.RouteChangeReason) -> String {

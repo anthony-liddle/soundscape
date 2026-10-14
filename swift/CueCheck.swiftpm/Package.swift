@@ -48,8 +48,10 @@ let package = Package(
             path: ".",
             exclude: ["README.md"],
             resources: [
-                // A copy of conformance/cues/cases/peach-of-a-word.json, held to it by a test
+                // Copies of conformance/cues/cases/peach-of-a-word.json and
+                // examples/cues/every-feature.cues.json, held to them by a test
                 .copy("peach-of-a-word.json"),
+                .copy("every-feature.cues.json"),
             ]
         ),
     ]
