@@ -30,6 +30,8 @@ export const MODES = { chromium: 'lockstep', webkit: 'lockstep', firefox: 'presc
 export const SCENARIOS = {
   rps: {
     game: 'rps',
+    // The generated glitch track's draws, which the game takes from Math.random
+    glitchSeed: 2,
     seconds: 36.5,
     playAt: 0.128,
     actions: [

@@ -6,17 +6,25 @@
 import { writeFileSync } from 'node:fs';
 import { buildEngine } from '../cues/render/browser.mjs';
 import { PLAYWRIGHT, SCENARIOS, renderSongs } from './render.mjs';
-import { db1, measureWindows, spreadOf, underMusic, worst } from './compare.mjs';
+import { RULE, db1, measureWindows, meetsRule, spreadOf } from './compare.mjs';
 
-/** The bar's rule: a difference at least this far under the music, in every window. */
-const UNDER_DB = -80;
 
 const engine = buildEngine();
 const browsers = {};
 const checks = {};
 
-/** The worst window of two renders' difference, over both channels. */
-const worstOf = (a, b, rate, from) => Math.max(...[0, 1].map((c) => worst(underMusic(a.channels[c], b.channels[c], rate, from))));
+/**
+ * Two renders by the bar's first rule, over both channels: whether every
+ * window meets it, and the worst window that the music still sounds in,
+ * leaving out any whose difference is under the floor.
+ */
+function ruleOf(a, b, rate, from) {
+  const judged = [0, 1].map((c) => meetsRule(a.channels[c], b.channels[c], rate, from));
+  const all = judged.flatMap((j) => j.windows.filter((w) => w.under !== null).map((w) => w.under));
+  const counted = judged.flatMap((j) => j.windows.filter((w) => w.under !== null && !(w.level <= RULE.floorDbfs)).map((w) => w.under));
+  const most = (xs) => (xs.length ? Math.max(...xs) : -Infinity);
+  return { pass: judged.every((j) => j.pass), worst: most(all), worstSounding: most(counted) };
+}
 
 // 1. Two loads of The Forgetting Machine, each drawing its own reverb as a
 // browser does: the same music, or not
@@ -26,13 +34,14 @@ for (const browser of ['chromium', 'webkit']) {
   const { version, renders } = await renderSongs(browser, [job, job]);
   browsers[browser] = version;
   const [a, b] = renders;
-  const w = worstOf(a, b, 48000, a.meta.playFrame);
+  const rule = ruleOf(a, b, 48000, a.meta.playFrame);
   const ids = Object.keys(a.meta.impulses);
   checks.loads[browser] = {
-    worstWindowUnderMusicDb: db1(w),
+    worstWindowUnderMusicDb: db1(rule.worst),
+    worstWindowAboveTheFloorDb: db1(rule.worstSounding),
     impulsesTheSameEachLoad: ids.every((id) => a.meta.impulses[id] === b.meta.impulses[id]),
     impulsesDifferentEachTrack: new Set(ids.map((id) => a.meta.impulses[id])).size === ids.length,
-    pass: w <= UNDER_DB,
+    pass: rule.pass,
   };
 }
 
@@ -50,12 +59,13 @@ for (const game of ['rps', 'fm']) {
   const spread = [0, 1]
     .map((ch) => spreadOf(measureWindows(c.channels[ch], 48000, from), measureWindows(w.channels[ch], 48000, from)))
     .reduce((p, q) => Object.fromEntries(Object.keys(p).map((k) => [k, Math.max(p[k], q[k])])));
-  const cw = worstOf(c, w, 48000, from);
+  const cw = ruleOf(c, w, 48000, from);
   checks.browsers[game] = {
-    chromiumWebkitWorstWindowUnderMusicDb: db1(cw),
+    chromiumWebkitWorstWindowUnderMusicDb: db1(cw.worst),
+    chromiumWebkitWorstWindowAboveTheFloorDb: db1(cw.worstSounding),
     chromiumWebkitMeasureSpread: spread,
-    chromiumFirefoxWorstWindowUnderMusicDb: db1(worstOf(c, f, 48000, from)),
-    pass: cw <= UNDER_DB,
+    chromiumFirefoxWorstWindowUnderMusicDb: db1(ruleOf(c, f, 48000, from).worst),
+    pass: cw.pass,
   };
 }
 
