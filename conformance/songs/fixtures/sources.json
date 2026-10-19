@@ -1,0 +1,29 @@
+{
+  "about": "Each game's song, copied byte for byte, and the files whose calls harness.js ports. The harness plays these songs through whichever engine it is given, as each game's music manager plays them.",
+  "rock-paper-scissors.json": {
+    "repository": "git@github.com:anthony-liddle/rock-paper-scissors.git",
+    "commit": "7041b1e531efea96f604923133e6fb2d6eb68b8c",
+    "path": "src/data/soundscape.json",
+    "lastChangedIn": "4aed934ef043559e2a10faf9e5c5a1412b7d558b",
+    "sha256": "cde8f201c7735df8f0ea2a7b35b8226e947def994164f478beb94c59a132757c",
+    "playedBy": {
+      "path": "src/engine/musicManager.ts",
+      "sha256": "b9f97c0816a26f9d30d1cfac17937ce7b10b9a0cb67ccbc00690be8568160bbe"
+    }
+  },
+  "the-forgetting-machine.json": {
+    "repository": "git@github.com:anthony-liddle/forgetting-machine.git",
+    "commit": "dea1e3b3e74dbbdae4d69b8cc39ea4eb416e583a",
+    "path": "public/music.json",
+    "lastChangedIn": "a5056cb7b9324c77d4479a55082ade68fd0cc232",
+    "sha256": "0010bfa50dcadc383de7388a50a3f9d85cbf4ca2d70af10bd0c8a04451ef39d9",
+    "playedBy": {
+      "path": "src/audio/musicManager.ts",
+      "sha256": "64c9088e1de60d61fcc74b86ee2b2288d5ef0370a35f41e8ba2862c589b8d7ae",
+      "timing": {
+        "path": "src/timing.ts",
+        "sha256": "543ef4327910931ccc3474e9ef34bb46d31d40feeb0e47423df59701828a9562"
+      }
+    }
+  }
+}

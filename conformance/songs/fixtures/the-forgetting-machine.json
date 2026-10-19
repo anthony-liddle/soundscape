@@ -1,0 +1,373 @@
+{
+  "metadata": {
+    "name": "the forgetting machine",
+    "tempo": 70,
+    "timeSignature": [4, 4],
+    "lengthBeats": 70
+  },
+  "tracks": [
+    {
+      "id": "track001",
+      "name": "Strings",
+      "presetId": "strings",
+      "notes": [
+        {
+          "id": "note0001",
+          "pitch": 57,
+          "startTime": 0,
+          "duration": 13,
+          "velocity": 78
+        },
+        {
+          "id": "note0002",
+          "pitch": 60,
+          "startTime": 0.5,
+          "duration": 12.5,
+          "velocity": 73
+        },
+        {
+          "id": "note0003",
+          "pitch": 64,
+          "startTime": 1,
+          "duration": 12,
+          "velocity": 68
+        },
+        {
+          "id": "note0004",
+          "pitch": 53,
+          "startTime": 13,
+          "duration": 10,
+          "velocity": 80
+        },
+        {
+          "id": "note0005",
+          "pitch": 57,
+          "startTime": 13.5,
+          "duration": 9.5,
+          "velocity": 75
+        },
+        {
+          "id": "note0006",
+          "pitch": 60,
+          "startTime": 14,
+          "duration": 9,
+          "velocity": 70
+        },
+        {
+          "id": "note0007",
+          "pitch": 57,
+          "startTime": 23,
+          "duration": 5,
+          "velocity": 78
+        },
+        {
+          "id": "note0008",
+          "pitch": 60,
+          "startTime": 23.5,
+          "duration": 4.5,
+          "velocity": 73
+        },
+        {
+          "id": "note0009",
+          "pitch": 64,
+          "startTime": 24,
+          "duration": 4,
+          "velocity": 68
+        },
+        {
+          "id": "note0010",
+          "pitch": 52,
+          "startTime": 28,
+          "duration": 10,
+          "velocity": 82
+        },
+        {
+          "id": "note0011",
+          "pitch": 55,
+          "startTime": 28.5,
+          "duration": 9.5,
+          "velocity": 77
+        },
+        {
+          "id": "note0012",
+          "pitch": 59,
+          "startTime": 29,
+          "duration": 9,
+          "velocity": 72
+        },
+        {
+          "id": "note0013",
+          "pitch": 50,
+          "startTime": 38,
+          "duration": 9,
+          "velocity": 80
+        },
+        {
+          "id": "note0014",
+          "pitch": 53,
+          "startTime": 38.5,
+          "duration": 8.5,
+          "velocity": 75
+        },
+        {
+          "id": "note0015",
+          "pitch": 57,
+          "startTime": 39,
+          "duration": 8,
+          "velocity": 70
+        },
+        {
+          "id": "note0016",
+          "pitch": 57,
+          "startTime": 47,
+          "duration": 10,
+          "velocity": 58
+        },
+        {
+          "id": "note0017",
+          "pitch": 60,
+          "startTime": 47.5,
+          "duration": 9.5,
+          "velocity": 52
+        },
+        {
+          "id": "note0018",
+          "pitch": 64,
+          "startTime": 48,
+          "duration": 9,
+          "velocity": 46
+        },
+        {
+          "id": "note0019",
+          "pitch": 57,
+          "startTime": 57,
+          "duration": 13,
+          "velocity": 40
+        },
+        {
+          "id": "note0020",
+          "pitch": 60,
+          "startTime": 57.5,
+          "duration": 12.5,
+          "velocity": 34
+        }
+      ]
+    },
+    {
+      "id": "track002",
+      "name": "Bell",
+      "presetId": "bell",
+      "notes": [
+        {
+          "id": "note0021",
+          "pitch": 45,
+          "startTime": 10,
+          "duration": 0.25,
+          "velocity": 72
+        },
+        {
+          "id": "note0022",
+          "pitch": 52,
+          "startTime": 16,
+          "duration": 0.25,
+          "velocity": 88
+        },
+        {
+          "id": "note0023",
+          "pitch": 48,
+          "startTime": 16.5,
+          "duration": 0.25,
+          "velocity": 84
+        },
+        {
+          "id": "note0024",
+          "pitch": 47,
+          "startTime": 17,
+          "duration": 0.25,
+          "velocity": 80
+        },
+        {
+          "id": "note0025",
+          "pitch": 45,
+          "startTime": 20,
+          "duration": 0.25,
+          "velocity": 75
+        },
+        {
+          "id": "note0026",
+          "pitch": 52,
+          "startTime": 24,
+          "duration": 0.25,
+          "velocity": 84
+        },
+        {
+          "id": "note0027",
+          "pitch": 48,
+          "startTime": 24.5,
+          "duration": 0.25,
+          "velocity": 80
+        },
+        {
+          "id": "note0028",
+          "pitch": 45,
+          "startTime": 25,
+          "duration": 0.25,
+          "velocity": 76
+        },
+        {
+          "id": "note0029",
+          "pitch": 52,
+          "startTime": 30,
+          "duration": 0.25,
+          "velocity": 88
+        },
+        {
+          "id": "note0030",
+          "pitch": 48,
+          "startTime": 30.5,
+          "duration": 0.25,
+          "velocity": 84
+        },
+        {
+          "id": "note0031",
+          "pitch": 47,
+          "startTime": 31,
+          "duration": 0.25,
+          "velocity": 80
+        },
+        {
+          "id": "note0032",
+          "pitch": 45,
+          "startTime": 32,
+          "duration": 0.25,
+          "velocity": 75
+        },
+        {
+          "id": "note0033",
+          "pitch": 43,
+          "startTime": 36,
+          "duration": 0.25,
+          "velocity": 80
+        },
+        {
+          "id": "note0034",
+          "pitch": 40,
+          "startTime": 37,
+          "duration": 0.25,
+          "velocity": 74
+        },
+        {
+          "id": "note0035",
+          "pitch": 45,
+          "startTime": 39,
+          "duration": 0.25,
+          "velocity": 68
+        },
+        {
+          "id": "note0036",
+          "pitch": 52,
+          "startTime": 42,
+          "duration": 0.25,
+          "velocity": 78
+        },
+        {
+          "id": "note0037",
+          "pitch": 48,
+          "startTime": 43,
+          "duration": 0.25,
+          "velocity": 73
+        },
+        {
+          "id": "note0038",
+          "pitch": 48,
+          "startTime": 50,
+          "duration": 0.25,
+          "velocity": 58
+        },
+        {
+          "id": "note0039",
+          "pitch": 45,
+          "startTime": 53,
+          "duration": 0.25,
+          "velocity": 50
+        },
+        {
+          "id": "note0040",
+          "pitch": 45,
+          "startTime": 62,
+          "duration": 0.25,
+          "velocity": 40
+        }
+      ]
+    },
+    {
+      "id": "track003",
+      "name": "Piano",
+      "presetId": "piano",
+      "notes": [
+        {
+          "id": "note0041",
+          "pitch": 55,
+          "startTime": 33,
+          "duration": 2,
+          "velocity": 68
+        },
+        {
+          "id": "note0042",
+          "pitch": 53,
+          "startTime": 35,
+          "duration": 2,
+          "velocity": 65
+        },
+        {
+          "id": "note0043",
+          "pitch": 52,
+          "startTime": 37,
+          "duration": 2,
+          "velocity": 62
+        },
+        {
+          "id": "note0044",
+          "pitch": 50,
+          "startTime": 39,
+          "duration": 2,
+          "velocity": 58
+        },
+        {
+          "id": "note0045",
+          "pitch": 48,
+          "startTime": 41,
+          "duration": 1.5,
+          "velocity": 54
+        },
+        {
+          "id": "note0046",
+          "pitch": 47,
+          "startTime": 43,
+          "duration": 1.5,
+          "velocity": 50
+        }
+      ]
+    }
+  ],
+  "mixer": {
+    "tracks": {
+      "track001": {
+        "volume": 0.72,
+        "mute": false,
+        "solo": false
+      },
+      "track002": {
+        "volume": 0.65,
+        "mute": false,
+        "solo": false
+      },
+      "track003": {
+        "volume": 0.52,
+        "mute": false,
+        "solo": false
+      }
+    },
+    "masterVolume": 0.72
+  }
+}
