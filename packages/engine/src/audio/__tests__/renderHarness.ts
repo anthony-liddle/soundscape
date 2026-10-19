@@ -18,19 +18,6 @@ export const SAMPLE_RATE = 48000
 export const STEP_SECONDS = 0.008
 export const START = 0.128
 
-/** A deterministic stand-in for Math.random, so the reverb impulse response repeats. */
-export function seedRandom(seed = 1): void {
-  let state = seed >>> 0
-  vi.spyOn(Math, 'random').mockImplementation(() => {
-    // mulberry32
-    state = (state + 0x6d2b79f5) >>> 0
-    let t = state
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  })
-}
-
 /**
  * Make `new AudioContext()` construct an offline context of the given length,
  * and return a getter for the one constructed. The worklet is refused

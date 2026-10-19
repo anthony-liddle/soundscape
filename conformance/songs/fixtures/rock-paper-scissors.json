@@ -1,0 +1,378 @@
+{
+  "metadata": {
+    "name": "RO-SHAM-BO",
+    "tempo": 60,
+    "timeSignature": [4, 4],
+    "lengthBeats": 16
+  },
+  "tracks": [
+    {
+      "id": "track-pad",
+      "name": "Ambient Pad",
+      "presetId": "pad",
+      "notes": [
+        { "id": "pad-01", "pitch": 48, "startTime": 0, "duration": 4, "velocity": 60 },
+        { "id": "pad-02", "pitch": 51, "startTime": 0, "duration": 4, "velocity": 60 },
+        { "id": "pad-03", "pitch": 55, "startTime": 0, "duration": 4, "velocity": 60 },
+        { "id": "pad-04", "pitch": 46, "startTime": 4, "duration": 4, "velocity": 60 },
+        { "id": "pad-05", "pitch": 49, "startTime": 4, "duration": 4, "velocity": 60 },
+        { "id": "pad-06", "pitch": 53, "startTime": 4, "duration": 4, "velocity": 60 },
+        { "id": "pad-07", "pitch": 43, "startTime": 8, "duration": 4, "velocity": 60 },
+        { "id": "pad-08", "pitch": 46, "startTime": 8, "duration": 4, "velocity": 60 },
+        { "id": "pad-09", "pitch": 51, "startTime": 8, "duration": 4, "velocity": 60 },
+        { "id": "pad-10", "pitch": 48, "startTime": 12, "duration": 4, "velocity": 60 },
+        { "id": "pad-11", "pitch": 51, "startTime": 12, "duration": 4, "velocity": 60 },
+        { "id": "pad-12", "pitch": 55, "startTime": 12, "duration": 4, "velocity": 60 }
+      ],
+      "paramOverrides": {
+        "attack": 0.6,
+        "release": 0.7,
+        "filterCutoff": 0.35,
+        "delayMix": 0.3,
+        "delayFeedback": 0.4,
+        "delayTime": 0.4
+      }
+    },
+    {
+      "id": "track-bass",
+      "name": "Bass Pulse",
+      "presetId": "bass",
+      "notes": [
+        { "id": "bass-01", "pitch": 36, "startTime": 0, "duration": 1.5, "velocity": 80 },
+        { "id": "bass-02", "pitch": 36, "startTime": 2, "duration": 1.5, "velocity": 80 },
+        { "id": "bass-03", "pitch": 34, "startTime": 4, "duration": 1.5, "velocity": 80 },
+        { "id": "bass-04", "pitch": 34, "startTime": 6, "duration": 1.5, "velocity": 80 },
+        { "id": "bass-05", "pitch": 31, "startTime": 8, "duration": 1.5, "velocity": 80 },
+        { "id": "bass-06", "pitch": 31, "startTime": 10, "duration": 1.5, "velocity": 80 },
+        { "id": "bass-07", "pitch": 36, "startTime": 12, "duration": 1.5, "velocity": 80 },
+        { "id": "bass-08", "pitch": 36, "startTime": 14, "duration": 1.5, "velocity": 80 }
+      ],
+      "paramOverrides": {
+        "filterCutoff": 0.25,
+        "distortion": 0.15
+      }
+    },
+    {
+      "id": "track-keys",
+      "name": "Uneasy Keys",
+      "presetId": "keys",
+      "notes": [
+        { "id": "keys-01", "pitch": 72, "startTime": 0, "duration": 0.5, "velocity": 70 },
+        { "id": "keys-02", "pitch": 75, "startTime": 1.5, "duration": 0.5, "velocity": 55 },
+        { "id": "keys-03", "pitch": 71, "startTime": 3, "duration": 0.75, "velocity": 65 },
+        { "id": "keys-04", "pitch": 67, "startTime": 5, "duration": 0.5, "velocity": 60 },
+        { "id": "keys-05", "pitch": 72, "startTime": 7, "duration": 0.5, "velocity": 50 },
+        { "id": "keys-06", "pitch": 70, "startTime": 8.5, "duration": 0.75, "velocity": 70 },
+        { "id": "keys-07", "pitch": 75, "startTime": 10, "duration": 0.5, "velocity": 55 },
+        { "id": "keys-08", "pitch": 68, "startTime": 12, "duration": 0.5, "velocity": 65 },
+        { "id": "keys-09", "pitch": 63, "startTime": 14, "duration": 1, "velocity": 50 }
+      ],
+      "paramOverrides": {
+        "delayMix": 0.25,
+        "delayFeedback": 0.35,
+        "delayTime": 0.25,
+        "filterCutoff": 0.55
+      }
+    },
+    {
+      "id": "track-percussion",
+      "name": "Percussion",
+      "presetId": "percussion",
+      "notes": [
+        { "id": "perc-k00", "pitch": 36, "startTime": 0, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-k01", "pitch": 36, "startTime": 1, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-h01", "pitch": 60, "startTime": 1.5, "duration": 0.15, "velocity": 70 },
+        { "id": "perc-k02", "pitch": 36, "startTime": 2, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-s02", "pitch": 48, "startTime": 2, "duration": 0.2, "velocity": 90 },
+        { "id": "perc-k03", "pitch": 36, "startTime": 3, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-h03", "pitch": 60, "startTime": 3.5, "duration": 0.15, "velocity": 70 },
+        { "id": "perc-k04", "pitch": 36, "startTime": 4, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-k05", "pitch": 36, "startTime": 5, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-h05", "pitch": 60, "startTime": 5.5, "duration": 0.15, "velocity": 70 },
+        { "id": "perc-k06", "pitch": 36, "startTime": 6, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-s06", "pitch": 48, "startTime": 6, "duration": 0.2, "velocity": 90 },
+        { "id": "perc-k07", "pitch": 36, "startTime": 7, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-h07", "pitch": 60, "startTime": 7.5, "duration": 0.15, "velocity": 70 },
+        { "id": "perc-k08", "pitch": 36, "startTime": 8, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-k09", "pitch": 36, "startTime": 9, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-h09", "pitch": 60, "startTime": 9.5, "duration": 0.15, "velocity": 70 },
+        { "id": "perc-k10", "pitch": 36, "startTime": 10, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-s10", "pitch": 48, "startTime": 10, "duration": 0.2, "velocity": 90 },
+        { "id": "perc-k11", "pitch": 36, "startTime": 11, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-h11", "pitch": 60, "startTime": 11.5, "duration": 0.15, "velocity": 70 },
+        { "id": "perc-k12", "pitch": 36, "startTime": 12, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-k13", "pitch": 36, "startTime": 13, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-h13", "pitch": 60, "startTime": 13.5, "duration": 0.15, "velocity": 70 },
+        { "id": "perc-k14", "pitch": 36, "startTime": 14, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-s14", "pitch": 48, "startTime": 14, "duration": 0.2, "velocity": 90 },
+        { "id": "perc-k15", "pitch": 36, "startTime": 15, "duration": 0.25, "velocity": 100 },
+        { "id": "perc-h15", "pitch": 60, "startTime": 15.5, "duration": 0.15, "velocity": 70 }
+      ],
+      "paramOverrides": {
+        "distortion": 0.3,
+        "filterCutoff": 0.6
+      }
+    },
+    {
+      "id": "track-lead",
+      "name": "Unstable Lead",
+      "presetId": "lead",
+      "notes": [
+        { "id": "lead-01", "pitch": 72, "startTime": 0, "duration": 0.25, "velocity": 100 },
+        { "id": "lead-02", "pitch": 75, "startTime": 0.5, "duration": 0.25, "velocity": 90 },
+        { "id": "lead-03", "pitch": 79, "startTime": 1, "duration": 0.5, "velocity": 110 },
+        { "id": "lead-04", "pitch": 72, "startTime": 2, "duration": 0.25, "velocity": 80 },
+        { "id": "lead-05", "pitch": 84, "startTime": 3, "duration": 0.75, "velocity": 100 },
+        { "id": "lead-06", "pitch": 79, "startTime": 4.5, "duration": 0.25, "velocity": 90 },
+        { "id": "lead-07", "pitch": 75, "startTime": 5, "duration": 0.5, "velocity": 100 },
+        { "id": "lead-08", "pitch": 72, "startTime": 6, "duration": 0.25, "velocity": 85 },
+        { "id": "lead-09", "pitch": 71, "startTime": 7, "duration": 0.5, "velocity": 110 },
+        { "id": "lead-10", "pitch": 72, "startTime": 8, "duration": 0.25, "velocity": 100 },
+        { "id": "lead-11", "pitch": 75, "startTime": 8.5, "duration": 0.25, "velocity": 90 },
+        { "id": "lead-12", "pitch": 80, "startTime": 9.5, "duration": 0.5, "velocity": 100 },
+        { "id": "lead-13", "pitch": 79, "startTime": 10.5, "duration": 0.25, "velocity": 85 },
+        { "id": "lead-14", "pitch": 84, "startTime": 11.5, "duration": 0.75, "velocity": 110 },
+        { "id": "lead-15", "pitch": 75, "startTime": 13, "duration": 0.25, "velocity": 90 },
+        { "id": "lead-16", "pitch": 72, "startTime": 14, "duration": 0.5, "velocity": 100 },
+        { "id": "lead-17", "pitch": 68, "startTime": 15, "duration": 0.25, "velocity": 80 }
+      ],
+      "paramOverrides": {
+        "filterCutoff": 0.5,
+        "distortion": 0.15,
+        "delayMix": 0.2,
+        "delayFeedback": 0.3,
+        "delayTime": 0.2
+      }
+    },
+    {
+      "id": "track-glitch",
+      "name": "Meltdown Glitch",
+      "presetId": "pluck",
+      "notes": [
+        { "id": "gl-s00", "pitch": 45, "startTime": 0, "duration": 0.08, "velocity": 82 },
+        { "id": "gl-s01", "pitch": 78, "startTime": 0.25, "duration": 0.12, "velocity": 115 },
+        { "id": "gl-s02", "pitch": 33, "startTime": 0.5, "duration": 0.06, "velocity": 68 },
+        { "id": "gl-s03", "pitch": 91, "startTime": 0.75, "duration": 0.14, "velocity": 98 },
+        { "id": "gl-s04", "pitch": 56, "startTime": 1, "duration": 0.05, "velocity": 74 },
+        { "id": "gl-s05", "pitch": 22, "startTime": 1.25, "duration": 0.11, "velocity": 121 },
+        { "id": "gl-s06", "pitch": 67, "startTime": 1.5, "duration": 0.09, "velocity": 63 },
+        { "id": "gl-s07", "pitch": 84, "startTime": 1.75, "duration": 0.15, "velocity": 105 },
+        { "id": "gl-s08", "pitch": 38, "startTime": 2, "duration": 0.07, "velocity": 89 },
+        { "id": "gl-s09", "pitch": 95, "startTime": 2.25, "duration": 0.13, "velocity": 127 },
+        { "id": "gl-s10", "pitch": 51, "startTime": 2.5, "duration": 0.05, "velocity": 71 },
+        { "id": "gl-s11", "pitch": 73, "startTime": 2.75, "duration": 0.1, "velocity": 110 },
+        { "id": "gl-s12", "pitch": 29, "startTime": 3, "duration": 0.08, "velocity": 66 },
+        { "id": "gl-s13", "pitch": 88, "startTime": 3.25, "duration": 0.14, "velocity": 100 },
+        { "id": "gl-s14", "pitch": 42, "startTime": 3.5, "duration": 0.06, "velocity": 79 },
+        { "id": "gl-s15", "pitch": 61, "startTime": 3.75, "duration": 0.12, "velocity": 118 },
+        { "id": "gl-s16", "pitch": 97, "startTime": 4, "duration": 0.09, "velocity": 64 },
+        { "id": "gl-s17", "pitch": 35, "startTime": 4.25, "duration": 0.15, "velocity": 107 },
+        { "id": "gl-s18", "pitch": 76, "startTime": 4.5, "duration": 0.05, "velocity": 85 },
+        { "id": "gl-s19", "pitch": 48, "startTime": 4.75, "duration": 0.11, "velocity": 122 },
+        { "id": "gl-s20", "pitch": 83, "startTime": 5, "duration": 0.07, "velocity": 69 },
+        { "id": "gl-s21", "pitch": 27, "startTime": 5.25, "duration": 0.13, "velocity": 96 },
+        { "id": "gl-s22", "pitch": 69, "startTime": 5.5, "duration": 0.08, "velocity": 113 },
+        { "id": "gl-s23", "pitch": 54, "startTime": 5.75, "duration": 0.14, "velocity": 72 },
+        { "id": "gl-s24", "pitch": 92, "startTime": 6, "duration": 0.06, "velocity": 104 },
+        { "id": "gl-s25", "pitch": 39, "startTime": 6.25, "duration": 0.1, "velocity": 88 },
+        { "id": "gl-s26", "pitch": 71, "startTime": 6.5, "duration": 0.12, "velocity": 126 },
+        { "id": "gl-s27", "pitch": 86, "startTime": 6.75, "duration": 0.05, "velocity": 67 },
+        { "id": "gl-s28", "pitch": 31, "startTime": 7, "duration": 0.09, "velocity": 102 },
+        { "id": "gl-s29", "pitch": 63, "startTime": 7.25, "duration": 0.15, "velocity": 77 },
+        { "id": "gl-s30", "pitch": 94, "startTime": 7.5, "duration": 0.07, "velocity": 119 },
+        { "id": "gl-s31", "pitch": 46, "startTime": 7.75, "duration": 0.11, "velocity": 62 },
+        { "id": "gl-s32", "pitch": 58, "startTime": 8, "duration": 0.13, "velocity": 108 },
+        { "id": "gl-s33", "pitch": 79, "startTime": 8.25, "duration": 0.06, "velocity": 83 },
+        { "id": "gl-s34", "pitch": 25, "startTime": 8.5, "duration": 0.14, "velocity": 124 },
+        { "id": "gl-s35", "pitch": 87, "startTime": 8.75, "duration": 0.08, "velocity": 70 },
+        { "id": "gl-s36", "pitch": 43, "startTime": 9, "duration": 0.1, "velocity": 99 },
+        { "id": "gl-s37", "pitch": 72, "startTime": 9.25, "duration": 0.05, "velocity": 116 },
+        { "id": "gl-s38", "pitch": 55, "startTime": 9.5, "duration": 0.12, "velocity": 65 },
+        { "id": "gl-s39", "pitch": 96, "startTime": 9.75, "duration": 0.09, "velocity": 101 },
+        { "id": "gl-s40", "pitch": 34, "startTime": 10, "duration": 0.15, "velocity": 90 },
+        { "id": "gl-s41", "pitch": 68, "startTime": 10.25, "duration": 0.07, "velocity": 125 },
+        { "id": "gl-s42", "pitch": 82, "startTime": 10.5, "duration": 0.11, "velocity": 73 },
+        { "id": "gl-s43", "pitch": 28, "startTime": 10.75, "duration": 0.06, "velocity": 109 },
+        { "id": "gl-s44", "pitch": 74, "startTime": 11, "duration": 0.13, "velocity": 81 },
+        { "id": "gl-s45", "pitch": 49, "startTime": 11.25, "duration": 0.08, "velocity": 120 },
+        { "id": "gl-s46", "pitch": 91, "startTime": 11.5, "duration": 0.05, "velocity": 66 },
+        { "id": "gl-s47", "pitch": 37, "startTime": 11.75, "duration": 0.14, "velocity": 103 },
+        { "id": "gl-s48", "pitch": 85, "startTime": 12, "duration": 0.09, "velocity": 78 },
+        { "id": "gl-s49", "pitch": 52, "startTime": 12.25, "duration": 0.12, "velocity": 117 },
+        { "id": "gl-s50", "pitch": 77, "startTime": 12.5, "duration": 0.06, "velocity": 61 },
+        { "id": "gl-s51", "pitch": 23, "startTime": 12.75, "duration": 0.1, "velocity": 97 },
+        { "id": "gl-s52", "pitch": 66, "startTime": 13, "duration": 0.15, "velocity": 111 },
+        { "id": "gl-s53", "pitch": 44, "startTime": 13.25, "duration": 0.07, "velocity": 75 },
+        { "id": "gl-s54", "pitch": 98, "startTime": 13.5, "duration": 0.11, "velocity": 123 },
+        { "id": "gl-s55", "pitch": 36, "startTime": 13.75, "duration": 0.08, "velocity": 86 },
+        { "id": "gl-s56", "pitch": 70, "startTime": 14, "duration": 0.13, "velocity": 106 },
+        { "id": "gl-s57", "pitch": 81, "startTime": 14.25, "duration": 0.05, "velocity": 69 },
+        { "id": "gl-s58", "pitch": 30, "startTime": 14.5, "duration": 0.14, "velocity": 114 },
+        { "id": "gl-s59", "pitch": 62, "startTime": 14.75, "duration": 0.09, "velocity": 80 },
+        { "id": "gl-s60", "pitch": 93, "startTime": 15, "duration": 0.06, "velocity": 100 },
+        { "id": "gl-s61", "pitch": 47, "startTime": 15.25, "duration": 0.12, "velocity": 127 },
+        { "id": "gl-s62", "pitch": 57, "startTime": 15.5, "duration": 0.1, "velocity": 76 },
+        { "id": "gl-s63", "pitch": 75, "startTime": 15.75, "duration": 0.07, "velocity": 112 },
+
+        { "id": "gl-c01", "pitch": 42, "startTime": 2.3, "duration": 1.2, "velocity": 95 },
+        { "id": "gl-c02", "pitch": 59, "startTime": 5.7, "duration": 0.8, "velocity": 112 },
+        { "id": "gl-c03", "pitch": 71, "startTime": 8.1, "duration": 1.7, "velocity": 87 },
+        { "id": "gl-c04", "pitch": 54, "startTime": 10.9, "duration": 1.1, "velocity": 120 },
+        { "id": "gl-c05", "pitch": 77, "startTime": 1.4, "duration": 0.6, "velocity": 103 },
+        { "id": "gl-c06", "pitch": 47, "startTime": 13.6, "duration": 1.9, "velocity": 88 },
+
+        { "id": "gl-r00", "pitch": 27, "startTime": 0, "duration": 0.3, "velocity": 115 },
+        { "id": "gl-r01", "pitch": 30, "startTime": 2, "duration": 0.3, "velocity": 122 },
+        { "id": "gl-r02", "pitch": 25, "startTime": 4, "duration": 0.3, "velocity": 118 },
+        { "id": "gl-r03", "pitch": 29, "startTime": 6, "duration": 0.3, "velocity": 126 },
+        { "id": "gl-r04", "pitch": 26, "startTime": 8, "duration": 0.3, "velocity": 112 },
+        { "id": "gl-r05", "pitch": 31, "startTime": 10, "duration": 0.3, "velocity": 120 },
+        { "id": "gl-r06", "pitch": 28, "startTime": 12, "duration": 0.3, "velocity": 117 },
+        { "id": "gl-r07", "pitch": 24, "startTime": 14, "duration": 0.3, "velocity": 125 }
+      ],
+      "paramOverrides": {
+        "distortion": 0.8,
+        "filterCutoff": 0.85,
+        "filterResonance": 0.7,
+        "attack": 0.05,
+        "decay": 0.49,
+        "sustain": 0.19,
+        "release": 0.03,
+        "delayMix": 0.67
+      }
+    }
+  ],
+  "presets": [
+    {
+      "id": "bass",
+      "name": "Bass",
+      "params": {
+        "waveform": "sawtooth",
+        "pitchOffset": -12,
+        "attack": 0.01,
+        "decay": 0.2,
+        "sustain": 0.6,
+        "release": 0.2,
+        "filterCutoff": 0.3,
+        "filterResonance": 0.2,
+        "delayTime": 0,
+        "delayFeedback": 0,
+        "delayMix": 0,
+        "distortion": 0.1,
+        "velocityResponse": 0.4
+      },
+      "isBuiltIn": true
+    },
+    {
+      "id": "lead",
+      "name": "Lead",
+      "params": {
+        "waveform": "square",
+        "pitchOffset": 0,
+        "attack": 0.02,
+        "decay": 0.15,
+        "sustain": 0.7,
+        "release": 0.3,
+        "filterCutoff": 0.6,
+        "filterResonance": 0.3,
+        "delayTime": 0.3,
+        "delayFeedback": 0.4,
+        "delayMix": 0.25,
+        "distortion": 0.05,
+        "velocityResponse": 0.6
+      },
+      "isBuiltIn": true
+    },
+    {
+      "id": "pad",
+      "name": "Pad",
+      "params": {
+        "waveform": "sine",
+        "pitchOffset": 0,
+        "attack": 0.4,
+        "decay": 0.3,
+        "sustain": 0.8,
+        "release": 0.6,
+        "filterCutoff": 0.5,
+        "filterResonance": 0.1,
+        "delayTime": 0.5,
+        "delayFeedback": 0.5,
+        "delayMix": 0.35,
+        "distortion": 0,
+        "velocityResponse": 0.3
+      },
+      "isBuiltIn": true
+    },
+    {
+      "id": "keys",
+      "name": "Keys",
+      "params": {
+        "waveform": "triangle",
+        "pitchOffset": 0,
+        "attack": 0.005,
+        "decay": 0.4,
+        "sustain": 0.3,
+        "release": 0.4,
+        "filterCutoff": 0.7,
+        "filterResonance": 0.1,
+        "delayTime": 0.15,
+        "delayFeedback": 0.2,
+        "delayMix": 0.15,
+        "distortion": 0,
+        "velocityResponse": 0.8
+      },
+      "isBuiltIn": true
+    },
+    {
+      "id": "pluck",
+      "name": "Pluck",
+      "params": {
+        "waveform": "sawtooth",
+        "pitchOffset": 0,
+        "attack": 0.001,
+        "decay": 0.3,
+        "sustain": 0.1,
+        "release": 0.2,
+        "filterCutoff": 0.8,
+        "filterResonance": 0.4,
+        "delayTime": 0.2,
+        "delayFeedback": 0.3,
+        "delayMix": 0.2,
+        "distortion": 0,
+        "velocityResponse": 0.7
+      },
+      "isBuiltIn": true
+    },
+    {
+      "id": "percussion",
+      "name": "Percussion",
+      "params": {
+        "waveform": "square",
+        "pitchOffset": 0,
+        "attack": 0.001,
+        "decay": 0.1,
+        "sustain": 0,
+        "release": 0.05,
+        "filterCutoff": 0.9,
+        "filterResonance": 0.2,
+        "delayTime": 0,
+        "delayFeedback": 0,
+        "delayMix": 0,
+        "distortion": 0.4,
+        "velocityResponse": 0.9
+      },
+      "isBuiltIn": true
+    }
+  ],
+  "mixer": {
+    "masterVolume": 0.7,
+    "tracks": {
+      "track-pad": { "volume": 0.7, "mute": false, "solo": false },
+      "track-bass": { "volume": 0.5, "mute": true, "solo": false },
+      "track-keys": { "volume": 0.5, "mute": true, "solo": false },
+      "track-percussion": { "volume": 0.5, "mute": true, "solo": false },
+      "track-lead": { "volume": 0.5, "mute": true, "solo": false },
+      "track-glitch": { "volume": 0.5, "mute": true, "solo": false }
+    }
+  }
+}

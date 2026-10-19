@@ -1,0 +1,91 @@
+{
+  "about": "The bar a render of a song is held to, against Chromium's and WebKit's references, in every 2 s window. Written from the references by bar.mjs --write, before any other engine's render is held to it.",
+  "rule": {
+    "underMusicDb": -80,
+    "floorDbfs": -144.49,
+    "windowSeconds": 2,
+    "text": "In every window, against each reference: the difference at least 80 dB under the music, or under 2^-24 of full scale where the music has died away; and measure() within tolerance, the widest Chromium and WebKit spread over the set rounded up to each value's step, plus one step, with no partial gained, lost or made strongest and no window silent in one only."
+  },
+  "sets": {
+    "rps-48000": {
+      "spread": {
+        "seconds": 0,
+        "db": 0,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0.09000000000000341,
+        "partialDb": 0,
+        "membershipChanges": 0,
+        "strongestChanges": 0,
+        "silentInOne": 0
+      },
+      "tolerance": {
+        "seconds": 0.00001,
+        "db": 0.01,
+        "hz": 0.01,
+        "partialHz": 0.1,
+        "partialDb": 0.01
+      }
+    },
+    "rps-44100": {
+      "spread": {
+        "seconds": 0,
+        "db": 0.009999999999999787,
+        "hz": 0.00999999999999801,
+        "windowDbfs": 0,
+        "partialHz": 0.10999999999998522,
+        "partialDb": 0.010000000000000009,
+        "membershipChanges": 0,
+        "strongestChanges": 0,
+        "silentInOne": 0
+      },
+      "tolerance": {
+        "seconds": 0.00001,
+        "db": 0.02,
+        "hz": 0.02,
+        "partialHz": 0.12,
+        "partialDb": 0.02
+      }
+    },
+    "fm-48000": {
+      "spread": {
+        "seconds": 0,
+        "db": 0.009999999999999787,
+        "hz": 0,
+        "windowDbfs": 0.00999999999999801,
+        "partialHz": 0.010000000000104592,
+        "partialDb": 0.010000000000005116,
+        "membershipChanges": 0,
+        "strongestChanges": 0,
+        "silentInOne": 0
+      },
+      "tolerance": {
+        "seconds": 0.00001,
+        "db": 0.02,
+        "hz": 0.01,
+        "partialHz": 0.02,
+        "partialDb": 0.02
+      }
+    },
+    "fm-44100": {
+      "spread": {
+        "seconds": 0,
+        "db": 0.010000000000005116,
+        "hz": 0,
+        "windowDbfs": 0,
+        "partialHz": 0.010000000000047748,
+        "partialDb": 0.010000000000005116,
+        "membershipChanges": 0,
+        "strongestChanges": 0,
+        "silentInOne": 0
+      },
+      "tolerance": {
+        "seconds": 0.00001,
+        "db": 0.02,
+        "hz": 0.01,
+        "partialHz": 0.02,
+        "partialDb": 0.02
+      }
+    }
+  }
+}

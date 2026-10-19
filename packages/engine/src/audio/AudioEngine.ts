@@ -4,8 +4,21 @@ import { beatsToSeconds, normalizedToADSR } from '../utils/time';
 import { VoiceSynthesizer } from './VoiceSynthesizer';
 import type { VoiceParams } from './VoiceSynthesizer';
 import { EffectsChain, asksForNoEffect, delayTail } from './EffectsChain';
+import { reverbSeedOf } from './reverbImpulse';
 import type { EffectsParams } from './EffectsChain';
 import { getPresetById } from '../presets';
+import { envelopeAndFilterProblems } from '../utils/validation';
+import {
+  SoundscapeValueError,
+  instrumentValueProblems,
+  loopLengthValueProblems,
+  mixerValueProblems,
+  pitchAndVelocityProblems,
+  reportSkipped,
+  stateValueProblems,
+  tempoValueProblems,
+} from '../utils/values';
+import type { ValueProblem } from '../utils/values';
 import { CueDocumentError } from '../cues/types';
 import type { CueDocument, CueInstrument } from '../cues/types';
 import { validateCueDocument } from '../cues/validate';
@@ -265,8 +278,12 @@ export class AudioEngine {
    *   are reflected in the next scheduling window (~100 ms lookahead).
    *
    * @param state - The full current project state.
+   * @throws {@link SoundscapeValueError} for any value in it that cannot play,
+   *   listing each with its path, before anything changes.
    */
   updateState(state: SoundscapeState): void {
+    const problems = stateValueProblems(state);
+    if (problems.length > 0) throw new SoundscapeValueError('updateState', problems);
     this.currentState = state;
     this.tempo = state.metadata.tempo;
     this.loopLengthBeats = state.metadata.lengthBeats;
@@ -353,7 +370,14 @@ export class AudioEngine {
     if (!channel) {
       // Create new channel
       const gainNode = context.createGain();
-      const effectsChain = new EffectsChain(context);
+      // Not oversampled while the track has no distortion: WebKit oversamples
+      // a waveshaper with no curve, delaying the music 6 samples and
+      // filtering it, where Chromium and Firefox pass it through. Its reverb
+      // is seeded from the track's id, the same on every load.
+      const effectsChain = new EffectsChain(context, {
+        oversampleOnlyWhenDistorting: true,
+        reverbSeed: reverbSeedOf(track.id),
+      });
 
       effectsChain.getOutput().connect(gainNode);
       gainNode.connect(masterGain);
@@ -422,9 +446,16 @@ export class AudioEngine {
    * This is called automatically by {@link updateState}, but you can call it
    * directly for low-latency mixer updates without a full state sync.
    *
+   * A mixer holding a volume that is not finite or not from 0 to 1, or a mute
+   * or solo that is not a boolean, is skipped whole: nothing changes, and a
+   * {@link SoundscapeValueError} naming each value is reported once, through
+   * `reportError` where the host has it, or else `console.error`. It never
+   * throws, since a host calls it while the music plays.
+   *
    * @param mixer - The mixer state to apply.
    */
   updateMixer(mixer: MixerState): void {
+    if (!this.goesAhead('updateMixer', mixerValueProblems(mixer))) return;
     const masterGain = this.masterGain;
     if (!masterGain) return;
 
@@ -584,11 +615,22 @@ export class AudioEngine {
       // the loop boundary and the next iteration's downbeat is scheduled
       // sample-accurately before the wrap. Iterations that already elapsed
       // (e.g. a note added mid-playback) are skipped without scheduling.
+      //
+      // A value that cannot play can still reach a note, in a state its host
+      // changed after handing it over, past updateState's check. Then that
+      // note is skipped, reported once, and never tried again, and every
+      // other note, on this track and the tracks after it, is still scheduled.
       for (;;) {
         const iteration = scheduled.nextStartIteration;
         if (iteration > 0 && !this.loopEnabled) break;
         const startBeats = note.startTime - this.startBeat + iteration * loopBeats;
         const noteStartTime = this.startTime + beatsToSeconds(startBeats, this.tempo);
+        if (!Number.isFinite(noteStartTime)) {
+          // No iteration of it can play, and none would ever pass the lookahead
+          this.reportNoteError(trackId, note.id, new RangeError(`its start, ${note.startTime}, is not a beat`));
+          scheduled.nextStartIteration = Number.POSITIVE_INFINITY;
+          break;
+        }
         if (noteStartTime >= lookaheadTime) break;
         if (noteStartTime >= currentTime - 0.1) {
           const voice = this.getAvailableVoice(channel);
@@ -598,9 +640,14 @@ export class AudioEngine {
               velocity: note.velocity,
               instrument: params,
             };
-            voice.noteOn(voiceParams, noteStartTime);
-            channel.activeVoices.set(voiceKey(note.id, iteration), voice);
-            scheduled.startedIterations.push(iteration);
+            try {
+              voice.noteOn(voiceParams, noteStartTime);
+              channel.activeVoices.set(voiceKey(note.id, iteration), voice);
+              scheduled.startedIterations.push(iteration);
+            } catch (error) {
+              voice.stop();
+              this.reportNoteError(trackId, note.id, error);
+            }
           }
         }
         scheduled.nextStartIteration = iteration + 1;
@@ -613,11 +660,19 @@ export class AudioEngine {
         for (const iteration of scheduled.startedIterations) {
           const endBeats = note.startTime + note.duration - this.startBeat + iteration * loopBeats;
           const noteEndTime = this.startTime + beatsToSeconds(endBeats, this.tempo);
-          if (noteEndTime < lookaheadTime) {
+          // An end that is not a time would never come: release it now, once
+          const ending = Number.isFinite(noteEndTime);
+          if (!ending || noteEndTime < lookaheadTime) {
             const key = voiceKey(note.id, iteration);
             const voice = channel.activeVoices.get(key);
             if (voice) {
-              voice.noteOff(params, noteEndTime);
+              try {
+                if (!ending) throw new RangeError(`its duration, ${note.duration}, is not a length`);
+                voice.noteOff(params, noteEndTime);
+              } catch (error) {
+                voice.stop();
+                this.reportNoteError(trackId, note.id, error);
+              }
               channel.activeVoices.delete(key);
             }
           } else {
@@ -627,6 +682,28 @@ export class AudioEngine {
         scheduled.startedIterations = stillPending;
       }
     }
+  }
+
+  /**
+   * A note that could not be played: reported through reportError where the
+   * host has it, as a browser does, or else console.error, so it is seen
+   * without stopping the music.
+   */
+  private reportNoteError(trackId: string, noteId: string, error: unknown): void {
+    reportSkipped(
+      new Error(`Track '${trackId}', note '${noteId}' could not be played, and was skipped: ${String(error)}`, { cause: error })
+    );
+  }
+
+  /**
+   * Whether a call made while the music plays goes ahead. One holding a value
+   * that cannot play is skipped instead, and reported once, with every
+   * problem's path, so neither its caller nor the music is stopped by it.
+   */
+  private goesAhead(call: string, problems: ValueProblem[]): boolean {
+    if (problems.length === 0) return true;
+    reportSkipped(new SoundscapeValueError(call, problems));
+    return false;
   }
 
   private getAvailableVoice(channel: TrackChannel): VoiceSynthesizer | null {
@@ -666,9 +743,13 @@ export class AudioEngine {
    * If currently playing, the transport start time is recalculated so the
    * playhead position stays consistent at the new BPM.
    *
+   * A tempo that is not a finite number above 0 is skipped, and reported once,
+   * as {@link updateMixer} reports a mixer: the tempo stays as it was.
+   *
    * @param bpm - New tempo in beats per minute.
    */
   setTempo(bpm: number): void {
+    if (!this.goesAhead('setTempo', tempoValueProblems(bpm))) return;
     if (this.isPlaying) {
       // Adjust start time to maintain position
       const context = this.ensureContext();
@@ -696,9 +777,13 @@ export class AudioEngine {
    * This should match `SoundscapeState.metadata.lengthBeats` in most cases.
    * Updated automatically when you call {@link updateState}.
    *
+   * A length that is not a finite number above 0 is skipped, and reported
+   * once, as {@link updateMixer} reports a mixer: the length stays as it was.
+   *
    * @param beats - Total number of beats before the loop wraps.
    */
   setLoopLength(beats: number): void {
+    if (!this.goesAhead('setLoopLength', loopLengthValueProblems(beats))) return;
     this.loopLengthBeats = beats;
   }
 
@@ -771,6 +856,10 @@ export class AudioEngine {
    * release tail completes (~1 s total). No interaction with the transport
    * or scheduled notes queue.
    *
+   * A note holding a value that cannot play, a pitch or velocity that is not a
+   * MIDI value or an override that is not finite or out of its range, plays
+   * nothing, and is reported once, as {@link updateMixer} reports a mixer.
+   *
    * @param pitch - MIDI pitch to preview (0–127).
    * @param velocity - Note velocity (0–127).
    * @param presetId - ID of the preset to use for the preview sound.
@@ -782,6 +871,7 @@ export class AudioEngine {
    * engine.previewNote(60, 100, 'preset-lead', { filterCutoff: 0.9 });
    */
   previewNote(pitch: number, velocity: number, presetId: string, paramOverrides?: Partial<InstrumentParams>): void {
+    if (!this.goesAhead('previewNote', this.noteValueProblems(pitch, velocity, presetId, paramOverrides))) return;
     if (!this.currentState) return;
 
     const context = this.ensureContext();
@@ -815,12 +905,40 @@ export class AudioEngine {
   }
 
   /**
+   * What previewNote and startMIDINote refuse: a pitch or velocity that is
+   * not a MIDI value, an override that cannot play, or overrides that break a
+   * rule between the preset's fields, with every problem's path.
+   */
+  private noteValueProblems(
+    pitch: number,
+    velocity: number,
+    presetId: string,
+    paramOverrides: Partial<InstrumentParams> | undefined
+  ): ValueProblem[] {
+    const problems: ValueProblem[] = [
+      ...pitchAndVelocityProblems(pitch, velocity),
+      ...instrumentValueProblems(paramOverrides, 'paramOverrides'),
+    ];
+    const preset = this.currentState ? getPresetById(this.currentState.presets, presetId) : undefined;
+    if (preset && problems.length === 0) {
+      for (const p of envelopeAndFilterProblems({ ...preset.params, ...paramOverrides })) {
+        problems.push({ path: 'paramOverrides', message: `with these overrides, ${p.key}: ${p.message}` });
+      }
+    }
+    return problems;
+  }
+
+  /**
    * Starts a sustained interactive note for live MIDI input.
    *
    * Unlike {@link previewNote}, the note holds until {@link stopMIDINote} is
    * called for the same pitch. Held notes are independent of the transport —
    * {@link stop} leaves them sounding; {@link destroy} force-stops them.
    * Re-striking a pitch that is already held replaces the previous voice.
+   *
+   * A note holding a value that cannot play plays nothing, and is reported
+   * once, as {@link previewNote} reports one; a voice already held on its
+   * pitch keeps sounding.
    *
    * @param pitch - MIDI pitch to play (0–127).
    * @param velocity - Note velocity (0–127).
@@ -833,6 +951,7 @@ export class AudioEngine {
     presetId: string,
     paramOverrides?: Partial<InstrumentParams>
   ): void {
+    if (!this.goesAhead('startMIDINote', this.noteValueProblems(pitch, velocity, presetId, paramOverrides))) return;
     if (!this.currentState) return;
 
     const context = this.ensureContext();

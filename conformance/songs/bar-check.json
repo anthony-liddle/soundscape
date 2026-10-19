@@ -1,0 +1,405 @@
+{
+  "about": "The bar, checked: fresh Chromium and WebKit renders against the committed references; each browser judged against the other, which the bar must admit; and each game with one track 0.5% louder, which it must refuse.",
+  "engine": {
+    "name": "soundscape-engine",
+    "version": "0.4.1",
+    "commit": "5ae039506a20c98d55449893692d269e67956a60",
+    "sourceChangedSinceCommit": false,
+    "built": "from source by this script, packages/engine/dist"
+  },
+  "playwright": "1.63.0",
+  "browsers": {
+    "chromium": "153.0.8010.12",
+    "webkit": "26.6"
+  },
+  "sets": {
+    "rps-48000": {
+      "freshMatchesReferences": {
+        "chromium": true,
+        "webkit": true
+      },
+      "webkitAgainstChromium": {
+        "underMusic": {
+          "pass": true,
+          "worstWindowUnderMusicDb": -90.2
+        },
+        "measure": {
+          "pass": true,
+          "spread": {
+            "seconds": 0,
+            "db": 0,
+            "hz": 0,
+            "windowDbfs": 0,
+            "partialHz": 0.09000000000000341,
+            "partialDb": 0,
+            "membershipChanges": 0,
+            "strongestChanges": 0,
+            "silentInOne": 0
+          }
+        },
+        "pass": true
+      },
+      "chromiumAgainstWebkit": {
+        "underMusic": {
+          "pass": true,
+          "worstWindowUnderMusicDb": -90.2
+        },
+        "measure": {
+          "pass": true,
+          "spread": {
+            "seconds": 0,
+            "db": 0,
+            "hz": 0,
+            "windowDbfs": 0,
+            "partialHz": 0.09000000000000341,
+            "partialDb": 0,
+            "membershipChanges": 0,
+            "strongestChanges": 0,
+            "silentInOne": 0
+          }
+        },
+        "pass": true
+      },
+      "mistake": {
+        "track": "track-bass",
+        "factor": 1.005,
+        "judged": {
+          "chromium": {
+            "underMusic": {
+              "pass": false,
+              "worstWindowUnderMusicDb": -48
+            },
+            "measure": {
+              "pass": false,
+              "spread": {
+                "seconds": 0,
+                "db": 0.040000000000000924,
+                "hz": 0.0899999999999963,
+                "windowDbfs": 0.0400000000000027,
+                "partialHz": 0.45999999999997954,
+                "partialDb": 0.07000000000000028,
+                "membershipChanges": 2,
+                "strongestChanges": 0,
+                "silentInOne": 0
+              }
+            },
+            "pass": false
+          },
+          "webkit": {
+            "underMusic": {
+              "pass": false,
+              "worstWindowUnderMusicDb": -48
+            },
+            "measure": {
+              "pass": false,
+              "spread": {
+                "seconds": 0,
+                "db": 0.040000000000000924,
+                "hz": 0.0899999999999963,
+                "windowDbfs": 0.0400000000000027,
+                "partialHz": 0.45999999999997954,
+                "partialDb": 0.07000000000000028,
+                "membershipChanges": 2,
+                "strongestChanges": 0,
+                "silentInOne": 0
+              }
+            },
+            "pass": false
+          }
+        },
+        "fails": true
+      }
+    },
+    "rps-44100": {
+      "freshMatchesReferences": {
+        "chromium": true,
+        "webkit": true
+      },
+      "webkitAgainstChromium": {
+        "underMusic": {
+          "pass": true,
+          "worstWindowUnderMusicDb": -90.5
+        },
+        "measure": {
+          "pass": true,
+          "spread": {
+            "seconds": 0,
+            "db": 0.009999999999999787,
+            "hz": 0.00999999999999801,
+            "windowDbfs": 0,
+            "partialHz": 0.10999999999998522,
+            "partialDb": 0.010000000000000009,
+            "membershipChanges": 0,
+            "strongestChanges": 0,
+            "silentInOne": 0
+          }
+        },
+        "pass": true
+      },
+      "chromiumAgainstWebkit": {
+        "underMusic": {
+          "pass": true,
+          "worstWindowUnderMusicDb": -90.5
+        },
+        "measure": {
+          "pass": true,
+          "spread": {
+            "seconds": 0,
+            "db": 0.009999999999999787,
+            "hz": 0.00999999999999801,
+            "windowDbfs": 0,
+            "partialHz": 0.10999999999998522,
+            "partialDb": 0.010000000000000009,
+            "membershipChanges": 0,
+            "strongestChanges": 0,
+            "silentInOne": 0
+          }
+        },
+        "pass": true
+      },
+      "mistake": {
+        "track": "track-bass",
+        "factor": 1.005,
+        "judged": {
+          "chromium": {
+            "underMusic": {
+              "pass": false,
+              "worstWindowUnderMusicDb": -48.1
+            },
+            "measure": {
+              "pass": false,
+              "spread": {
+                "seconds": 0,
+                "db": 0.05000000000000071,
+                "hz": 0.08000000000004093,
+                "windowDbfs": 0.0400000000000027,
+                "partialHz": 0.6000000000000227,
+                "partialDb": 0.14000000000000057,
+                "membershipChanges": 2,
+                "strongestChanges": 1,
+                "silentInOne": 0
+              }
+            },
+            "pass": false
+          },
+          "webkit": {
+            "underMusic": {
+              "pass": false,
+              "worstWindowUnderMusicDb": -48.1
+            },
+            "measure": {
+              "pass": false,
+              "spread": {
+                "seconds": 0,
+                "db": 0.05000000000000071,
+                "hz": 0.08000000000004093,
+                "windowDbfs": 0.0400000000000027,
+                "partialHz": 0.6000000000000227,
+                "partialDb": 0.14000000000000057,
+                "membershipChanges": 2,
+                "strongestChanges": 1,
+                "silentInOne": 0
+              }
+            },
+            "pass": false
+          }
+        },
+        "fails": true
+      }
+    },
+    "fm-48000": {
+      "freshMatchesReferences": {
+        "chromium": true,
+        "webkit": true
+      },
+      "webkitAgainstChromium": {
+        "underMusic": {
+          "pass": true,
+          "worstWindowUnderMusicDb": -106.7
+        },
+        "measure": {
+          "pass": true,
+          "spread": {
+            "seconds": 0,
+            "db": 0.009999999999999787,
+            "hz": 0,
+            "windowDbfs": 0.00999999999999801,
+            "partialHz": 0.010000000000104592,
+            "partialDb": 0.010000000000005116,
+            "membershipChanges": 0,
+            "strongestChanges": 0,
+            "silentInOne": 0
+          }
+        },
+        "pass": true
+      },
+      "chromiumAgainstWebkit": {
+        "underMusic": {
+          "pass": true,
+          "worstWindowUnderMusicDb": -106.7
+        },
+        "measure": {
+          "pass": true,
+          "spread": {
+            "seconds": 0,
+            "db": 0.009999999999999787,
+            "hz": 0,
+            "windowDbfs": 0.00999999999999801,
+            "partialHz": 0.010000000000104592,
+            "partialDb": 0.010000000000005116,
+            "membershipChanges": 0,
+            "strongestChanges": 0,
+            "silentInOne": 0
+          }
+        },
+        "pass": true
+      },
+      "mistake": {
+        "track": "track002",
+        "factor": 1.005,
+        "judged": {
+          "chromium": {
+            "underMusic": {
+              "pass": false,
+              "worstWindowUnderMusicDb": -53.1
+            },
+            "measure": {
+              "pass": false,
+              "spread": {
+                "seconds": 0.000020000000000131024,
+                "db": 0.05000000000000071,
+                "hz": 0.19000000000002615,
+                "windowDbfs": 0.030000000000001137,
+                "partialHz": 0.9299999999999784,
+                "partialDb": 0.11000000000000298,
+                "membershipChanges": 2,
+                "strongestChanges": 0,
+                "silentInOne": 0
+              }
+            },
+            "pass": false
+          },
+          "webkit": {
+            "underMusic": {
+              "pass": false,
+              "worstWindowUnderMusicDb": -53.1
+            },
+            "measure": {
+              "pass": false,
+              "spread": {
+                "seconds": 0.000020000000000131024,
+                "db": 0.05000000000000071,
+                "hz": 0.19000000000002615,
+                "windowDbfs": 0.030000000000001137,
+                "partialHz": 0.9299999999999784,
+                "partialDb": 0.11000000000000298,
+                "membershipChanges": 2,
+                "strongestChanges": 0,
+                "silentInOne": 0
+              }
+            },
+            "pass": false
+          }
+        },
+        "fails": true
+      }
+    },
+    "fm-44100": {
+      "freshMatchesReferences": {
+        "chromium": true,
+        "webkit": true
+      },
+      "webkitAgainstChromium": {
+        "underMusic": {
+          "pass": true,
+          "worstWindowUnderMusicDb": -107.2
+        },
+        "measure": {
+          "pass": true,
+          "spread": {
+            "seconds": 0,
+            "db": 0.010000000000005116,
+            "hz": 0,
+            "windowDbfs": 0,
+            "partialHz": 0.010000000000047748,
+            "partialDb": 0.010000000000005116,
+            "membershipChanges": 0,
+            "strongestChanges": 0,
+            "silentInOne": 0
+          }
+        },
+        "pass": true
+      },
+      "chromiumAgainstWebkit": {
+        "underMusic": {
+          "pass": true,
+          "worstWindowUnderMusicDb": -107.2
+        },
+        "measure": {
+          "pass": true,
+          "spread": {
+            "seconds": 0,
+            "db": 0.010000000000005116,
+            "hz": 0,
+            "windowDbfs": 0,
+            "partialHz": 0.010000000000047748,
+            "partialDb": 0.010000000000005116,
+            "membershipChanges": 0,
+            "strongestChanges": 0,
+            "silentInOne": 0
+          }
+        },
+        "pass": true
+      },
+      "mistake": {
+        "track": "track002",
+        "factor": 1.005,
+        "judged": {
+          "chromium": {
+            "underMusic": {
+              "pass": false,
+              "worstWindowUnderMusicDb": -53
+            },
+            "measure": {
+              "pass": false,
+              "spread": {
+                "seconds": 0,
+                "db": 0.030000000000001137,
+                "hz": 0.5799999999999841,
+                "windowDbfs": 0.03999999999999915,
+                "partialHz": 0.7400000000000091,
+                "partialDb": 0.129999999999999,
+                "membershipChanges": 0,
+                "strongestChanges": 0,
+                "silentInOne": 0
+              }
+            },
+            "pass": false
+          },
+          "webkit": {
+            "underMusic": {
+              "pass": false,
+              "worstWindowUnderMusicDb": -53
+            },
+            "measure": {
+              "pass": false,
+              "spread": {
+                "seconds": 0,
+                "db": 0.030000000000001137,
+                "hz": 0.5799999999999841,
+                "windowDbfs": 0.03999999999999915,
+                "partialHz": 0.7400000000000091,
+                "partialDb": 0.129999999999999,
+                "membershipChanges": 0,
+                "strongestChanges": 0,
+                "silentInOne": 0
+              }
+            },
+            "pass": false
+          }
+        },
+        "fails": true
+      }
+    }
+  }
+}

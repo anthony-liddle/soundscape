@@ -16,7 +16,6 @@ import {
   largestDifference,
   renderInLockstep,
   retryRefused,
-  seedRandom,
   useLockstepTimers,
 } from './renderHarness'
 
@@ -33,10 +32,16 @@ import {
  *   makes for a sound effect;
  *   the three voice configurations render.test.ts uses.
  *
- * One change since was meant to be heard: #110 centred the distortion curve,
- * which moved the transport, whose bass and lead distort. That reference was
- * recorded again by the engine as it was before cues, with only the curve
- * centred; reference/existing/provenance.json says how, and by how much.
+ * Changes since that were meant to be heard each moved the references they
+ * reach, and reference/existing/provenance.json lists every move, file by
+ * file, with how it was recorded and by how much:
+ *
+ *   #110 centred the distortion curve, which moved the transport, whose bass
+ *   and lead distort;
+ *   a held note holds until its release, where it faded from its decay's end,
+ *   which moved the transport, both previews and the released voice;
+ *   the reverb is seeded from each track's id, where it drew from
+ *   Math.random, which moved the transport, whose pad sends to it.
  *
  * The engine builds its own AudioContext, so a constructor that makes an
  * offline one stands in for it: this is the default path every consumer takes.
@@ -48,9 +53,10 @@ import {
  * of magnitude more.
  *
  * To record the references again, run with UPDATE_RENDER_REFERENCE=1. Only do
- * that for a change that is meant to be heard, and do it at the commit
- * provenance.json names, with only that change applied, so the references
- * still hold the engine as it was before cues.
+ * that for a change that is meant to be heard, and only on the commit before
+ * it, with that change applied, once that commit has rendered every reference
+ * byte for byte: then each reference still holds the engine as it was before
+ * cues, moved by nothing but the changes listed.
  */
 const TOLERANCE = 1e-6
 const DIR = resolve(__dirname, 'reference/existing')
@@ -97,7 +103,6 @@ async function renderEngine(
   act: (engine: AudioEngine) => void
 ): Promise<Float32Array> {
   return retryRefused(async () => {
-    seedRandom()
     useLockstepTimers()
     const context = installOfflineAudioContext(seconds)
     const engine = new AudioEngine()

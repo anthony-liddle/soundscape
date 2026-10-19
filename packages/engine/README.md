@@ -130,6 +130,24 @@ Eleven presets are included out of the box:
 
 Access them via `builtInPresets` or individually (`bassPreset`, `leadPreset`, etc.). Look up a preset by ID with `getPresetById(presets, id)`.
 
+### The Reverb
+
+Each track's reverb is 2.5 s of noise in stereo, faded as it goes, and seeded from the track's id. So a track's reverb is the same on every load, it differs from every other track's, and adding a track changes no other's. No song file carries a seed.
+
+It is specified exactly, so another implementation can reproduce it bit for bit, and `reverbSeedOf`, `mulberry32` and `reverbImpulse` are exported to check against:
+
+1. **The seed** is FNV-1a, 32-bit, over the UTF-8 bytes of the track's id. Start at `0x811C9DC5`; for each byte, XOR it in, then multiply by `0x01000193`, modulo 2^32. An `EffectsChain` made with no `reverbSeed` takes the empty id's, `0x811C9DC5`.
+2. **The generator** is mulberry32, from that seed. Each draw:
+   - adds `0x6D2B79F5` to a 32-bit state, modulo 2^32, and takes `t`, a copy of it;
+   - sets `t` to `(t XOR (t >>> 15)) * (t OR 1)`;
+   - sets `t` to `t XOR (t + (t XOR (t >>> 7)) * (t OR 61))`;
+   - returns `(t XOR (t >>> 14))`, as an unsigned 32-bit integer, divided by 2^32: a draw in [0, 1).
+
+   Every multiply keeps the low 32 bits, as `Math.imul` does.
+3. **The shape:** two channels of `floor(sampleRate * 2.5)` frames each, channel 0 first, then channel 1, from one stream of draws. Frame `i` of a channel of `n` frames is `(r * 2 - 1) * fade`, where `r` is the next draw and `fade` is `(1 - t) * (1 - t)` with `t = i / n`, all in double, then stored as float32, rounding to the nearest.
+
+The `ConvolverNode` keeps `normalize` at its default, `true`. The track's `reverbMix` is the send's gain.
+
 ### Utility Functions
 
 **Pitch**

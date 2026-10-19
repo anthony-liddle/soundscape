@@ -1,0 +1,108 @@
+{
+  "about": "The four problems the songs discovery found, on the engine built from this checkout: two loads differing by the reverb; Chromium and WebKit differing by more than the bar; a held note stepping down when noteOff is called; and a NaN override silencing its track and costing the others notes. pass is each check the fixed engine should meet.",
+  "engine": {
+    "name": "soundscape-engine",
+    "version": "0.4.1",
+    "commit": "5ae039506a20c98d55449893692d269e67956a60",
+    "sourceChangedSinceCommit": false,
+    "built": "from source by this script, packages/engine/dist"
+  },
+  "playwright": "1.63.0",
+  "browsers": {
+    "chromium": "153.0.8010.12",
+    "webkit": "26.6",
+    "firefox": "155.0"
+  },
+  "checks": {
+    "loads": {
+      "about": "Two loads of The Forgetting Machine, each with the reverb a load of the engine draws.",
+      "chromium": {
+        "worstWindowUnderMusicDb": -138.6,
+        "worstWindowAboveTheFloorDb": "-inf",
+        "impulsesTheSameEachLoad": true,
+        "impulsesDifferentEachTrack": true,
+        "pass": true
+      },
+      "webkit": {
+        "worstWindowUnderMusicDb": -138.9,
+        "worstWindowAboveTheFloorDb": "-inf",
+        "impulsesTheSameEachLoad": true,
+        "impulsesDifferentEachTrack": true,
+        "pass": true
+      }
+    },
+    "browsers": {
+      "about": "Chromium against WebKit, both games as the references play them, on one impulse response. Firefox beside them, for the record.",
+      "rps": {
+        "chromiumWebkitWorstWindowUnderMusicDb": -90.2,
+        "chromiumWebkitWorstWindowAboveTheFloorDb": -90.2,
+        "chromiumWebkitMeasureSpread": {
+          "seconds": 0,
+          "db": 0,
+          "hz": 0,
+          "windowDbfs": 0,
+          "partialHz": 0.09000000000000341,
+          "partialDb": 0,
+          "membershipChanges": 0,
+          "strongestChanges": 0,
+          "silentInOne": 0
+        },
+        "chromiumFirefoxWorstWindowUnderMusicDb": 1.9,
+        "pass": true
+      },
+      "fm": {
+        "chromiumWebkitWorstWindowUnderMusicDb": -81.5,
+        "chromiumWebkitWorstWindowAboveTheFloorDb": -106.7,
+        "chromiumWebkitMeasureSpread": {
+          "seconds": 0,
+          "db": 0.009999999999999787,
+          "hz": 0,
+          "windowDbfs": 0.00999999999999801,
+          "partialHz": 0.010000000000104592,
+          "partialDb": 0.010000000000005116,
+          "membershipChanges": 0,
+          "strongestChanges": 0,
+          "silentInOne": 0
+        },
+        "chromiumFirefoxWorstWindowUnderMusicDb": 6.3,
+        "pass": true
+      }
+    },
+    "held": {
+      "about": "One sine held at 0.6 of its peak: its level after the scheduler calls noteOff, up to 100 ms before the release, against its level just before the call. Reverb and compressor left out, to read the envelope as it is.",
+      "chromium": {
+        "noteOffCalledMsBeforeRelease": 80,
+        "stepDb": 0,
+        "pass": true
+      },
+      "webkit": {
+        "noteOffCalledMsBeforeRelease": 80,
+        "stepDb": 0,
+        "pass": true
+      },
+      "firefox": {
+        "noteOffCalledMsBeforeRelease": 80,
+        "stepDb": 0,
+        "pass": true
+      }
+    },
+    "nan": {
+      "about": "A NaN attack on The Forgetting Machine's strings, track001, in Chromium.",
+      "handedIn": {
+        "firstError": "SoundscapeValueError: updateState refused, since these values cannot play:\n  tracks[0].paramOverrides.attack, on track 'track001': must be from 0 to 1, got NaN",
+        "errors": 1,
+        "notesPlayed": {},
+        "pass": true
+      },
+      "slippedIn": {
+        "errors": 20,
+        "firstError": "Error: Track 'track001', note 'note0001' could not be played, and was skipped: TypeError: Failed to execute 'linearRampToValueAtTime' on 'AudioParam': The provided double value is non-finite.",
+        "notesPlayed": {
+          "track002": 20,
+          "track003": 6
+        },
+        "pass": true
+      }
+    }
+  }
+}

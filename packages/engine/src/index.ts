@@ -31,6 +31,7 @@ export { VoiceSynthesizer } from './audio';
 export type { VoiceParams } from './audio/VoiceSynthesizer';
 export { EffectsChain } from './audio';
 export type { EffectsChainOptions, EffectsParams } from './audio/EffectsChain';
+export { REVERB_SECONDS, mulberry32, reverbImpulse, reverbSeedOf } from './audio/reverbImpulse';
 
 // Cues
 export {
@@ -87,3 +88,15 @@ export {
   clamp,
 } from './utils/validation';
 export type { InstrumentProblem } from './utils/validation';
+
+export {
+  SoundscapeValueError,
+  instrumentValueProblems,
+  mixerValueProblems,
+  trackMixerValueProblems,
+  tempoValueProblems,
+  loopLengthValueProblems,
+  stateValueProblems,
+  reportSkipped,
+} from './utils/values';
+export type { ValueProblem } from './utils/values';

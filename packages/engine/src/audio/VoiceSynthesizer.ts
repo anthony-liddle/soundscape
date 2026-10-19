@@ -31,12 +31,12 @@ export interface VoiceParams {
    */
   peak?: number;
   /**
-   * Set the note's frequency, detune, filter and LFO settings as the params'
-   * values, rather than as automation events at its start. Only for a voice
-   * that plays this one note, as a cue's voices do. The two sound the same
-   * everywhere but Chrome, where an oscillator whose frequency is an event at
-   * a start falling inside a render quantum begins with a different phase.
-   * Hand-built Web Audio cues set values, so cues do too.
+   * Set the note's filter and LFO depth as the params' values, rather than as
+   * automation events at its start. Only for a voice that plays this one
+   * note, as a cue's voices do, since a voice keeps its filter from note to
+   * note. Hand-built Web Audio cues set values, so cues do too. An
+   * oscillator's frequency and detune are always values: every note gets
+   * oscillators of its own.
    */
   setAsValues?: boolean;
 }
@@ -221,11 +221,20 @@ export class VoiceSynthesizer {
    */
   private startSources(params: VoiceParams, scheduleTime: number): void {
     const { pitch, instrument } = params;
-    // Settings fixed for the whole note: an event at its start, as always, or
-    // for a single-note voice that asks, the param's value.
+    // The filter's and the LFO's depth, on nodes a voice keeps from note to
+    // note: an event at the note's start, or for a single-note voice that
+    // asks, the param's value.
     const fix = (param: AudioParam, value: number): void => {
       if (params.setAsValues) param.value = value;
       else param.setValueAtTime(value, scheduleTime);
+    };
+    // An oscillator is made for this note alone, so its frequency and detune
+    // are values, set before it starts. As events at a start inside a render
+    // quantum, Chromium began such an oscillator at a different phase, and
+    // WebKit could begin it a sample late, so a song note did not start the
+    // same way in the two.
+    const tune = (param: AudioParam, value: number): void => {
+      param.value = value;
     };
 
     // Apply pitch offset
@@ -239,9 +248,9 @@ export class VoiceSynthesizer {
     this.oscillators = Array.from({ length: oscCount }, (_, i) => {
       const osc = this.context.createOscillator();
       osc.type = instrument.waveform as OscillatorType;
-      fix(osc.frequency, frequency);
+      tune(osc.frequency, frequency);
       if (oscCount === 2) {
-        fix(osc.detune, i === 0 ? -detuneCents / 2 : detuneCents / 2);
+        tune(osc.detune, i === 0 ? -detuneCents / 2 : detuneCents / 2);
       }
       osc.connect(this.gainNode);
       osc.start(scheduleTime);
@@ -266,7 +275,7 @@ export class VoiceSynthesizer {
       this.lfoGainNode = this.context.createGain();
 
       this.lfoNode.type = 'sine';
-      fix(this.lfoNode.frequency, lfoRate);
+      tune(this.lfoNode.frequency, lfoRate);
 
       if (lfoTarget === 'filter') {
         fix(this.lfoGainNode.gain, normalizedToLfoFilterDepth(lfoDepth));
@@ -319,40 +328,37 @@ export class VoiceSynthesizer {
     const scheduleTime = Math.max(now, stopTime);
     const releaseTime = normalizedToADSR(instrument.release, 'release');
 
-    // Start the release from the envelope's value AT scheduleTime. noteOff is
-    // typically invoked up to ~100 ms early (scheduler lookahead), so reading
-    // gain.value here would capture a stale level and cause clicks.
+    // Start the release from the envelope's level AT scheduleTime. noteOff is
+    // invoked up to 100 ms early, by the scheduler's lookahead, so gain.value
+    // would be stale; and before rendering it is the param's default.
+    //
+    // The voice scheduled the envelope, so it knows that level, and ends the
+    // envelope there itself, in every browser. cancelAndHoldAtTime is never
+    // used: by the spec's algorithm, holding at a time after the last
+    // scheduled event inserts nothing, so a release ramp after it would start
+    // from the decay's end. In Chrome and Safari a held note then stepped down
+    // the moment noteOff was called, before its release.
+    //
+    // Cancelling at scheduleTime removes any ramp still in progress there,
+    // and Firefox also removes one that ended up to half a sample earlier. So
+    // the envelope is always ended again at that level, with a ramp of its own
+    // curve. Where the cancel removed a ramp, that traces the same curve to
+    // the same point; where it removed nothing, the new ramp is flat. A
+    // release before, at or after the decay's end comes out right, and no
+    // comparison with the decay's end decides which.
     const gain = this.gainNode.gain;
     const exponential = instrument.envelopeCurve === 'exponential';
     const floor = exponential ? envelopeFloorOf(instrument) : 0;
-    if (typeof gain.cancelAndHoldAtTime === 'function') {
-      // Holds the envelope's own value at scheduleTime, mid-ramp included,
-      // exponential or linear.
-      gain.cancelAndHoldAtTime(scheduleTime);
+    const scheduled = this.scheduled;
+    const start = scheduled ? scheduled.start : scheduleTime;
+    const held = scheduled ? envelopeLevelAt(scheduled.shape, scheduleTime - start) : 0;
+    gain.cancelScheduledValues(scheduleTime);
+    if (scheduled && scheduleTime > start) {
+      if (scheduled.shape.curve === 'exponential') gain.exponentialRampToValueAtTime(held, scheduleTime);
+      else gain.linearRampToValueAtTime(held, scheduleTime);
     } else {
-      // No cancelAndHoldAtTime, as in Firefox. The voice scheduled the
-      // envelope, so it knows the level at scheduleTime, where gain.value
-      // would be stale: noteOff runs ahead of time, and before rendering the
-      // value is the param's default.
-      //
-      // Cancelling at scheduleTime removes any ramp still in progress there,
-      // and Firefox also removes one that ended up to half a sample earlier.
-      // So the envelope is always ended again at that level, with a ramp of
-      // its own curve. Where the cancel removed a ramp, that traces the same
-      // curve to the same point; where it removed nothing, the new ramp is
-      // flat. A release before, at or after the decay's end comes out right,
-      // and no comparison with the decay's end decides which.
-      const scheduled = this.scheduled;
-      const start = scheduled ? scheduled.start : scheduleTime;
-      const held = scheduled ? envelopeLevelAt(scheduled.shape, scheduleTime - start) : 0;
-      gain.cancelScheduledValues(scheduleTime);
-      if (scheduled && scheduleTime > start) {
-        if (scheduled.shape.curve === 'exponential') gain.exponentialRampToValueAtTime(held, scheduleTime);
-        else gain.linearRampToValueAtTime(held, scheduleTime);
-      } else {
-        // At the note's start nothing has sounded yet
-        gain.setValueAtTime(held, scheduleTime);
-      }
+      // At the note's start nothing has sounded yet
+      gain.setValueAtTime(held, scheduleTime);
     }
 
     // Release envelope: to zero, or for an exponential one, to its floor, where

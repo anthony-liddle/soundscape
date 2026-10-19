@@ -1,13 +1,14 @@
 import { normalizedToDelayTime } from '../utils/time';
+import { reverbImpulse, reverbSeedOf } from './reverbImpulse';
 
 export interface EffectsChainOptions {
   /**
    * Leave the waveshaper's oversampling off while there is no distortion.
    * WebKit oversamples a WaveShaperNode even when its curve is null, which at
    * 2x delays the signal by 6 samples and filters it, where Chromium and
-   * Firefox pass it through untouched. Cue chains set this, so a cue with no
-   * distortion sounds the same in every browser. Track chains do not, so
-   * music keeps the behaviour it has always had.
+   * Firefox pass it through untouched. The engine sets this on every chain it
+   * builds, for tracks and for cues, so music and cues with no distortion
+   * sound the same in every browser. A chain made with no options keeps 2x.
    */
   oversampleOnlyWhenDistorting?: boolean;
   /**
@@ -18,6 +19,14 @@ export interface EffectsChainOptions {
    * ignore it.
    */
   reverb?: boolean;
+  /**
+   * The seed of the reverb's impulse response, see reverbImpulse.ts. The
+   * engine gives each track's chain the seed of the track's id,
+   * `reverbSeedOf(track.id)`, so a track's reverb is the same on every load
+   * and differs from every other track's. A chain made with none takes the
+   * empty id's, `reverbSeedOf('')`.
+   */
+  reverbSeed?: number;
 }
 
 export interface EffectsParams {
@@ -107,10 +116,12 @@ export class EffectsChain {
   private reverbWetGain: GainNode | null = null;
   private lastDistortionAmount: number | null = null;
   private readonly oversampleOnlyWhenDistorting: boolean;
+  private readonly reverbSeed: number;
 
   constructor(context: BaseAudioContext, options: EffectsChainOptions = {}) {
     this.context = context;
     this.oversampleOnlyWhenDistorting = options.oversampleOnlyWhenDistorting ?? false;
+    this.reverbSeed = options.reverbSeed ?? reverbSeedOf('');
 
     // Create nodes
     this.input = context.createGain();
@@ -197,22 +208,15 @@ export class EffectsChain {
   }
 
   /**
-   * Generates a stereo algorithmic impulse response using exponentially-decaying
-   * white noise. Produces a natural-sounding room reverb without any file loading.
+   * The reverb's impulse response: 2.5 s of seeded noise in stereo, faded by
+   * (1 - t) squared, from the chain's seed. Exactly as reverbImpulse.ts
+   * specifies it, so it is the same on every load.
    */
-  private createReverbIR(duration = 2.5, decay = 2): AudioBuffer {
+  private createReverbIR(): AudioBuffer {
     const sampleRate = this.context.sampleRate;
-    const length = Math.floor(sampleRate * duration);
-    const buffer = this.context.createBuffer(2, length, sampleRate);
-
-    for (let channel = 0; channel < 2; channel++) {
-      const data = buffer.getChannelData(channel);
-      for (let i = 0; i < length; i++) {
-        const t = i / length;
-        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, decay);
-      }
-    }
-
+    const channels = reverbImpulse(sampleRate, this.reverbSeed);
+    const buffer = this.context.createBuffer(2, channels[0].length, sampleRate);
+    channels.forEach((data, channel) => buffer.getChannelData(channel).set(data));
     return buffer;
   }
 
