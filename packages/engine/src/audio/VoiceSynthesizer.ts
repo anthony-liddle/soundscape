@@ -31,12 +31,12 @@ export interface VoiceParams {
    */
   peak?: number;
   /**
-   * Set the note's frequency, detune, filter and LFO settings as the params'
-   * values, rather than as automation events at its start. Only for a voice
-   * that plays this one note, as a cue's voices do. The two sound the same
-   * everywhere but Chrome, where an oscillator whose frequency is an event at
-   * a start falling inside a render quantum begins with a different phase.
-   * Hand-built Web Audio cues set values, so cues do too.
+   * Set the note's filter and LFO depth as the params' values, rather than as
+   * automation events at its start. Only for a voice that plays this one
+   * note, as a cue's voices do, since a voice keeps its filter from note to
+   * note. Hand-built Web Audio cues set values, so cues do too. An
+   * oscillator's frequency and detune are always values: every note gets
+   * oscillators of its own.
    */
   setAsValues?: boolean;
 }
@@ -221,11 +221,20 @@ export class VoiceSynthesizer {
    */
   private startSources(params: VoiceParams, scheduleTime: number): void {
     const { pitch, instrument } = params;
-    // Settings fixed for the whole note: an event at its start, as always, or
-    // for a single-note voice that asks, the param's value.
+    // The filter's and the LFO's depth, on nodes a voice keeps from note to
+    // note: an event at the note's start, or for a single-note voice that
+    // asks, the param's value.
     const fix = (param: AudioParam, value: number): void => {
       if (params.setAsValues) param.value = value;
       else param.setValueAtTime(value, scheduleTime);
+    };
+    // An oscillator is made for this note alone, so its frequency and detune
+    // are values, set before it starts. As events at a start inside a render
+    // quantum, Chromium began such an oscillator at a different phase, and
+    // WebKit could begin it a sample late, so a song note did not start the
+    // same way in the two.
+    const tune = (param: AudioParam, value: number): void => {
+      param.value = value;
     };
 
     // Apply pitch offset
@@ -239,9 +248,9 @@ export class VoiceSynthesizer {
     this.oscillators = Array.from({ length: oscCount }, (_, i) => {
       const osc = this.context.createOscillator();
       osc.type = instrument.waveform as OscillatorType;
-      fix(osc.frequency, frequency);
+      tune(osc.frequency, frequency);
       if (oscCount === 2) {
-        fix(osc.detune, i === 0 ? -detuneCents / 2 : detuneCents / 2);
+        tune(osc.detune, i === 0 ? -detuneCents / 2 : detuneCents / 2);
       }
       osc.connect(this.gainNode);
       osc.start(scheduleTime);
@@ -266,7 +275,7 @@ export class VoiceSynthesizer {
       this.lfoGainNode = this.context.createGain();
 
       this.lfoNode.type = 'sine';
-      fix(this.lfoNode.frequency, lfoRate);
+      tune(this.lfoNode.frequency, lfoRate);
 
       if (lfoTarget === 'filter') {
         fix(this.lfoGainNode.gain, normalizedToLfoFilterDepth(lfoDepth));

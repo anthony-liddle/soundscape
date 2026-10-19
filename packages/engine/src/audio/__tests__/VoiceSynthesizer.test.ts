@@ -63,7 +63,9 @@ describe('VoiceSynthesizer', () => {
       expect(oscillators()).toHaveLength(1)
       const osc = oscillators()[0]!
       expect(osc.type).toBe(defaultInstrumentParams.waveform)
-      expect(osc.frequency.calls[0]).toEqual({ method: 'set', value: midiToFrequency(60), time: 0 })
+      // A value, not an event at the note's start: see VoiceSynthesizer.startSources
+      expect(osc.frequency.value).toBe(midiToFrequency(60))
+      expect(osc.frequency.calls).toEqual([])
       expect(osc.started).toEqual([0])
       expect(isConnected(osc, gainNode())).toBe(true)
     })
@@ -73,13 +75,14 @@ describe('VoiceSynthesizer', () => {
       const oscs = oscillators()
       expect(oscs).toHaveLength(2)
       const cents = 0.2 * 50
-      expect(oscs[0]!.detune.calls[0]!.value).toBe(-cents / 2)
-      expect(oscs[1]!.detune.calls[0]!.value).toBe(cents / 2)
+      expect(oscs[0]!.detune.value).toBe(-cents / 2)
+      expect(oscs[1]!.detune.value).toBe(cents / 2)
+      for (const osc of oscs) expect(osc.detune.calls).toEqual([])
     })
 
     it('applies pitchOffset to the oscillator frequency', () => {
       voice.noteOn({ pitch: 60, velocity: 100, instrument: makeParams({ pitchOffset: -12 }) }, 0)
-      expect(oscillators()[0]!.frequency.calls[0]!.value).toBeCloseTo(midiToFrequency(48))
+      expect(oscillators()[0]!.frequency.value).toBeCloseTo(midiToFrequency(48))
     })
 
     it('clamps a start time in the past to the current time', () => {

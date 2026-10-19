@@ -6,6 +6,7 @@ import type { SoundscapeState } from '../../types'
 import { normalizedToADSR } from '../../utils/time'
 import { createMockAudioContext } from './mockWebAudio'
 import type { MockAudioContext, MockNode } from './mockWebAudio'
+import { midiToFrequency } from '../../utils/pitch'
 
 /**
  * startMIDINote / stopMIDINote: sustained interactive voices for live MIDI
@@ -106,7 +107,8 @@ describe('AudioEngine MIDI notes', () => {
   it('transport stop() leaves held MIDI notes sounding', () => {
     engine.play()
     engine.startMIDINote(60, 100, 'keys')
-    const osc = oscs().find((o) => o.frequency.calls.length > 0)!
+    // The held note's oscillator: middle C, keys having no pitch offset
+    const osc = oscs().find((o) => o.frequency.value === midiToFrequency(60))!
 
     engine.stop()
     expect(osc.stop).not.toHaveBeenCalled()

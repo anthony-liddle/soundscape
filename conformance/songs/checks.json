@@ -3,7 +3,7 @@
   "engine": {
     "name": "soundscape-engine",
     "version": "0.4.1",
-    "commit": "ef0c8ed4bab0821264f3307f4eee5bbb0e67850b",
+    "commit": "22fc78f94f524d2d8fbb3349a0101297488ec80b",
     "sourceChangedSinceCommit": true,
     "built": "from source by this script, packages/engine/dist"
   },
@@ -17,13 +17,13 @@
     "loads": {
       "about": "Two loads of The Forgetting Machine, each with the reverb a load of the engine draws.",
       "chromium": {
-        "worstWindowUnderMusicDb": 5.3,
+        "worstWindowUnderMusicDb": 2,
         "impulsesTheSameEachLoad": false,
         "impulsesDifferentEachTrack": true,
         "pass": false
       },
       "webkit": {
-        "worstWindowUnderMusicDb": 4.2,
+        "worstWindowUnderMusicDb": 1.4,
         "impulsesTheSameEachLoad": false,
         "impulsesDifferentEachTrack": true,
         "pass": false
@@ -34,33 +34,33 @@
       "rps": {
         "chromiumWebkitWorstWindowUnderMusicDb": -0.7,
         "chromiumWebkitMeasureSpread": {
-          "seconds": 0.002429999999999932,
-          "db": 4.489999999999998,
-          "hz": 87.5,
-          "windowDbfs": 13.219999999999999,
-          "partialHz": 4.619999999999891,
-          "partialDb": 14.61,
-          "membershipChanges": 50,
+          "seconds": 0.0035799999999999166,
+          "db": 4.84,
+          "hz": 227.85000000000002,
+          "windowDbfs": 3.5700000000000003,
+          "partialHz": 5.580000000000155,
+          "partialDb": 6.63,
+          "membershipChanges": 52,
           "strongestChanges": 6,
           "silentInOne": 0
         },
-        "chromiumFirefoxWorstWindowUnderMusicDb": 2.3,
+        "chromiumFirefoxWorstWindowUnderMusicDb": 1.9,
         "pass": false
       },
       "fm": {
         "chromiumWebkitWorstWindowUnderMusicDb": 5.7,
         "chromiumWebkitMeasureSpread": {
-          "seconds": 0.04739999999999989,
+          "seconds": 0.047370000000000134,
           "db": 22.429999999999993,
-          "hz": 151.76999999999998,
-          "windowDbfs": 7.950000000000003,
-          "partialHz": 5.339999999999918,
-          "partialDb": 15.219999999999995,
-          "membershipChanges": 74,
+          "hz": 160.65,
+          "windowDbfs": 7.840000000000003,
+          "partialHz": 5.430000000000064,
+          "partialDb": 18.36,
+          "membershipChanges": 68,
           "strongestChanges": 7,
           "silentInOne": 0
         },
-        "chromiumFirefoxWorstWindowUnderMusicDb": 7.3,
+        "chromiumFirefoxWorstWindowUnderMusicDb": 6.3,
         "pass": false
       }
     },
