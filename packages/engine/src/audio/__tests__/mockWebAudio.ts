@@ -24,25 +24,35 @@ export interface MockParam {
   cancelAndHoldAtTime: ReturnType<typeof vi.fn>;
 }
 
+/** As every browser does, a value or time that is not finite is refused. */
+function finite(...values: number[]): void {
+  if (!values.every(Number.isFinite)) throw new TypeError('The provided double value is non-finite.');
+}
+
 export function createMockParam(initial = 0): MockParam {
   const calls: ParamCall[] = [];
   const param: MockParam = {
     value: initial,
     calls,
     setValueAtTime: vi.fn((value: number, time: number) => {
+      finite(value, time);
       calls.push({ method: 'set', value, time });
       param.value = value;
     }),
     linearRampToValueAtTime: vi.fn((value: number, time: number) => {
+      finite(value, time);
       calls.push({ method: 'ramp', value, time });
     }),
     exponentialRampToValueAtTime: vi.fn((value: number, time: number) => {
+      finite(value, time);
       calls.push({ method: 'expRamp', value, time });
     }),
     cancelScheduledValues: vi.fn((time: number) => {
+      finite(time);
       calls.push({ method: 'cancel', time });
     }),
     cancelAndHoldAtTime: vi.fn((time: number) => {
+      finite(time);
       calls.push({ method: 'hold', time });
     }),
   };

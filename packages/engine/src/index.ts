@@ -88,3 +88,12 @@ export {
   clamp,
 } from './utils/validation';
 export type { InstrumentProblem } from './utils/validation';
+
+export {
+  SoundscapeValueError,
+  instrumentValueProblems,
+  mixerValueProblems,
+  trackMixerValueProblems,
+  stateValueProblems,
+} from './utils/values';
+export type { ValueProblem } from './utils/values';

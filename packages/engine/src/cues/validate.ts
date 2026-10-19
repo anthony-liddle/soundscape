@@ -1,6 +1,7 @@
 import { CUE_FORMAT, CUE_VERSION } from './types';
 import type { CueDocument, CueProblem, CueValidation } from './types';
 import { envelopeAndFilterProblems } from '../utils/validation';
+import { NORMALIZED_PARAMS, PARAM_CHOICES } from '../utils/values';
 
 /**
  * Validation for cue documents. Stricter than the state validator, on purpose:
@@ -16,33 +17,20 @@ const TOP_KEYS = ['format', 'version', 'instruments', 'cues'];
 const CUE_KEYS = ['notes'];
 const NOTE_KEYS = ['id', 'instrument', 'start', 'duration', 'pitch', 'level'];
 
-const WAVEFORMS = ['sine', 'square', 'sawtooth', 'triangle'];
-const FILTER_TYPES = ['lowpass', 'highpass', 'bandpass', 'notch', 'none'];
-const LFO_TARGETS = ['filter', 'pitch'];
-const ENVELOPE_CURVES = ['linear', 'exponential'];
+// The choices and ranges a song's instrument is held to as well, from one source
+const WAVEFORMS: readonly string[] = PARAM_CHOICES.waveform;
+const FILTER_TYPES: readonly string[] = PARAM_CHOICES.filterType;
+const LFO_TARGETS: readonly string[] = PARAM_CHOICES.lfoTarget;
+const ENVELOPE_CURVES: readonly string[] = PARAM_CHOICES.envelopeCurve;
 
 /** Instrument fields mapped from 0 to 1 by the engine. */
-const NORMALIZED = [
-  'attack',
-  'decay',
-  'sustain',
-  'release',
-  'filterCutoff',
-  'filterResonance',
-  'delayTime',
-  'delayFeedback',
-  'delayMix',
-  'distortion',
-  'lfoRate',
-  'lfoDepth',
-  'unisonDetune',
-];
+const NORMALIZED: readonly string[] = NORMALIZED_PARAMS;
 /** Instrument fields a cue fixes at 0. See CueInstrument. */
 const FIXED_AT_ZERO: Record<string, string> = {
   reverbMix: "must be 0: the reverb's impulse response is random, and a cue must sound the same every time",
   velocityResponse: "must be 0: a cue note's level is its peak, and velocity plays no part",
 };
-const ENUMS: Record<string, string[]> = {
+const ENUMS: Record<string, readonly string[]> = {
   waveform: WAVEFORMS,
   filterType: FILTER_TYPES,
   lfoTarget: LFO_TARGETS,

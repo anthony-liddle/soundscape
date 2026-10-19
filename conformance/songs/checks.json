@@ -3,7 +3,7 @@
   "engine": {
     "name": "soundscape-engine",
     "version": "0.4.1",
-    "commit": "662b7ef8a3612b929233d939abae55d7958e81d4",
+    "commit": "78a30d1581cf0661e6a099e0a3339a01ed833bf2",
     "sourceChangedSinceCommit": true,
     "built": "from source by this script, packages/engine/dist"
   },
@@ -17,13 +17,13 @@
     "loads": {
       "about": "Two loads of The Forgetting Machine, each with the reverb a load of the engine draws.",
       "chromium": {
-        "worstWindowUnderMusicDb": -135.9,
+        "worstWindowUnderMusicDb": -136.3,
         "impulsesTheSameEachLoad": true,
         "impulsesDifferentEachTrack": true,
         "pass": true
       },
       "webkit": {
-        "worstWindowUnderMusicDb": -145.5,
+        "worstWindowUnderMusicDb": -138.8,
         "impulsesTheSameEachLoad": true,
         "impulsesDifferentEachTrack": true,
         "pass": true
@@ -85,22 +85,19 @@
     "nan": {
       "about": "A NaN attack on The Forgetting Machine's strings, track001, in Chromium.",
       "handedIn": {
-        "firstError": "TypeError: Failed to execute 'linearRampToValueAtTime' on 'AudioParam': The provided double value is non-finite.",
-        "errors": 182,
-        "notesPlayed": {
-          "track002": 18,
-          "track003": 5
-        },
-        "pass": false
+        "firstError": "SoundscapeValueError: updateState refused, since these values cannot play:\n  tracks[0].paramOverrides.attack, on track 'track001': must be from 0 to 1, got NaN",
+        "errors": 1,
+        "notesPlayed": {},
+        "pass": true
       },
       "slippedIn": {
-        "errors": 182,
-        "firstError": "TypeError: Failed to execute 'linearRampToValueAtTime' on 'AudioParam': The provided double value is non-finite.",
+        "errors": 20,
+        "firstError": "Error: Track 'track001', note 'note0001' could not be played, and was skipped: TypeError: Failed to execute 'linearRampToValueAtTime' on 'AudioParam': The provided double value is non-finite.",
         "notesPlayed": {
-          "track002": 18,
-          "track003": 5
+          "track002": 20,
+          "track003": 6
         },
-        "pass": false
+        "pass": true
       }
     }
   }
