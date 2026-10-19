@@ -95,7 +95,8 @@ export async function renderVoiceRelease(
   shape: ReleaseShape,
   start: number,
   releaseTime: number,
-  withoutHold: boolean
+  withoutHold: boolean,
+  calledAt: number | null = null
 ): Promise<Float32Array> {
   const ctx = new Offline(1, lengthFor(releaseTime, shape), RELEASE_RATE)
   const voice = new VoiceSynthesizer(ctx, ctx.destination)
@@ -105,8 +106,33 @@ export async function renderVoiceRelease(
   }
   const instrument = instrumentFor(shape)
   voice.noteOn({ pitch: 69, velocity: 127, instrument }, start)
-  voice.noteOff(instrument, releaseTime)
+  if (calledAt === null) {
+    voice.noteOff(instrument, releaseTime)
+  } else {
+    // Called while the render runs, as the scheduler calls it, up to 100 ms
+    // ahead of the release, with the envelope's ramps already sounding
+    void (ctx as unknown as OfflineAudioContext).suspend(calledAt).then(() => {
+      voice.noteOff(instrument, releaseTime)
+      void (ctx as unknown as OfflineAudioContext).resume()
+    })
+  }
   return Float32Array.from((await ctx.startRendering()).getChannelData(0))
+}
+
+/**
+ * Releases called while the render runs, each at a render quantum's start,
+ * where a suspension can be: 80 ms before a release after a hold of 0.5 s,
+ * and halfway into the decay for a release three quarters of the way in.
+ */
+export function liveReleasesFor(shape: ReleaseShape, start: number): Record<string, { release: number; calledAt: number }> {
+  const decayEnd = decayEndOf(shape, start)
+  const onAQuantum = (t: number) => (Math.floor((t * RELEASE_RATE) / 128) * 128) / RELEASE_RATE
+  const afterHold = decayEnd + 0.5
+  const inDecay = decayEnd - shape.decay / 4
+  return {
+    'after a hold of 0.5 s, noteOff called 80 ms before': { release: afterHold, calledAt: onAQuantum(afterHold - 0.08) },
+    'late in the decay, noteOff called while it still runs': { release: inDecay, calledAt: onAQuantum(inDecay - shape.decay / 2) },
+  }
 }
 
 /**

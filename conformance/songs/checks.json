@@ -3,8 +3,8 @@
   "engine": {
     "name": "soundscape-engine",
     "version": "0.4.1",
-    "commit": "be4ec572c780d380a9846bfe4d380077ad6d6ba7",
-    "sourceChangedSinceCommit": false,
+    "commit": "ef0c8ed4bab0821264f3307f4eee5bbb0e67850b",
+    "sourceChangedSinceCommit": true,
     "built": "from source by this script, packages/engine/dist"
   },
   "playwright": "1.63.0",
@@ -17,13 +17,13 @@
     "loads": {
       "about": "Two loads of The Forgetting Machine, each with the reverb a load of the engine draws.",
       "chromium": {
-        "worstWindowUnderMusicDb": 2.4,
+        "worstWindowUnderMusicDb": 5.3,
         "impulsesTheSameEachLoad": false,
         "impulsesDifferentEachTrack": true,
         "pass": false
       },
       "webkit": {
-        "worstWindowUnderMusicDb": 1.6,
+        "worstWindowUnderMusicDb": 4.2,
         "impulsesTheSameEachLoad": false,
         "impulsesDifferentEachTrack": true,
         "pass": false
@@ -35,32 +35,32 @@
         "chromiumWebkitWorstWindowUnderMusicDb": -0.7,
         "chromiumWebkitMeasureSpread": {
           "seconds": 0.002429999999999932,
-          "db": 5.109999999999999,
-          "hz": 744.6199999999999,
-          "windowDbfs": 5.02,
+          "db": 4.489999999999998,
+          "hz": 87.5,
+          "windowDbfs": 13.219999999999999,
           "partialHz": 4.619999999999891,
-          "partialDb": 6.18,
-          "membershipChanges": 55,
+          "partialDb": 14.61,
+          "membershipChanges": 50,
           "strongestChanges": 6,
           "silentInOne": 0
         },
-        "chromiumFirefoxWorstWindowUnderMusicDb": 2.5,
+        "chromiumFirefoxWorstWindowUnderMusicDb": 2.3,
         "pass": false
       },
       "fm": {
         "chromiumWebkitWorstWindowUnderMusicDb": 5.7,
         "chromiumWebkitMeasureSpread": {
-          "seconds": 0.04737999999999998,
+          "seconds": 0.04739999999999989,
           "db": 22.429999999999993,
-          "hz": 126.83000000000001,
-          "windowDbfs": 8.019999999999996,
-          "partialHz": 5.259999999999991,
-          "partialDb": 14.809999999999999,
-          "membershipChanges": 68,
+          "hz": 151.76999999999998,
+          "windowDbfs": 7.950000000000003,
+          "partialHz": 5.339999999999918,
+          "partialDb": 15.219999999999995,
+          "membershipChanges": 74,
           "strongestChanges": 7,
           "silentInOne": 0
         },
-        "chromiumFirefoxWorstWindowUnderMusicDb": 17.9,
+        "chromiumFirefoxWorstWindowUnderMusicDb": 7.3,
         "pass": false
       }
     },
@@ -68,13 +68,13 @@
       "about": "One sine held at 0.6 of its peak: its level after the scheduler calls noteOff, up to 100 ms before the release, against its level just before the call. Reverb and compressor left out, to read the envelope as it is.",
       "chromium": {
         "noteOffCalledMsBeforeRelease": 80,
-        "stepDb": -12.73,
-        "pass": false
+        "stepDb": 0,
+        "pass": true
       },
       "webkit": {
         "noteOffCalledMsBeforeRelease": 80,
-        "stepDb": -12.69,
-        "pass": false
+        "stepDb": 0,
+        "pass": true
       },
       "firefox": {
         "noteOffCalledMsBeforeRelease": 80,

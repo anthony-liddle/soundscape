@@ -319,40 +319,37 @@ export class VoiceSynthesizer {
     const scheduleTime = Math.max(now, stopTime);
     const releaseTime = normalizedToADSR(instrument.release, 'release');
 
-    // Start the release from the envelope's value AT scheduleTime. noteOff is
-    // typically invoked up to ~100 ms early (scheduler lookahead), so reading
-    // gain.value here would capture a stale level and cause clicks.
+    // Start the release from the envelope's level AT scheduleTime. noteOff is
+    // invoked up to 100 ms early, by the scheduler's lookahead, so gain.value
+    // would be stale; and before rendering it is the param's default.
+    //
+    // The voice scheduled the envelope, so it knows that level, and ends the
+    // envelope there itself, in every browser. cancelAndHoldAtTime is never
+    // used: by the spec's algorithm, holding at a time after the last
+    // scheduled event inserts nothing, so a release ramp after it would start
+    // from the decay's end. In Chrome and Safari a held note then stepped down
+    // the moment noteOff was called, before its release.
+    //
+    // Cancelling at scheduleTime removes any ramp still in progress there,
+    // and Firefox also removes one that ended up to half a sample earlier. So
+    // the envelope is always ended again at that level, with a ramp of its own
+    // curve. Where the cancel removed a ramp, that traces the same curve to
+    // the same point; where it removed nothing, the new ramp is flat. A
+    // release before, at or after the decay's end comes out right, and no
+    // comparison with the decay's end decides which.
     const gain = this.gainNode.gain;
     const exponential = instrument.envelopeCurve === 'exponential';
     const floor = exponential ? envelopeFloorOf(instrument) : 0;
-    if (typeof gain.cancelAndHoldAtTime === 'function') {
-      // Holds the envelope's own value at scheduleTime, mid-ramp included,
-      // exponential or linear.
-      gain.cancelAndHoldAtTime(scheduleTime);
+    const scheduled = this.scheduled;
+    const start = scheduled ? scheduled.start : scheduleTime;
+    const held = scheduled ? envelopeLevelAt(scheduled.shape, scheduleTime - start) : 0;
+    gain.cancelScheduledValues(scheduleTime);
+    if (scheduled && scheduleTime > start) {
+      if (scheduled.shape.curve === 'exponential') gain.exponentialRampToValueAtTime(held, scheduleTime);
+      else gain.linearRampToValueAtTime(held, scheduleTime);
     } else {
-      // No cancelAndHoldAtTime, as in Firefox. The voice scheduled the
-      // envelope, so it knows the level at scheduleTime, where gain.value
-      // would be stale: noteOff runs ahead of time, and before rendering the
-      // value is the param's default.
-      //
-      // Cancelling at scheduleTime removes any ramp still in progress there,
-      // and Firefox also removes one that ended up to half a sample earlier.
-      // So the envelope is always ended again at that level, with a ramp of
-      // its own curve. Where the cancel removed a ramp, that traces the same
-      // curve to the same point; where it removed nothing, the new ramp is
-      // flat. A release before, at or after the decay's end comes out right,
-      // and no comparison with the decay's end decides which.
-      const scheduled = this.scheduled;
-      const start = scheduled ? scheduled.start : scheduleTime;
-      const held = scheduled ? envelopeLevelAt(scheduled.shape, scheduleTime - start) : 0;
-      gain.cancelScheduledValues(scheduleTime);
-      if (scheduled && scheduleTime > start) {
-        if (scheduled.shape.curve === 'exponential') gain.exponentialRampToValueAtTime(held, scheduleTime);
-        else gain.linearRampToValueAtTime(held, scheduleTime);
-      } else {
-        // At the note's start nothing has sounded yet
-        gain.setValueAtTime(held, scheduleTime);
-      }
+      // At the note's start nothing has sounded yet
+      gain.setValueAtTime(held, scheduleTime);
     }
 
     // Release envelope: to zero, or for an exponential one, to its floor, where

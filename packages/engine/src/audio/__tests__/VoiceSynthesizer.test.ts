@@ -164,28 +164,31 @@ describe('VoiceSynthesizer', () => {
       voice.noteOff(params, 2)
       const release = normalizedToADSR(0.5, 'release')
 
-      expect(gainNode().gain.calls[0]).toEqual({ method: 'hold', time: 2 })
-      expect(gainNode().gain.calls[1]).toEqual({ method: 'ramp', value: 0, time: 2 + release })
+      expect(gainNode().gain.calls.map((c) => [c.method, c.time])).toEqual([
+        ['cancel', 2],
+        ['ramp', 2],
+        ['ramp', 2 + release],
+      ])
+      expect(gainNode().gain.calls[2]!.value).toBe(0)
       expect(oscillators()[0]!.stopped[0]!).toBeCloseTo(2 + release + 0.01)
     })
 
-    it('holds the envelope at the scheduled stop time via cancelAndHoldAtTime (M3 fixed)', () => {
-      // The release must start from the envelope's value AT scheduleTime —
-      // not the value when noteOff happens to be invoked (up to 100 ms early
-      // under the scheduler lookahead)
+    it('never holds with cancelAndHoldAtTime, even where the browser has it', () => {
+      // After the last scheduled event, the spec's cancelAndHoldAtTime inserts
+      // nothing, so a release ramp after it would start from the decay's end:
+      // in Chrome and Safari a held note stepped down when noteOff was called,
+      // up to 100 ms before its release. The voice ends the envelope at the
+      // level it has at the release itself, in every browser.
       const params = makeParams({ release: 0.5 })
       voice.noteOn({ pitch: 60, velocity: 100, instrument: params }, 0)
       gainNode().gain.calls.length = 0
 
       voice.noteOff(params, 0.1)
-      const release = normalizedToADSR(0.5, 'release')
-      expect(gainNode().gain.calls).toEqual([
-        { method: 'hold', time: 0.1 },
-        { method: 'ramp', value: 0, time: 0.1 + release },
-      ])
+      expect(gainNode().gain.cancelAndHoldAtTime).not.toHaveBeenCalled()
+      expect(gainNode().gain.calls.map((c) => c.method)).toEqual(['cancel', 'ramp', 'ramp'])
     })
 
-    describe('where cancelAndHoldAtTime is unavailable (Firefox)', () => {
+    describe('the level it releases from', () => {
       // The defaults: peak 0.3 scaled by velocity 100 at velocityResponse 0.5,
       // a 1.2 ms attack, a 39.9 ms decay to 0.7 of the peak
       const peak = 0.3 * (1 - 0.5 + 0.5 * (100 / 127))
@@ -197,7 +200,6 @@ describe('VoiceSynthesizer', () => {
         const params = makeParams({ release: 0.5 })
         voice.noteOn({ pitch: 60, velocity: 100, instrument: params }, 0)
         const gain = gainNode().gain
-        ;(gain as { cancelAndHoldAtTime?: unknown }).cancelAndHoldAtTime = undefined
         // A stale reading, which the release must not use
         gain.value = 0.25
         gain.calls.length = 0
