@@ -5,9 +5,9 @@ export interface EffectsChainOptions {
    * Leave the waveshaper's oversampling off while there is no distortion.
    * WebKit oversamples a WaveShaperNode even when its curve is null, which at
    * 2x delays the signal by 6 samples and filters it, where Chromium and
-   * Firefox pass it through untouched. Cue chains set this, so a cue with no
-   * distortion sounds the same in every browser. Track chains do not, so
-   * music keeps the behaviour it has always had.
+   * Firefox pass it through untouched. The engine sets this on every chain it
+   * builds, for tracks and for cues, so music and cues with no distortion
+   * sound the same in every browser. A chain made with no options keeps 2x.
    */
   oversampleOnlyWhenDistorting?: boolean;
   /**

@@ -3,7 +3,7 @@
   "engine": {
     "name": "soundscape-engine",
     "version": "0.4.1",
-    "commit": "22fc78f94f524d2d8fbb3349a0101297488ec80b",
+    "commit": "2b103bbbbfeb91fb23d58d16088d3ccc4cdd93f8",
     "sourceChangedSinceCommit": true,
     "built": "from source by this script, packages/engine/dist"
   },
@@ -17,13 +17,13 @@
     "loads": {
       "about": "Two loads of The Forgetting Machine, each with the reverb a load of the engine draws.",
       "chromium": {
-        "worstWindowUnderMusicDb": 2,
+        "worstWindowUnderMusicDb": 5.8,
         "impulsesTheSameEachLoad": false,
         "impulsesDifferentEachTrack": true,
         "pass": false
       },
       "webkit": {
-        "worstWindowUnderMusicDb": 1.4,
+        "worstWindowUnderMusicDb": 5.4,
         "impulsesTheSameEachLoad": false,
         "impulsesDifferentEachTrack": true,
         "pass": false
@@ -32,36 +32,36 @@
     "browsers": {
       "about": "Chromium against WebKit, both games as the references play them, on one impulse response. Firefox beside them, for the record.",
       "rps": {
-        "chromiumWebkitWorstWindowUnderMusicDb": -0.7,
+        "chromiumWebkitWorstWindowUnderMusicDb": -90.2,
         "chromiumWebkitMeasureSpread": {
-          "seconds": 0.0035799999999999166,
-          "db": 4.84,
-          "hz": 227.85000000000002,
-          "windowDbfs": 3.5700000000000003,
-          "partialHz": 5.580000000000155,
-          "partialDb": 6.63,
-          "membershipChanges": 52,
-          "strongestChanges": 6,
+          "seconds": 0,
+          "db": 0,
+          "hz": 0,
+          "windowDbfs": 0,
+          "partialHz": 0.09000000000000341,
+          "partialDb": 0,
+          "membershipChanges": 0,
+          "strongestChanges": 0,
           "silentInOne": 0
         },
         "chromiumFirefoxWorstWindowUnderMusicDb": 1.9,
-        "pass": false
+        "pass": true
       },
       "fm": {
-        "chromiumWebkitWorstWindowUnderMusicDb": 5.7,
+        "chromiumWebkitWorstWindowUnderMusicDb": -81.5,
         "chromiumWebkitMeasureSpread": {
-          "seconds": 0.047370000000000134,
-          "db": 22.429999999999993,
-          "hz": 160.65,
-          "windowDbfs": 7.840000000000003,
-          "partialHz": 5.430000000000064,
-          "partialDb": 18.36,
-          "membershipChanges": 68,
-          "strongestChanges": 7,
+          "seconds": 0,
+          "db": 0.010000000000001563,
+          "hz": 0,
+          "windowDbfs": 0,
+          "partialHz": 0.010000000000104592,
+          "partialDb": 0.010000000000005116,
+          "membershipChanges": 0,
+          "strongestChanges": 0,
           "silentInOne": 0
         },
         "chromiumFirefoxWorstWindowUnderMusicDb": 6.3,
-        "pass": false
+        "pass": true
       }
     },
     "held": {

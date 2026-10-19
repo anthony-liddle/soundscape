@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { AudioEngine } from '../AudioEngine'
+import { builtInPresets } from '../../presets'
+import type { SoundscapeState } from '../../types'
 import { createMockAudioContext } from './mockWebAudio'
 
 // emitBeatUpdate is private — cast to any to access it directly.
@@ -117,5 +119,31 @@ describe('AudioEngine context lifecycle', () => {
 
     expect(created).not.toHaveBeenCalled()
     expect(close).not.toHaveBeenCalled()
+  })
+})
+
+describe("a track's effects chain", () => {
+  // WebKit oversamples a waveshaper with no curve, delaying the signal 6
+  // samples at 2x and filtering it, where Chromium and Firefox pass it
+  // through. A track with no distortion is not oversampled, as a cue is not.
+  const stateWith = (distortion: number): SoundscapeState => ({
+    metadata: { name: 'Track', tempo: 120, timeSignature: [4, 4], lengthBeats: 4 },
+    presets: [...builtInPresets],
+    tracks: [{ id: 'pad', name: 'Pad', presetId: 'pad', notes: [], paramOverrides: { distortion } }],
+    mixer: { tracks: { pad: { volume: 1, mute: false, solo: false } }, masterVolume: 1 },
+  })
+
+  it('leaves the waveshaper unoversampled with no distortion, and oversamples it while distorting', async () => {
+    const ctx = createMockAudioContext()
+    const engine = new AudioEngine({ context: ctx as unknown as BaseAudioContext })
+    await engine.initialize()
+    engine.updateState(stateWith(0))
+    const shaper = ctx.createdNodes.find((n) => n.kind === 'waveshaper')!
+    expect(shaper.curve).toBeNull()
+    expect(shaper.oversample).toBe('none')
+    engine.updateState(stateWith(0.3))
+    expect(shaper.oversample).toBe('2x')
+    engine.updateState(stateWith(0))
+    expect(shaper.oversample).toBe('none')
   })
 })

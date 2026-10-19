@@ -353,7 +353,10 @@ export class AudioEngine {
     if (!channel) {
       // Create new channel
       const gainNode = context.createGain();
-      const effectsChain = new EffectsChain(context);
+      // Not oversampled while the track has no distortion: WebKit oversamples
+      // a waveshaper with no curve, delaying the music 6 samples and
+      // filtering it, where Chromium and Firefox pass it through
+      const effectsChain = new EffectsChain(context, { oversampleOnlyWhenDistorting: true });
 
       effectsChain.getOutput().connect(gainNode);
       gainNode.connect(masterGain);

@@ -142,10 +142,11 @@ describe('EffectsChain', () => {
 
   describe('oversampling with no distortion', () => {
     // WebKit oversamples a null curve, delaying the signal 6 samples at 2x;
-    // Chromium and Firefox pass it through. Cue chains opt out of that.
+    // Chromium and Firefox pass it through. The engine's chains, for tracks
+    // and for cues, opt out of that.
     const waveshaperOf = (c: MockAudioContext) => c.createdNodes.find((n) => n.kind === 'waveshaper')!
 
-    it('keeps 2x at distortion 0 by default, as track chains always have', () => {
+    it('keeps 2x at distortion 0 for a chain made with no options', () => {
       chain.setParams({ ...PARAMS, distortion: 0 })
       expect(distortion.curve).toBeNull()
       expect(distortion.oversample).toBe('2x')
