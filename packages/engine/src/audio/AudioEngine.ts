@@ -11,9 +11,12 @@ import { envelopeAndFilterProblems } from '../utils/validation';
 import {
   SoundscapeValueError,
   instrumentValueProblems,
+  loopLengthValueProblems,
   mixerValueProblems,
   pitchAndVelocityProblems,
+  reportSkipped,
   stateValueProblems,
+  tempoValueProblems,
 } from '../utils/values';
 import type { ValueProblem } from '../utils/values';
 import { CueDocumentError } from '../cues/types';
@@ -443,14 +446,16 @@ export class AudioEngine {
    * This is called automatically by {@link updateState}, but you can call it
    * directly for low-latency mixer updates without a full state sync.
    *
+   * A mixer holding a volume that is not finite or not from 0 to 1, or a mute
+   * or solo that is not a boolean, is skipped whole: nothing changes, and a
+   * {@link SoundscapeValueError} naming each value is reported once, through
+   * `reportError` where the host has it, or else `console.error`. It never
+   * throws, since a host calls it while the music plays.
+   *
    * @param mixer - The mixer state to apply.
-   * @throws {@link SoundscapeValueError} for a volume that is not finite or
-   *   not from 0 to 1, or a mute or solo that is not a boolean, before
-   *   anything changes.
    */
   updateMixer(mixer: MixerState): void {
-    const problems = mixerValueProblems(mixer);
-    if (problems.length > 0) throw new SoundscapeValueError('updateMixer', problems);
+    if (!this.goesAhead('updateMixer', mixerValueProblems(mixer))) return;
     const masterGain = this.masterGain;
     if (!masterGain) return;
 
@@ -685,12 +690,20 @@ export class AudioEngine {
    * without stopping the music.
    */
   private reportNoteError(trackId: string, noteId: string, error: unknown): void {
-    const reported = new Error(`Track '${trackId}', note '${noteId}' could not be played, and was skipped: ${String(error)}`, {
-      cause: error,
-    });
-    const report = (globalThis as { reportError?: (e: unknown) => void }).reportError;
-    if (typeof report === 'function') report(reported);
-    else console.error(reported);
+    reportSkipped(
+      new Error(`Track '${trackId}', note '${noteId}' could not be played, and was skipped: ${String(error)}`, { cause: error })
+    );
+  }
+
+  /**
+   * Whether a call made while the music plays goes ahead. One holding a value
+   * that cannot play is skipped instead, and reported once, with every
+   * problem's path, so neither its caller nor the music is stopped by it.
+   */
+  private goesAhead(call: string, problems: ValueProblem[]): boolean {
+    if (problems.length === 0) return true;
+    reportSkipped(new SoundscapeValueError(call, problems));
+    return false;
   }
 
   private getAvailableVoice(channel: TrackChannel): VoiceSynthesizer | null {
@@ -730,13 +743,13 @@ export class AudioEngine {
    * If currently playing, the transport start time is recalculated so the
    * playhead position stays consistent at the new BPM.
    *
+   * A tempo that is not a finite number above 0 is skipped, and reported once,
+   * as {@link updateMixer} reports a mixer: the tempo stays as it was.
+   *
    * @param bpm - New tempo in beats per minute.
-   * @throws {@link SoundscapeValueError} for a tempo that is not finite and above 0.
    */
   setTempo(bpm: number): void {
-    if (!(Number.isFinite(bpm) && bpm > 0)) {
-      throw new SoundscapeValueError('setTempo', [{ path: 'bpm', message: `must be a tempo above 0 beats a minute, got ${bpm}` }]);
-    }
+    if (!this.goesAhead('setTempo', tempoValueProblems(bpm))) return;
     if (this.isPlaying) {
       // Adjust start time to maintain position
       const context = this.ensureContext();
@@ -764,13 +777,13 @@ export class AudioEngine {
    * This should match `SoundscapeState.metadata.lengthBeats` in most cases.
    * Updated automatically when you call {@link updateState}.
    *
+   * A length that is not a finite number above 0 is skipped, and reported
+   * once, as {@link updateMixer} reports a mixer: the length stays as it was.
+   *
    * @param beats - Total number of beats before the loop wraps.
-   * @throws {@link SoundscapeValueError} for a length that is not finite and above 0.
    */
   setLoopLength(beats: number): void {
-    if (!(Number.isFinite(beats) && beats > 0)) {
-      throw new SoundscapeValueError('setLoopLength', [{ path: 'beats', message: `must be a length above 0 beats, got ${beats}` }]);
-    }
+    if (!this.goesAhead('setLoopLength', loopLengthValueProblems(beats))) return;
     this.loopLengthBeats = beats;
   }
 
@@ -843,6 +856,10 @@ export class AudioEngine {
    * release tail completes (~1 s total). No interaction with the transport
    * or scheduled notes queue.
    *
+   * A note holding a value that cannot play, a pitch or velocity that is not a
+   * MIDI value or an override that is not finite or out of its range, plays
+   * nothing, and is reported once, as {@link updateMixer} reports a mixer.
+   *
    * @param pitch - MIDI pitch to preview (0–127).
    * @param velocity - Note velocity (0–127).
    * @param presetId - ID of the preset to use for the preview sound.
@@ -854,7 +871,7 @@ export class AudioEngine {
    * engine.previewNote(60, 100, 'preset-lead', { filterCutoff: 0.9 });
    */
   previewNote(pitch: number, velocity: number, presetId: string, paramOverrides?: Partial<InstrumentParams>): void {
-    this.refuseNoteValues('previewNote', pitch, velocity, presetId, paramOverrides);
+    if (!this.goesAhead('previewNote', this.noteValueProblems(pitch, velocity, presetId, paramOverrides))) return;
     if (!this.currentState) return;
 
     const context = this.ensureContext();
@@ -888,17 +905,16 @@ export class AudioEngine {
   }
 
   /**
-   * previewNote's and startMIDINote's refusal: a pitch or velocity that is not
-   * a MIDI value, an override that cannot play, or overrides that break a
+   * What previewNote and startMIDINote refuse: a pitch or velocity that is
+   * not a MIDI value, an override that cannot play, or overrides that break a
    * rule between the preset's fields, with every problem's path.
    */
-  private refuseNoteValues(
-    call: string,
+  private noteValueProblems(
     pitch: number,
     velocity: number,
     presetId: string,
     paramOverrides: Partial<InstrumentParams> | undefined
-  ): void {
+  ): ValueProblem[] {
     const problems: ValueProblem[] = [
       ...pitchAndVelocityProblems(pitch, velocity),
       ...instrumentValueProblems(paramOverrides, 'paramOverrides'),
@@ -909,7 +925,7 @@ export class AudioEngine {
         problems.push({ path: 'paramOverrides', message: `with these overrides, ${p.key}: ${p.message}` });
       }
     }
-    if (problems.length > 0) throw new SoundscapeValueError(call, problems);
+    return problems;
   }
 
   /**
@@ -919,6 +935,10 @@ export class AudioEngine {
    * called for the same pitch. Held notes are independent of the transport —
    * {@link stop} leaves them sounding; {@link destroy} force-stops them.
    * Re-striking a pitch that is already held replaces the previous voice.
+   *
+   * A note holding a value that cannot play plays nothing, and is reported
+   * once, as {@link previewNote} reports one; a voice already held on its
+   * pitch keeps sounding.
    *
    * @param pitch - MIDI pitch to play (0–127).
    * @param velocity - Note velocity (0–127).
@@ -931,7 +951,7 @@ export class AudioEngine {
     presetId: string,
     paramOverrides?: Partial<InstrumentParams>
   ): void {
-    this.refuseNoteValues('startMIDINote', pitch, velocity, presetId, paramOverrides);
+    if (!this.goesAhead('startMIDINote', this.noteValueProblems(pitch, velocity, presetId, paramOverrides))) return;
     if (!this.currentState) return;
 
     const context = this.ensureContext();

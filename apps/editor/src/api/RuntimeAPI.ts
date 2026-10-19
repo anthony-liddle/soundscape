@@ -2,6 +2,8 @@ import {
   SoundscapeValueError,
   instrumentValueProblems,
   mixerValueProblems,
+  reportSkipped,
+  tempoValueProblems,
   trackMixerValueProblems,
 } from 'soundscape-engine';
 import type { MixerState, InstrumentParams, ValueProblem } from 'soundscape-engine';
@@ -81,16 +83,23 @@ export interface SoundscapeRuntimeAPI {
   setMasterVolume: (volume: number) => void;
 }
 
-/** Refuse a call whose values cannot play, before anything is dispatched. */
-function refuse(call: string, problems: ValueProblem[]): void {
-  if (problems.length > 0) throw new SoundscapeValueError(call, problems);
+/**
+ * Whether a call goes ahead. One whose values cannot play is skipped before
+ * anything is dispatched, and reported once, as the engine reports one.
+ */
+function goesAhead(call: string, problems: ValueProblem[]): boolean {
+  if (problems.length === 0) return true;
+  reportSkipped(new SoundscapeValueError(call, problems));
+  return false;
 }
 
 /**
  * Create a runtime API instance for game integration. Every call that sets a
- * value refuses one that cannot play, as the engine does, with a
- * SoundscapeValueError naming each, so a game learns of it at once and the
- * editor's state never holds it.
+ * value refuses one that cannot play, as the engine does: a game makes these
+ * calls while the music plays, so the call is skipped, and a
+ * SoundscapeValueError naming each value is reported once, through
+ * reportError where the page has it, or else console.error. It never throws
+ * into the game, and the editor's state never holds the value.
  */
 export function createRuntimeAPI(
   dispatch: Dispatch<SoundscapeAction>,
@@ -107,12 +116,12 @@ export function createRuntimeAPI(
 ): SoundscapeRuntimeAPI {
   return {
     applyMixerState: (partialMixer: Partial<MixerState>) => {
-      refuse('applyMixerState', mixerValueProblems(partialMixer));
+      if (!goesAhead('applyMixerState', mixerValueProblems(partialMixer))) return;
       dispatch({ type: 'APPLY_MIXER_STATE', payload: partialMixer });
     },
 
     applyInstrumentOverride: (trackId: string, overrides: Partial<InstrumentParams>) => {
-      refuse('applyInstrumentOverride', instrumentValueProblems(overrides, 'overrides', trackId));
+      if (!goesAhead('applyInstrumentOverride', instrumentValueProblems(overrides, 'overrides', trackId))) return;
       dispatch({
         type: 'SET_TRACK_PARAM_OVERRIDES',
         payload: { trackId, overrides },
@@ -121,13 +130,17 @@ export function createRuntimeAPI(
 
     play: controls.play,
     stop: controls.stop,
-    setTempo: controls.setTempo,
+    setTempo: (bpm: number) => {
+      if (!goesAhead('setTempo', tempoValueProblems(bpm))) return;
+      controls.setTempo(bpm);
+    },
     setLoop: controls.setLoop,
 
     getPlaybackState: () => getState().playback,
     getMixerState: () => getState().mixer,
 
     muteTrack: (trackId: string, muted: boolean) => {
+      if (!goesAhead('muteTrack', trackMixerValueProblems({ mute: muted }, `mixer.tracks.${trackId}`, trackId))) return;
       dispatch({
         type: 'SET_MIXER_TRACK',
         payload: { trackId, state: { mute: muted } },
@@ -135,6 +148,7 @@ export function createRuntimeAPI(
     },
 
     soloTrack: (trackId: string, soloed: boolean) => {
+      if (!goesAhead('soloTrack', trackMixerValueProblems({ solo: soloed }, `mixer.tracks.${trackId}`, trackId))) return;
       dispatch({
         type: 'SET_MIXER_TRACK',
         payload: { trackId, state: { solo: soloed } },
@@ -142,7 +156,7 @@ export function createRuntimeAPI(
     },
 
     setTrackVolume: (trackId: string, volume: number) => {
-      refuse('setTrackVolume', trackMixerValueProblems({ volume }, `mixer.tracks.${trackId}`, trackId));
+      if (!goesAhead('setTrackVolume', trackMixerValueProblems({ volume }, `mixer.tracks.${trackId}`, trackId))) return;
       dispatch({
         type: 'SET_MIXER_TRACK',
         payload: { trackId, state: { volume } },
@@ -150,7 +164,7 @@ export function createRuntimeAPI(
     },
 
     setMasterVolume: (volume: number) => {
-      refuse('setMasterVolume', mixerValueProblems({ masterVolume: volume }));
+      if (!goesAhead('setMasterVolume', mixerValueProblems({ masterVolume: volume }))) return;
       dispatch({ type: 'SET_MASTER_VOLUME', payload: volume });
     },
   };

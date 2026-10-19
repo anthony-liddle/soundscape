@@ -3,10 +3,12 @@ import type { InstrumentProblem } from './validation';
 
 /**
  * The values a song can hold that cannot play, found as they arrive at the
- * engine's runtime API: updateState, updateMixer, previewNote, startMIDINote,
- * setTempo and setLoopLength refuse them, with every problem's path, before
- * changing anything. A file's validator is not the only way in: a host can
- * hand over a bad value at any time.
+ * engine's runtime API, which refuses them with every problem's path before
+ * changing anything. updateState throws. A call made while the music plays,
+ * updateMixer, previewNote, startMIDINote, setTempo or setLoopLength, skips
+ * what it was asked and reports it instead, so it never throws into its
+ * caller. A file's validator is not the only way in: a host can hand over a
+ * bad value at any time.
  */
 
 /** Instrument fields the engine maps from 0 to 1. A cue instrument's are held to the same range. */
@@ -45,7 +47,10 @@ export interface ValueProblem extends InstrumentProblem {
   track?: string | undefined;
 }
 
-/** The runtime API's refusal, listing every value that cannot play. */
+/**
+ * The runtime API's refusal, listing every value that cannot play: thrown by
+ * updateState, and reported by a call made while the music plays.
+ */
 export class SoundscapeValueError extends RangeError {
   readonly problems: ValueProblem[];
   constructor(call: string, problems: ValueProblem[]) {
@@ -137,6 +142,31 @@ export function trackMixerValueProblems(entry: unknown, base: string, track?: st
   return problems;
 }
 
+/** A tempo that cannot play: anything but a finite number of beats a minute above 0. */
+export function tempoValueProblems(bpm: unknown, path = 'bpm'): ValueProblem[] {
+  const problems: ValueProblem[] = [];
+  checkNumber(problems, { [path]: bpm }, path, '', (n) => n > 0, 'a tempo above 0 beats a minute');
+  return problems;
+}
+
+/** A loop length that cannot play: anything but a finite number of beats above 0. */
+export function loopLengthValueProblems(beats: unknown, path = 'beats'): ValueProblem[] {
+  const problems: ValueProblem[] = [];
+  checkNumber(problems, { [path]: beats }, path, '', (n) => n > 0, 'a length above 0 beats');
+  return problems;
+}
+
+/**
+ * Reports what was skipped, rather than throw into a caller while the music
+ * plays: through reportError where the host has it, as a browser does, or
+ * else console.error, so it is seen and the music carries on.
+ */
+export function reportSkipped(error: Error): void {
+  const report = (globalThis as { reportError?: (e: unknown) => void }).reportError;
+  if (typeof report === 'function') report.call(globalThis, error);
+  else console.error(error);
+}
+
 /** A note's pitch and velocity, as previewNote and startMIDINote take them. */
 export function pitchAndVelocityProblems(pitch: unknown, velocity: unknown): ValueProblem[] {
   const problems: ValueProblem[] = [];
@@ -155,8 +185,8 @@ export function stateValueProblems(state: unknown): ValueProblem[] {
   if (!isRecord(state)) return [{ path: '', message: 'must be an object' }];
   const problems: ValueProblem[] = [];
   const metadata = isRecord(state.metadata) ? state.metadata : {};
-  checkNumber(problems, metadata, 'tempo', 'metadata', (n) => n > 0, 'a tempo above 0 beats a minute');
-  checkNumber(problems, metadata, 'lengthBeats', 'metadata', (n) => n > 0, 'a length above 0 beats');
+  if (own(metadata, 'tempo')) problems.push(...tempoValueProblems(metadata.tempo, 'metadata.tempo'));
+  if (own(metadata, 'lengthBeats')) problems.push(...loopLengthValueProblems(metadata.lengthBeats, 'metadata.lengthBeats'));
   (Array.isArray(state.presets) ? state.presets : []).forEach((preset: unknown, i) => {
     if (isRecord(preset)) problems.push(...instrumentValueProblems(preset.params, `presets[${i}].params`));
   });

@@ -94,6 +94,9 @@ export {
   instrumentValueProblems,
   mixerValueProblems,
   trackMixerValueProblems,
+  tempoValueProblems,
+  loopLengthValueProblems,
   stateValueProblems,
+  reportSkipped,
 } from './utils/values';
 export type { ValueProblem } from './utils/values';
