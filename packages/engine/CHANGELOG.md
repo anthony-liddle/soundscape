@@ -7,13 +7,15 @@
 - **Checks for a song's values, exported:** `stateValueProblems`,
   `instrumentValueProblems`, `mixerValueProblems`, `trackMixerValueProblems`,
   `tempoValueProblems` and `loopLengthValueProblems`, each listing every value
-  that cannot play with its path; `SoundscapeValueError`, which `updateState`
-  throws with them and a call made while the music plays reports; and
-  `reportSkipped`, which reports as the engine does, for a host to do the
-  same.
+  that cannot play with its path, as a `ValueProblem`; `SoundscapeValueError`,
+  which `updateState` throws with them and a call made while the music plays
+  reports; and `reportSkipped`, which reports as the engine does, for a host
+  to do the same.
 - **The reverb's generator, exported to check against:** `reverbSeedOf`,
   `mulberry32`, `reverbImpulse` and `REVERB_SECONDS`, as the README's The
   Reverb specifies them, to the bit.
+- **`EffectsChainOptions.reverbSeed`,** the seed of a chain's impulse
+  response. The engine gives each track's chain `reverbSeedOf(track.id)`.
 
 ### Changed
 
@@ -36,7 +38,10 @@
   the track's id. For a listener, any one play sounds as before, since each
   load was one random draw of the same room and this is another. What changes
   is that it stays that draw, on every load and in every browser, and every
-  track keeps a draw of its own, so adding a track changes no other's.
+  track keeps a draw of its own, so adding a track changes no other's. An
+  `EffectsChain` made without a `reverbSeed` takes the empty id's,
+  `reverbSeedOf('')`, so every such chain now has the same reverb, where each
+  drew its own.
 - **A song note's oscillators are set with values.** Their frequency and
   detune, and the LFO's frequency, are set as values before they start, as
   cues set them, not as events at the note's start, where Chromium began such
