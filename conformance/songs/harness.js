@@ -419,6 +419,10 @@ export async function renderSong(o) {
   const vs = lib.VoiceSynthesizer.prototype;
   const savedOn = vs.noteOn;
   const savedOff = vs.noteOff;
+  // Errors the engine reports without throwing, through reportError
+  const reported = [];
+  const onError = (event) => reported.push({ frame: clock.frame, error: String(event.error ?? event.message) });
+  window.addEventListener('error', onError);
   const restore = installClock(clock);
   try {
     const game = { rps: rpsGame, fm: fmGame, held: heldGame }[o.game](lib, data, o, random);
@@ -504,10 +508,24 @@ export async function renderSong(o) {
 
     const played = {};
     for (const n of notes) if (n.ok) played[n.track] = (played[n.track] ?? 0) + 1;
+    // Each track's impulse response, as a hash of its samples' bits, both channels
+    const impulses = {};
+    for (const [id, ch] of engine.trackChannels) {
+      const buffer = ch.effectsChain.convolverNode?.buffer;
+      if (!buffer) continue;
+      let h = 0x811c9dc5;
+      for (let c = 0; c < buffer.numberOfChannels; c++) {
+        const bytes = new Uint8Array(buffer.getChannelData(c).buffer);
+        for (let i = 0; i < bytes.length; i++) h = Math.imul(h ^ bytes[i], 0x01000193) >>> 0;
+      }
+      impulses[id] = h.toString(16).padStart(8, '0');
+    }
     return {
       channels: [toBase64(buffer.getChannelData(0)), toBase64(buffer.getChannelData(1))],
       notes: notes.map(({ voice, ...n }) => n),
       played,
+      impulses,
+      reported,
       steals,
       thrown,
       playFrame,
@@ -515,6 +533,7 @@ export async function renderSong(o) {
       userAgent: navigator.userAgent,
     };
   } finally {
+    window.removeEventListener('error', onError);
     vs.noteOn = savedOn;
     vs.noteOff = savedOff;
     restore();

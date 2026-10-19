@@ -36,3 +36,18 @@ How the engine plays a song, held to the browsers: both games' music played thro
 ## The Fixtures
 
 `fixtures/` holds each game's song, copied byte for byte from the commit `sources.json` names. Copy them again only from a commit of the game, and update `sources.json` with it.
+
+## The Checks
+
+`checks.mjs` checks the engine built from this checkout for the four problems the songs discovery found, and writes `checks.json`, so each commit records which it has and by how much:
+
+```sh
+node conformance/songs/checks.mjs
+```
+
+1. **Two loads:** The Forgetting Machine twice in one browser, each drawing its reverb as a load of the engine does. It passes when the two are the same music, by the bar's rule: every 2 s window's difference at least 80 dB under the music. It also records whether each track's impulse response came out the same both times, and whether the tracks' differ from each other.
+2. **Chromium and WebKit:** both games, on one impulse response, by the same rule. Firefox is recorded beside them, never held to.
+3. **A held note:** the `held` song alone, with the reverb and the compressor left out so the envelope reads as it is. Its level after the scheduler calls `noteOff`, up to 100 ms before the release, against its level just before. It passes when that step is under 0.05 dB.
+4. **A NaN `attack`** on The Forgetting Machine's strings, `track001`, in Chromium:
+   - **handed in** with the song. It passes when the engine refuses it at once, before anything plays, with an error naming the track and the value;
+   - **slipped in** after `updateState` has the song, as a host changing its own state would. It passes when the bell and the piano still play all 20 and all 6 of their notes.
