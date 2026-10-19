@@ -105,3 +105,20 @@ The differences sit near the music's own level, since every note's oscillator no
   - the piano up to 2 dB louder in a window, and the bell as it was;
   - the reverb's new draw moves some windows by up to 1.1 dB in Chromium, either way.
 - **Rock Paper Scissors,** 0.3 to 0.4 dB louder overall, from 12 to 24 s, as the pad comes in: the pad up to 1.9 dB louder in a window, the bass 1.1 dB and the lead 0.6 dB. The keys, the percussion and both glitch tracks move by 0.2 dB at most. It sends nothing to the reverb, so the new draw changes nothing.
+
+## Nothing Else Moves
+
+`cues-unchanged.mjs` renders each cue of every cue reference set, at both rates and both starts, in every browser the set records, through today's engine, 0.4.1 from npm, and through the engine built from this checkout, and writes `cues-unchanged.json`:
+
+```sh
+node conformance/songs/cues-unchanged.mjs [--set <name>]
+```
+
+- **Where today's engine renders a condition the same twice,** the branch must render every cue byte for byte the same, and the record holds its SHA-256.
+- **Where today's own renders differ,** the condition races, and a cue can come out alike twice by chance. That is Peach's set in Chromium and WebKit, whose 34 cues render in one page and were never checked for races. Today's engine renders it four times, and every cue the branch renders must stay within that condition's own run-to-run gap, the largest between any two of today's four, and measure as one of them does, to a step.
+- **Peach is also rendered with no voice ever disconnected,** where WebKit renders the same every time.
+
+Of 1,048 renders, 888 are byte for byte the same, and none fails:
+
+- **Every other set,** and Peach's in Firefox, comes out byte for byte the same.
+- **Peach's in Chromium and WebKit:** the other 160 are within their condition's own gap, today's renders differing from each other by up to 5.96e-8 in Chromium and 4.47e-8 in WebKit, the branch's by at most 2.98e-8, each measuring as today does. With no voice disconnected, WebKit renders every one of Peach's cues byte for byte the same through both engines.
