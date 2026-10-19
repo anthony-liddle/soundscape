@@ -2,6 +2,70 @@
 
 ## Unreleased
 
+### Added
+
+- **Checks for a song's values, exported:** `stateValueProblems`,
+  `instrumentValueProblems`, `mixerValueProblems` and
+  `trackMixerValueProblems`, each listing every value that cannot play with
+  its path, and `SoundscapeValueError`, which the runtime API throws with
+  them.
+- **The reverb's generator, exported to check against:** `reverbSeedOf`,
+  `mulberry32`, `reverbImpulse` and `REVERB_SECONDS`, as the README's The
+  Reverb specifies them, to the bit.
+
+### Changed
+
+- **A held song note holds until its release, in Chrome and Safari too.** The
+  release ended the envelope with `cancelAndHoldAtTime`, which after the last
+  scheduled event inserts nothing, so the release ramp started from the
+  decay's end. A note held past its decay stepped down the moment the
+  scheduler called `noteOff`, up to 100 ms before its release. It now ends the
+  envelope at the level it has at the release, computed from the envelope the
+  voice scheduled, in every browser, as Firefox already played it. Sustained
+  notes are louder at their ends: The Forgetting Machine 1 to 3.5 dB in the
+  windows where its strings release, and about 12 dB from 60 s, where its last
+  chord no longer fades through its hold; Rock Paper Scissors' pad up to 1.9
+  dB, its bass 1.1 and its lead 0.6. `previewNote` and live MIDI notes release
+  the same way.
+- **Each track's reverb is seeded from its id, the same on every load.** Its
+  impulse response drew from `Math.random`, so every load of a song had a
+  reverb of its own: two loads of The Forgetting Machine differed by a median
+  15 dB under the music. It now comes from a specified generator, seeded from
+  the track's id. For a listener, any one play sounds as before, since each
+  load was one random draw of the same room and this is another. What changes
+  is that it stays that draw, on every load and in every browser, and every
+  track keeps a draw of its own, so adding a track changes no other's.
+- **A song note's oscillators are set with values.** Their frequency and
+  detune, and the LFO's frequency, are set as values before they start, as
+  cues set them, not as events at the note's start, where Chromium began such
+  an oscillator at a different phase and WebKit could begin it a sample late.
+  Inaudible: a song note now starts the same way in both.
+- **A track's waveshaper is not oversampled while the track has no
+  distortion,** as a cue's is not (#106). WebKit oversampled a waveshaper with
+  no curve, delaying the music 6 samples and filtering it. In WebKit, music
+  with no distortion is no longer filtered.
+
+### Fixed
+
+- **A value that cannot play is refused where it arrives.** `updateState`,
+  `updateMixer`, `previewNote`, `startMIDINote`, `setTempo` and
+  `setLoopLength` throw a `SoundscapeValueError` naming each value that cannot
+  play, with its path and track, before anything changes: a number that is not
+  finite or is outside the range the types document, 0 to 1, or -24 to 24
+  semitones for the pitch offset, or a choice that is not one of its own. A
+  NaN `attack` on The Forgetting Machine's strings threw at every scheduler
+  tick while a strings note was due, 182 times over the song, and silenced the
+  strings. Rock Paper Scissors passes `decay` and `release` above 1 to
+  `previewNote` for its sound effects, which is now refused.
+- **One track's error no longer silences the tracks after it.** A value that
+  reaches a note past those checks, in a state its host changes after handing
+  it over, now costs that note alone: it is skipped, reported once through
+  `reportError`, or `console.error` where there is none, and every other note
+  is still scheduled. The error used to end each scheduler tick early, so with
+  the strings' NaN the bell lost 2 of its 20 notes and the piano 1 of its 6. A
+  note whose start or end is not a time no longer loops the scheduler forever
+  or holds its voice.
+
 ## 0.4.1 - 2026-10-09
 
 ### Added
