@@ -60,7 +60,8 @@ class FakeAudioContext {
   createDelay = vi.fn(() => makeNode())
   createWaveShaper = vi.fn(() => makeNode())
   createConvolver = vi.fn(() => makeNode())
-  createBuffer = vi.fn(() => ({ getChannelData: () => new Float32Array(8) }))
+  // As long as asked for, as a real AudioBuffer's channels are: the engine fills them whole
+  createBuffer = vi.fn((_channels: number, length: number) => ({ getChannelData: () => new Float32Array(length) }))
   resume = vi.fn().mockResolvedValue(undefined)
   close = vi.fn().mockResolvedValue(undefined)
 }

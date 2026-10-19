@@ -3,7 +3,7 @@
   "engine": {
     "name": "soundscape-engine",
     "version": "0.4.1",
-    "commit": "2b103bbbbfeb91fb23d58d16088d3ccc4cdd93f8",
+    "commit": "662b7ef8a3612b929233d939abae55d7958e81d4",
     "sourceChangedSinceCommit": true,
     "built": "from source by this script, packages/engine/dist"
   },
@@ -17,16 +17,16 @@
     "loads": {
       "about": "Two loads of The Forgetting Machine, each with the reverb a load of the engine draws.",
       "chromium": {
-        "worstWindowUnderMusicDb": 5.8,
-        "impulsesTheSameEachLoad": false,
+        "worstWindowUnderMusicDb": -135.9,
+        "impulsesTheSameEachLoad": true,
         "impulsesDifferentEachTrack": true,
-        "pass": false
+        "pass": true
       },
       "webkit": {
-        "worstWindowUnderMusicDb": 5.4,
-        "impulsesTheSameEachLoad": false,
+        "worstWindowUnderMusicDb": -145.5,
+        "impulsesTheSameEachLoad": true,
         "impulsesDifferentEachTrack": true,
-        "pass": false
+        "pass": true
       }
     },
     "browsers": {
@@ -51,9 +51,9 @@
         "chromiumWebkitWorstWindowUnderMusicDb": -81.5,
         "chromiumWebkitMeasureSpread": {
           "seconds": 0,
-          "db": 0.010000000000001563,
+          "db": 0.009999999999999787,
           "hz": 0,
-          "windowDbfs": 0,
+          "windowDbfs": 0.00999999999999801,
           "partialHz": 0.010000000000104592,
           "partialDb": 0.010000000000005116,
           "membershipChanges": 0,

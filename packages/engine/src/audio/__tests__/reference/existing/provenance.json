@@ -26,6 +26,13 @@
         "how": "Recorded on the commit before the change, ef0c8ed, with only the change applied. ef0c8ed first rendered all six references byte for byte with UPDATE_RENDER_REFERENCE=1. The two voices with no release, voice-sine.wav and voice-velocity-zero.wav, came out byte for byte with the change too, and were left alone.",
         "why": "In this renderer, as in Chromium and WebKit, a note released after its decay faded from the decay's end through its hold. Each of these four releases a note after its decay ends.",
         "by": "From 0.2860 s, as notes held past their decay hold instead of fading. The largest difference is 0.27268, at 2.7075 s; the difference is 14.6 dB below the composition by RMS: -25.6 dBFS against -11.0."
+      },
+      {
+        "change": "The reverb is seeded from each track's id (the songs-play-the-same branch, after 662b7ef)",
+        "patch": "EffectsChain draws its impulse response from reverbImpulse.ts: mulberry32 seeded with FNV-1a over the UTF-8 bytes of the track's id, faded by (1 - t) * (1 - t), where it drew from Math.random. The test had seeded Math.random to make the draw repeat; it no longer needs to, and does not. Nothing else.",
+        "how": "Recorded on the commit before the change, 662b7ef, with only the change applied. 662b7ef first rendered all six references byte for byte with UPDATE_RENDER_REFERENCE=1. The other five came out byte for byte with the change too: none of them builds a track's chain. Recorded twice, byte for byte alike.",
+        "why": "The composition's pad sends to the reverb, at 0.35, so its echo is now the pad track's own draw, the same on every load, where it was the draw seedRandom gave it.",
+        "by": "From 0.1360 s, as the pad's reverb begins. The largest difference is 0.081619, at 3.0401 s; the difference is 21.2 dB below the composition by RMS: -31.8 dBFS against -10.6."
       }
     ],
     "preview-keys.wav": [

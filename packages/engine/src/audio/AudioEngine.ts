@@ -4,6 +4,7 @@ import { beatsToSeconds, normalizedToADSR } from '../utils/time';
 import { VoiceSynthesizer } from './VoiceSynthesizer';
 import type { VoiceParams } from './VoiceSynthesizer';
 import { EffectsChain, asksForNoEffect, delayTail } from './EffectsChain';
+import { reverbSeedOf } from './reverbImpulse';
 import type { EffectsParams } from './EffectsChain';
 import { getPresetById } from '../presets';
 import { CueDocumentError } from '../cues/types';
@@ -355,8 +356,12 @@ export class AudioEngine {
       const gainNode = context.createGain();
       // Not oversampled while the track has no distortion: WebKit oversamples
       // a waveshaper with no curve, delaying the music 6 samples and
-      // filtering it, where Chromium and Firefox pass it through
-      const effectsChain = new EffectsChain(context, { oversampleOnlyWhenDistorting: true });
+      // filtering it, where Chromium and Firefox pass it through. Its reverb
+      // is seeded from the track's id, the same on every load.
+      const effectsChain = new EffectsChain(context, {
+        oversampleOnlyWhenDistorting: true,
+        reverbSeed: reverbSeedOf(track.id),
+      });
 
       effectsChain.getOutput().connect(gainNode);
       gainNode.connect(masterGain);

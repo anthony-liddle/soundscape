@@ -17,7 +17,6 @@ import {
   largestDifference,
   renderInLockstep,
   retryRefused,
-  seedRandom,
   useLockstepTimers,
 } from './renderHarness'
 
@@ -302,8 +301,7 @@ describe('the analyser', () => {
 describe('loading cues leaves music alone', () => {
   const preview = (withCues: boolean) =>
     retryRefused(async () => {
-      seedRandom()
-      useLockstepTimers()
+        useLockstepTimers()
       const context = installOfflineAudioContext(1.6)
       const engine = new AudioEngine()
       await engine.initialize()

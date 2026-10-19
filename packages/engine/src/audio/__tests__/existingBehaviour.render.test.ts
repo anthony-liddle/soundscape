@@ -16,7 +16,6 @@ import {
   largestDifference,
   renderInLockstep,
   retryRefused,
-  seedRandom,
   useLockstepTimers,
 } from './renderHarness'
 
@@ -40,7 +39,9 @@ import {
  *   #110 centred the distortion curve, which moved the transport, whose bass
  *   and lead distort;
  *   a held note holds until its release, where it faded from its decay's end,
- *   which moved the transport, both previews and the released voice.
+ *   which moved the transport, both previews and the released voice;
+ *   the reverb is seeded from each track's id, where it drew from
+ *   Math.random, which moved the transport, whose pad sends to it.
  *
  * The engine builds its own AudioContext, so a constructor that makes an
  * offline one stands in for it: this is the default path every consumer takes.
@@ -102,7 +103,6 @@ async function renderEngine(
   act: (engine: AudioEngine) => void
 ): Promise<Float32Array> {
   return retryRefused(async () => {
-    seedRandom()
     useLockstepTimers()
     const context = installOfflineAudioContext(seconds)
     const engine = new AudioEngine()
