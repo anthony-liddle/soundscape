@@ -1,0 +1,1798 @@
+{
+ "about": "What each game hears change from today's engine, 0.4.1 from npm, to the engine built from this checkout: in Chromium and WebKit, in lockstep, as SCENARIOS in render.mjs plays each game, with the reverb and the compressor in. The whole mix; the mix again with the reverb left out on both, to tell a change of reverb draw from the rest; then each track alone, soloed. Per 2 s window: each engine's level, the change, and how far under today's music the difference sits. Today's reverb draws from Math.random, seeded with 1 here, so one draw stands for the many a listener hears on different loads. Windows quieter than -100 dBFS are left out of the summaries.",
+ "today": {
+  "name": "soundscape-engine",
+  "version": "0.4.1",
+  "integrity": "sha512-ylI7EACHs7T46KXspZiP0X/FCN9F/wRDOMM+V42gaqK2RD1GmiO3Zp/BBwbMkt4EtA5AG7qOBjGVjRUNaAkfBw==",
+  "shasum": "21aef62f5338fbeaab69f94c47737f56a4529c34",
+  "gitHead": "77e914551750462b8a35c5b4a975e9020895474b",
+  "tarball": "https://registry.npmjs.org/soundscape-engine/-/soundscape-engine-0.4.1.tgz",
+  "built": "from npm by this script, the tarball's sha512 checked against the registry's"
+ },
+ "branch": {
+  "name": "soundscape-engine",
+  "version": "0.4.1",
+  "commit": "0c84c8a4446817460f8bf33d22e94b6d4293cbcd",
+  "sourceChangedSinceCommit": false,
+  "built": "from source by this script, packages/engine/dist"
+ },
+ "playwright": "1.63.0",
+ "browsers": {
+  "chromium": "153.0.8010.12",
+  "webkit": "26.6"
+ },
+ "games": {
+  "rps": {
+   "chromium": {
+    "mix": {
+     "whole": {
+      "todayDbfs": -13.5,
+      "branchDbfs": -13.2,
+      "changeDb": 0.3
+     },
+     "largestWindowChangeDb": 0.7,
+     "worstWindowUnderMusicDb": 3.4,
+     "medianWindowUnderMusicDb": -4.1,
+     "windows": [
+      {
+       "from": 0,
+       "todayDbfs": -23.9,
+       "branchDbfs": -23.9,
+       "changeDb": 0,
+       "underMusicDb": -2.8
+      },
+      {
+       "from": 2,
+       "todayDbfs": -24.6,
+       "branchDbfs": -24.6,
+       "changeDb": 0,
+       "underMusicDb": -2.8
+      },
+      {
+       "from": 4,
+       "todayDbfs": -24.2,
+       "branchDbfs": -24.2,
+       "changeDb": 0,
+       "underMusicDb": -3.4
+      },
+      {
+       "from": 6,
+       "todayDbfs": -24.5,
+       "branchDbfs": -24.5,
+       "changeDb": 0,
+       "underMusicDb": -3
+      },
+      {
+       "from": 8,
+       "todayDbfs": -15.9,
+       "branchDbfs": -15.7,
+       "changeDb": 0.3,
+       "underMusicDb": -3.5
+      },
+      {
+       "from": 10,
+       "todayDbfs": -16.1,
+       "branchDbfs": -15.7,
+       "changeDb": 0.4,
+       "underMusicDb": 1.6
+      },
+      {
+       "from": 12,
+       "todayDbfs": -16.7,
+       "branchDbfs": -16,
+       "changeDb": 0.7,
+       "underMusicDb": 3.4
+      },
+      {
+       "from": 14,
+       "todayDbfs": -14.2,
+       "branchDbfs": -13.6,
+       "changeDb": 0.6,
+       "underMusicDb": -9.3
+      },
+      {
+       "from": 16,
+       "todayDbfs": -14.6,
+       "branchDbfs": -13.9,
+       "changeDb": 0.7,
+       "underMusicDb": -8.3
+      },
+      {
+       "from": 18,
+       "todayDbfs": -14.4,
+       "branchDbfs": -13.8,
+       "changeDb": 0.6,
+       "underMusicDb": -8.1
+      },
+      {
+       "from": 20,
+       "todayDbfs": -12.9,
+       "branchDbfs": -12.5,
+       "changeDb": 0.5,
+       "underMusicDb": -4.7
+      },
+      {
+       "from": 22,
+       "todayDbfs": -12.1,
+       "branchDbfs": -11.7,
+       "changeDb": 0.3,
+       "underMusicDb": -14.8
+      },
+      {
+       "from": 24,
+       "todayDbfs": -12.6,
+       "branchDbfs": -12.2,
+       "changeDb": 0.4,
+       "underMusicDb": -13.7
+      },
+      {
+       "from": 26,
+       "todayDbfs": -10.5,
+       "branchDbfs": -10.4,
+       "changeDb": 0.2,
+       "underMusicDb": -7.2
+      },
+      {
+       "from": 28,
+       "todayDbfs": -10.7,
+       "branchDbfs": -10.5,
+       "changeDb": 0.2,
+       "underMusicDb": -4.1
+      },
+      {
+       "from": 30,
+       "todayDbfs": -10.7,
+       "branchDbfs": -10.6,
+       "changeDb": 0.1,
+       "underMusicDb": -3.4
+      },
+      {
+       "from": 32,
+       "todayDbfs": -10.6,
+       "branchDbfs": -10.3,
+       "changeDb": 0.3,
+       "underMusicDb": -5
+      },
+      {
+       "from": 34,
+       "todayDbfs": -10.7,
+       "branchDbfs": -10.5,
+       "changeDb": 0.2,
+       "underMusicDb": -4.6
+      }
+     ]
+    },
+    "mixWithoutReverb": {
+     "whole": {
+      "todayDbfs": -13.5,
+      "branchDbfs": -13.2,
+      "changeDb": 0.3
+     },
+     "largestWindowChangeDb": 0.7,
+     "worstWindowUnderMusicDb": 3.4,
+     "medianWindowUnderMusicDb": -4.1,
+     "windows": [
+      {
+       "from": 0,
+       "todayDbfs": -23.9,
+       "branchDbfs": -23.9,
+       "changeDb": 0,
+       "underMusicDb": -2.8
+      },
+      {
+       "from": 2,
+       "todayDbfs": -24.6,
+       "branchDbfs": -24.6,
+       "changeDb": 0,
+       "underMusicDb": -2.8
+      },
+      {
+       "from": 4,
+       "todayDbfs": -24.2,
+       "branchDbfs": -24.2,
+       "changeDb": 0,
+       "underMusicDb": -3.4
+      },
+      {
+       "from": 6,
+       "todayDbfs": -24.5,
+       "branchDbfs": -24.5,
+       "changeDb": 0,
+       "underMusicDb": -3
+      },
+      {
+       "from": 8,
+       "todayDbfs": -15.9,
+       "branchDbfs": -15.7,
+       "changeDb": 0.3,
+       "underMusicDb": -3.5
+      },
+      {
+       "from": 10,
+       "todayDbfs": -16.1,
+       "branchDbfs": -15.7,
+       "changeDb": 0.4,
+       "underMusicDb": 1.6
+      },
+      {
+       "from": 12,
+       "todayDbfs": -16.7,
+       "branchDbfs": -16,
+       "changeDb": 0.7,
+       "underMusicDb": 3.4
+      },
+      {
+       "from": 14,
+       "todayDbfs": -14.2,
+       "branchDbfs": -13.6,
+       "changeDb": 0.6,
+       "underMusicDb": -9.3
+      },
+      {
+       "from": 16,
+       "todayDbfs": -14.6,
+       "branchDbfs": -13.9,
+       "changeDb": 0.7,
+       "underMusicDb": -8.3
+      },
+      {
+       "from": 18,
+       "todayDbfs": -14.4,
+       "branchDbfs": -13.8,
+       "changeDb": 0.6,
+       "underMusicDb": -8.1
+      },
+      {
+       "from": 20,
+       "todayDbfs": -12.9,
+       "branchDbfs": -12.5,
+       "changeDb": 0.5,
+       "underMusicDb": -4.7
+      },
+      {
+       "from": 22,
+       "todayDbfs": -12.1,
+       "branchDbfs": -11.7,
+       "changeDb": 0.3,
+       "underMusicDb": -14.8
+      },
+      {
+       "from": 24,
+       "todayDbfs": -12.6,
+       "branchDbfs": -12.2,
+       "changeDb": 0.4,
+       "underMusicDb": -13.7
+      },
+      {
+       "from": 26,
+       "todayDbfs": -10.5,
+       "branchDbfs": -10.4,
+       "changeDb": 0.2,
+       "underMusicDb": -7.2
+      },
+      {
+       "from": 28,
+       "todayDbfs": -10.7,
+       "branchDbfs": -10.5,
+       "changeDb": 0.2,
+       "underMusicDb": -4.1
+      },
+      {
+       "from": 30,
+       "todayDbfs": -10.7,
+       "branchDbfs": -10.6,
+       "changeDb": 0.1,
+       "underMusicDb": -3.4
+      },
+      {
+       "from": 32,
+       "todayDbfs": -10.6,
+       "branchDbfs": -10.3,
+       "changeDb": 0.3,
+       "underMusicDb": -5
+      },
+      {
+       "from": 34,
+       "todayDbfs": -10.7,
+       "branchDbfs": -10.5,
+       "changeDb": 0.2,
+       "underMusicDb": -4.6
+      }
+     ]
+    },
+    "tracks": {
+     "pad": {
+      "whole": {
+       "todayDbfs": -24.1,
+       "branchDbfs": -23.2,
+       "changeDb": 0.9
+      },
+      "largestWindowChangeDb": 1.9,
+      "worstWindowUnderMusicDb": -5.9,
+      "medianWindowUnderMusicDb": -15.7
+     },
+     "bass": {
+      "whole": {
+       "todayDbfs": -16,
+       "branchDbfs": -15.2,
+       "changeDb": 0.8
+      },
+      "largestWindowChangeDb": 1.1,
+      "worstWindowUnderMusicDb": 3.8,
+      "medianWindowUnderMusicDb": -9.6
+     },
+     "keys": {
+      "whole": {
+       "todayDbfs": -31.3,
+       "branchDbfs": -31.3,
+       "changeDb": 0
+      },
+      "largestWindowChangeDb": 0.2,
+      "worstWindowUnderMusicDb": -2.1,
+      "medianWindowUnderMusicDb": -33.1
+     },
+     "percussion": {
+      "whole": {
+       "todayDbfs": -20.3,
+       "branchDbfs": -20.3,
+       "changeDb": 0
+      },
+      "largestWindowChangeDb": 0,
+      "worstWindowUnderMusicDb": 3.1,
+      "medianWindowUnderMusicDb": -2.9
+     },
+     "lead": {
+      "whole": {
+       "todayDbfs": -16.5,
+       "branchDbfs": -16.1,
+       "changeDb": 0.3
+      },
+      "largestWindowChangeDb": 0.6,
+      "worstWindowUnderMusicDb": 0,
+      "medianWindowUnderMusicDb": -21.6
+     },
+     "glitch": {
+      "whole": {
+       "todayDbfs": -17.9,
+       "branchDbfs": -17.8,
+       "changeDb": 0
+      },
+      "largestWindowChangeDb": 0.1,
+      "worstWindowUnderMusicDb": -1,
+      "medianWindowUnderMusicDb": -2
+     },
+     "glitch-random": {
+      "whole": {
+       "todayDbfs": -22.8,
+       "branchDbfs": -22.8,
+       "changeDb": 0
+      },
+      "largestWindowChangeDb": -0.1,
+      "worstWindowUnderMusicDb": 1.3,
+      "medianWindowUnderMusicDb": 0.2
+     }
+    }
+   },
+   "webkit": {
+    "mix": {
+     "whole": {
+      "todayDbfs": -13.6,
+      "branchDbfs": -13.2,
+      "changeDb": 0.4
+     },
+     "largestWindowChangeDb": 1,
+     "worstWindowUnderMusicDb": 3.5,
+     "medianWindowUnderMusicDb": -1.8,
+     "windows": [
+      {
+       "from": 0,
+       "todayDbfs": -23.9,
+       "branchDbfs": -23.9,
+       "changeDb": 0,
+       "underMusicDb": -0.5
+      },
+      {
+       "from": 2,
+       "todayDbfs": -24.6,
+       "branchDbfs": -24.6,
+       "changeDb": 0,
+       "underMusicDb": -1.4
+      },
+      {
+       "from": 4,
+       "todayDbfs": -24.2,
+       "branchDbfs": -24.2,
+       "changeDb": 0,
+       "underMusicDb": -3.3
+      },
+      {
+       "from": 6,
+       "todayDbfs": -24.5,
+       "branchDbfs": -24.5,
+       "changeDb": 0,
+       "underMusicDb": -0.9
+      },
+      {
+       "from": 8,
+       "todayDbfs": -16,
+       "branchDbfs": -15.7,
+       "changeDb": 0.3,
+       "underMusicDb": -2.9
+      },
+      {
+       "from": 10,
+       "todayDbfs": -16.1,
+       "branchDbfs": -15.7,
+       "changeDb": 0.4,
+       "underMusicDb": 1.9
+      },
+      {
+       "from": 12,
+       "todayDbfs": -16.7,
+       "branchDbfs": -16,
+       "changeDb": 0.7,
+       "underMusicDb": 3.5
+      },
+      {
+       "from": 14,
+       "todayDbfs": -14.5,
+       "branchDbfs": -13.6,
+       "changeDb": 0.9,
+       "underMusicDb": -0.8
+      },
+      {
+       "from": 16,
+       "todayDbfs": -14.9,
+       "branchDbfs": -13.9,
+       "changeDb": 1,
+       "underMusicDb": 0.6
+      },
+      {
+       "from": 18,
+       "todayDbfs": -14.5,
+       "branchDbfs": -13.8,
+       "changeDb": 0.8,
+       "underMusicDb": 0.4
+      },
+      {
+       "from": 20,
+       "todayDbfs": -13,
+       "branchDbfs": -12.5,
+       "changeDb": 0.5,
+       "underMusicDb": -1.8
+      },
+      {
+       "from": 22,
+       "todayDbfs": -12,
+       "branchDbfs": -11.7,
+       "changeDb": 0.3,
+       "underMusicDb": -5
+      },
+      {
+       "from": 24,
+       "todayDbfs": -12.7,
+       "branchDbfs": -12.2,
+       "changeDb": 0.5,
+       "underMusicDb": -4.2
+      },
+      {
+       "from": 26,
+       "todayDbfs": -10.6,
+       "branchDbfs": -10.4,
+       "changeDb": 0.2,
+       "underMusicDb": -5.8
+      },
+      {
+       "from": 28,
+       "todayDbfs": -10.7,
+       "branchDbfs": -10.5,
+       "changeDb": 0.1,
+       "underMusicDb": -3.6
+      },
+      {
+       "from": 30,
+       "todayDbfs": -10.7,
+       "branchDbfs": -10.6,
+       "changeDb": 0.1,
+       "underMusicDb": -2.7
+      },
+      {
+       "from": 32,
+       "todayDbfs": -10.6,
+       "branchDbfs": -10.3,
+       "changeDb": 0.3,
+       "underMusicDb": -4.3
+      },
+      {
+       "from": 34,
+       "todayDbfs": -10.7,
+       "branchDbfs": -10.5,
+       "changeDb": 0.2,
+       "underMusicDb": -3.8
+      }
+     ]
+    },
+    "mixWithoutReverb": {
+     "whole": {
+      "todayDbfs": -13.6,
+      "branchDbfs": -13.2,
+      "changeDb": 0.4
+     },
+     "largestWindowChangeDb": 1,
+     "worstWindowUnderMusicDb": 3.5,
+     "medianWindowUnderMusicDb": -1.8,
+     "windows": [
+      {
+       "from": 0,
+       "todayDbfs": -23.9,
+       "branchDbfs": -23.9,
+       "changeDb": 0,
+       "underMusicDb": -0.5
+      },
+      {
+       "from": 2,
+       "todayDbfs": -24.6,
+       "branchDbfs": -24.6,
+       "changeDb": 0,
+       "underMusicDb": -1.4
+      },
+      {
+       "from": 4,
+       "todayDbfs": -24.2,
+       "branchDbfs": -24.2,
+       "changeDb": 0,
+       "underMusicDb": -3.3
+      },
+      {
+       "from": 6,
+       "todayDbfs": -24.5,
+       "branchDbfs": -24.5,
+       "changeDb": 0,
+       "underMusicDb": -0.9
+      },
+      {
+       "from": 8,
+       "todayDbfs": -16,
+       "branchDbfs": -15.7,
+       "changeDb": 0.3,
+       "underMusicDb": -2.9
+      },
+      {
+       "from": 10,
+       "todayDbfs": -16.1,
+       "branchDbfs": -15.7,
+       "changeDb": 0.4,
+       "underMusicDb": 1.9
+      },
+      {
+       "from": 12,
+       "todayDbfs": -16.7,
+       "branchDbfs": -16,
+       "changeDb": 0.7,
+       "underMusicDb": 3.5
+      },
+      {
+       "from": 14,
+       "todayDbfs": -14.5,
+       "branchDbfs": -13.6,
+       "changeDb": 0.9,
+       "underMusicDb": -0.8
+      },
+      {
+       "from": 16,
+       "todayDbfs": -14.9,
+       "branchDbfs": -13.9,
+       "changeDb": 1,
+       "underMusicDb": 0.6
+      },
+      {
+       "from": 18,
+       "todayDbfs": -14.5,
+       "branchDbfs": -13.8,
+       "changeDb": 0.8,
+       "underMusicDb": 0.4
+      },
+      {
+       "from": 20,
+       "todayDbfs": -13,
+       "branchDbfs": -12.5,
+       "changeDb": 0.5,
+       "underMusicDb": -1.8
+      },
+      {
+       "from": 22,
+       "todayDbfs": -12,
+       "branchDbfs": -11.7,
+       "changeDb": 0.3,
+       "underMusicDb": -5
+      },
+      {
+       "from": 24,
+       "todayDbfs": -12.7,
+       "branchDbfs": -12.2,
+       "changeDb": 0.5,
+       "underMusicDb": -4.2
+      },
+      {
+       "from": 26,
+       "todayDbfs": -10.6,
+       "branchDbfs": -10.4,
+       "changeDb": 0.2,
+       "underMusicDb": -5.8
+      },
+      {
+       "from": 28,
+       "todayDbfs": -10.7,
+       "branchDbfs": -10.5,
+       "changeDb": 0.1,
+       "underMusicDb": -3.6
+      },
+      {
+       "from": 30,
+       "todayDbfs": -10.7,
+       "branchDbfs": -10.6,
+       "changeDb": 0.1,
+       "underMusicDb": -2.7
+      },
+      {
+       "from": 32,
+       "todayDbfs": -10.6,
+       "branchDbfs": -10.3,
+       "changeDb": 0.3,
+       "underMusicDb": -4.3
+      },
+      {
+       "from": 34,
+       "todayDbfs": -10.7,
+       "branchDbfs": -10.5,
+       "changeDb": 0.2,
+       "underMusicDb": -3.8
+      }
+     ]
+    },
+    "tracks": {
+     "pad": {
+      "whole": {
+       "todayDbfs": -24.1,
+       "branchDbfs": -23.2,
+       "changeDb": 0.9
+      },
+      "largestWindowChangeDb": 1.9,
+      "worstWindowUnderMusicDb": 6.1,
+      "medianWindowUnderMusicDb": 5.7
+     },
+     "bass": {
+      "whole": {
+       "todayDbfs": -16,
+       "branchDbfs": -15.2,
+       "changeDb": 0.8
+      },
+      "largestWindowChangeDb": 1.1,
+      "worstWindowUnderMusicDb": 3.9,
+      "medianWindowUnderMusicDb": -9.6
+     },
+     "keys": {
+      "whole": {
+       "todayDbfs": -31.3,
+       "branchDbfs": -31.3,
+       "changeDb": 0
+      },
+      "largestWindowChangeDb": 0.2,
+      "worstWindowUnderMusicDb": 5.4,
+      "medianWindowUnderMusicDb": 3.8
+     },
+     "percussion": {
+      "whole": {
+       "todayDbfs": -20.3,
+       "branchDbfs": -20.3,
+       "changeDb": 0
+      },
+      "largestWindowChangeDb": 0.1,
+      "worstWindowUnderMusicDb": 3.2,
+      "medianWindowUnderMusicDb": -2.6
+     },
+     "lead": {
+      "whole": {
+       "todayDbfs": -16.5,
+       "branchDbfs": -16.1,
+       "changeDb": 0.3
+      },
+      "largestWindowChangeDb": 0.6,
+      "worstWindowUnderMusicDb": 0,
+      "medianWindowUnderMusicDb": -21.6
+     },
+     "glitch": {
+      "whole": {
+       "todayDbfs": -17.9,
+       "branchDbfs": -17.8,
+       "changeDb": 0
+      },
+      "largestWindowChangeDb": 0.1,
+      "worstWindowUnderMusicDb": -1,
+      "medianWindowUnderMusicDb": -2
+     },
+     "glitch-random": {
+      "whole": {
+       "todayDbfs": -22.8,
+       "branchDbfs": -22.8,
+       "changeDb": 0
+      },
+      "largestWindowChangeDb": -0.1,
+      "worstWindowUnderMusicDb": 1.3,
+      "medianWindowUnderMusicDb": 0.2
+     }
+    }
+   }
+  },
+  "fm": {
+   "chromium": {
+    "mix": {
+     "whole": {
+      "todayDbfs": -18.2,
+      "branchDbfs": -17.8,
+      "changeDb": 0.4
+     },
+     "largestWindowChangeDb": 13.8,
+     "worstWindowUnderMusicDb": 14.8,
+     "medianWindowUnderMusicDb": 0.1,
+     "windows": [
+      {
+       "from": 0,
+       "todayDbfs": -19.5,
+       "branchDbfs": -19.7,
+       "changeDb": -0.2,
+       "underMusicDb": -6.3
+      },
+      {
+       "from": 2,
+       "todayDbfs": -17.9,
+       "branchDbfs": -18.1,
+       "changeDb": -0.2,
+       "underMusicDb": -5.2
+      },
+      {
+       "from": 4,
+       "todayDbfs": -17.8,
+       "branchDbfs": -18,
+       "changeDb": -0.2,
+       "underMusicDb": -5.3
+      },
+      {
+       "from": 6,
+       "todayDbfs": -17.9,
+       "branchDbfs": -18.1,
+       "changeDb": -0.2,
+       "underMusicDb": -5.6
+      },
+      {
+       "from": 8,
+       "todayDbfs": -17.2,
+       "branchDbfs": -16.9,
+       "changeDb": 0.2,
+       "underMusicDb": -4.6
+      },
+      {
+       "from": 10,
+       "todayDbfs": -18.5,
+       "branchDbfs": -17.7,
+       "changeDb": 0.8,
+       "underMusicDb": 0
+      },
+      {
+       "from": 12,
+       "todayDbfs": -15.5,
+       "branchDbfs": -15.9,
+       "changeDb": -0.4,
+       "underMusicDb": 1.3
+      },
+      {
+       "from": 14,
+       "todayDbfs": -15.6,
+       "branchDbfs": -16.4,
+       "changeDb": -0.8,
+       "underMusicDb": 1.6
+      },
+      {
+       "from": 16,
+       "todayDbfs": -15.5,
+       "branchDbfs": -16.7,
+       "changeDb": -1.1,
+       "underMusicDb": 2.1
+      },
+      {
+       "from": 18,
+       "todayDbfs": -16.2,
+       "branchDbfs": -16.8,
+       "changeDb": -0.6,
+       "underMusicDb": 2.1
+      },
+      {
+       "from": 20,
+       "todayDbfs": -17.7,
+       "branchDbfs": -16.6,
+       "changeDb": 1.1,
+       "underMusicDb": 0.4
+      },
+      {
+       "from": 22,
+       "todayDbfs": -17.6,
+       "branchDbfs": -17.7,
+       "changeDb": -0.2,
+       "underMusicDb": -1.8
+      },
+      {
+       "from": 24,
+       "todayDbfs": -16.9,
+       "branchDbfs": -15.9,
+       "changeDb": 1,
+       "underMusicDb": -1.5
+      },
+      {
+       "from": 26,
+       "todayDbfs": -16.1,
+       "branchDbfs": -15.8,
+       "changeDb": 0.3,
+       "underMusicDb": -0.7
+      },
+      {
+       "from": 28,
+       "todayDbfs": -15.6,
+       "branchDbfs": -15.5,
+       "changeDb": 0.1,
+       "underMusicDb": -1.7
+      },
+      {
+       "from": 30,
+       "todayDbfs": -16.4,
+       "branchDbfs": -16.1,
+       "changeDb": 0.3,
+       "underMusicDb": -0.8
+      },
+      {
+       "from": 32,
+       "todayDbfs": -16.4,
+       "branchDbfs": -15.2,
+       "changeDb": 1.2,
+       "underMusicDb": 0.7
+      },
+      {
+       "from": 34,
+       "todayDbfs": -15,
+       "branchDbfs": -15.1,
+       "changeDb": -0.1,
+       "underMusicDb": 0
+      },
+      {
+       "from": 36,
+       "todayDbfs": -15.4,
+       "branchDbfs": -15.7,
+       "changeDb": -0.3,
+       "underMusicDb": 0.1
+      },
+      {
+       "from": 38,
+       "todayDbfs": -15.2,
+       "branchDbfs": -15.8,
+       "changeDb": -0.6,
+       "underMusicDb": -0.7
+      },
+      {
+       "from": 40,
+       "todayDbfs": -18.8,
+       "branchDbfs": -16,
+       "changeDb": 2.8,
+       "underMusicDb": 1
+      },
+      {
+       "from": 42,
+       "todayDbfs": -18.6,
+       "branchDbfs": -18.1,
+       "changeDb": 0.4,
+       "underMusicDb": -2.2
+      },
+      {
+       "from": 44,
+       "todayDbfs": -18.8,
+       "branchDbfs": -18.7,
+       "changeDb": 0,
+       "underMusicDb": -3.5
+      },
+      {
+       "from": 46,
+       "todayDbfs": -18,
+       "branchDbfs": -18.3,
+       "changeDb": -0.3,
+       "underMusicDb": -3.1
+      },
+      {
+       "from": 48,
+       "todayDbfs": -20.8,
+       "branchDbfs": -18.9,
+       "changeDb": 1.9,
+       "underMusicDb": 2
+      },
+      {
+       "from": 50,
+       "todayDbfs": -20.5,
+       "branchDbfs": -20.2,
+       "changeDb": 0.3,
+       "underMusicDb": 3.2
+      },
+      {
+       "from": 52,
+       "todayDbfs": -19.8,
+       "branchDbfs": -20,
+       "changeDb": -0.2,
+       "underMusicDb": 2.1
+      },
+      {
+       "from": 54,
+       "todayDbfs": -19.6,
+       "branchDbfs": -19.8,
+       "changeDb": -0.3,
+       "underMusicDb": 2.3
+      },
+      {
+       "from": 56,
+       "todayDbfs": -19.6,
+       "branchDbfs": -20,
+       "changeDb": -0.3,
+       "underMusicDb": 2.2
+      },
+      {
+       "from": 58,
+       "todayDbfs": -19.7,
+       "branchDbfs": -19.9,
+       "changeDb": -0.2,
+       "underMusicDb": 2.2
+      },
+      {
+       "from": 60,
+       "todayDbfs": -33.4,
+       "branchDbfs": -22.6,
+       "changeDb": 10.8,
+       "underMusicDb": 11.1
+      },
+      {
+       "from": 62,
+       "todayDbfs": -48.9,
+       "branchDbfs": -36.6,
+       "changeDb": 12.2,
+       "underMusicDb": 12.4
+      },
+      {
+       "from": 64,
+       "todayDbfs": -90.7,
+       "branchDbfs": -76.9,
+       "changeDb": 13.8,
+       "underMusicDb": 14.8
+      },
+      {
+       "from": 66,
+       "todayDbfs": -153.7,
+       "branchDbfs": -141.1,
+       "changeDb": 12.6,
+       "underMusicDb": 11.4
+      }
+     ]
+    },
+    "mixWithoutReverb": {
+     "whole": {
+      "todayDbfs": -18.3,
+      "branchDbfs": -17.8,
+      "changeDb": 0.5
+     },
+     "largestWindowChangeDb": 12.7,
+     "worstWindowUnderMusicDb": 12.5,
+     "medianWindowUnderMusicDb": 0,
+     "windows": [
+      {
+       "from": 0,
+       "todayDbfs": -19.7,
+       "branchDbfs": -19.7,
+       "changeDb": 0,
+       "underMusicDb": -7.2
+      },
+      {
+       "from": 2,
+       "todayDbfs": -18.1,
+       "branchDbfs": -18.1,
+       "changeDb": 0,
+       "underMusicDb": -6.3
+      },
+      {
+       "from": 4,
+       "todayDbfs": -18,
+       "branchDbfs": -18,
+       "changeDb": 0,
+       "underMusicDb": -6.5
+      },
+      {
+       "from": 6,
+       "todayDbfs": -18.2,
+       "branchDbfs": -18.2,
+       "changeDb": 0,
+       "underMusicDb": -6.8
+      },
+      {
+       "from": 8,
+       "todayDbfs": -17.4,
+       "branchDbfs": -17,
+       "changeDb": 0.4,
+       "underMusicDb": -5.3
+      },
+      {
+       "from": 10,
+       "todayDbfs": -18.9,
+       "branchDbfs": -17.7,
+       "changeDb": 1.1,
+       "underMusicDb": 0
+      },
+      {
+       "from": 12,
+       "todayDbfs": -16.1,
+       "branchDbfs": -15.7,
+       "changeDb": 0.4,
+       "underMusicDb": 1.3
+      },
+      {
+       "from": 14,
+       "todayDbfs": -16.3,
+       "branchDbfs": -16.2,
+       "changeDb": 0.1,
+       "underMusicDb": 1.7
+      },
+      {
+       "from": 16,
+       "todayDbfs": -16.3,
+       "branchDbfs": -16.3,
+       "changeDb": 0,
+       "underMusicDb": 2.3
+      },
+      {
+       "from": 18,
+       "todayDbfs": -16.9,
+       "branchDbfs": -16.6,
+       "changeDb": 0.3,
+       "underMusicDb": 2.2
+      },
+      {
+       "from": 20,
+       "todayDbfs": -18,
+       "branchDbfs": -16.6,
+       "changeDb": 1.4,
+       "underMusicDb": 0.4
+      },
+      {
+       "from": 22,
+       "todayDbfs": -17.8,
+       "branchDbfs": -17.8,
+       "changeDb": 0,
+       "underMusicDb": -2.5
+      },
+      {
+       "from": 24,
+       "todayDbfs": -17,
+       "branchDbfs": -16,
+       "changeDb": 0.9,
+       "underMusicDb": -1.6
+      },
+      {
+       "from": 26,
+       "todayDbfs": -16.2,
+       "branchDbfs": -16,
+       "changeDb": 0.3,
+       "underMusicDb": -0.7
+      },
+      {
+       "from": 28,
+       "todayDbfs": -15.7,
+       "branchDbfs": -15.7,
+       "changeDb": 0,
+       "underMusicDb": -1.7
+      },
+      {
+       "from": 30,
+       "todayDbfs": -16.5,
+       "branchDbfs": -16.3,
+       "changeDb": 0.2,
+       "underMusicDb": -0.8
+      },
+      {
+       "from": 32,
+       "todayDbfs": -16.5,
+       "branchDbfs": -15.4,
+       "changeDb": 1.1,
+       "underMusicDb": 0.5
+      },
+      {
+       "from": 34,
+       "todayDbfs": -15.4,
+       "branchDbfs": -15.2,
+       "changeDb": 0.2,
+       "underMusicDb": -0.3
+      },
+      {
+       "from": 36,
+       "todayDbfs": -15.9,
+       "branchDbfs": -15.9,
+       "changeDb": 0,
+       "underMusicDb": -0.2
+      },
+      {
+       "from": 38,
+       "todayDbfs": -15.8,
+       "branchDbfs": -15.8,
+       "changeDb": 0,
+       "underMusicDb": -1
+      },
+      {
+       "from": 40,
+       "todayDbfs": -19.2,
+       "branchDbfs": -16.2,
+       "changeDb": 3,
+       "underMusicDb": 1
+      },
+      {
+       "from": 42,
+       "todayDbfs": -18.9,
+       "branchDbfs": -18.2,
+       "changeDb": 0.7,
+       "underMusicDb": -3.4
+      },
+      {
+       "from": 44,
+       "todayDbfs": -19,
+       "branchDbfs": -18.7,
+       "changeDb": 0.2,
+       "underMusicDb": -4.8
+      },
+      {
+       "from": 46,
+       "todayDbfs": -18.3,
+       "branchDbfs": -18.3,
+       "changeDb": -0.1,
+       "underMusicDb": -4.5
+      },
+      {
+       "from": 48,
+       "todayDbfs": -21.1,
+       "branchDbfs": -19.1,
+       "changeDb": 2,
+       "underMusicDb": 1.9
+      },
+      {
+       "from": 50,
+       "todayDbfs": -20.8,
+       "branchDbfs": -20.2,
+       "changeDb": 0.6,
+       "underMusicDb": 3.2
+      },
+      {
+       "from": 52,
+       "todayDbfs": -20.1,
+       "branchDbfs": -20.1,
+       "changeDb": 0,
+       "underMusicDb": 1.9
+      },
+      {
+       "from": 54,
+       "todayDbfs": -19.9,
+       "branchDbfs": -19.9,
+       "changeDb": 0,
+       "underMusicDb": 2.1
+      },
+      {
+       "from": 56,
+       "todayDbfs": -19.9,
+       "branchDbfs": -19.9,
+       "changeDb": 0,
+       "underMusicDb": 2
+      },
+      {
+       "from": 58,
+       "todayDbfs": -20,
+       "branchDbfs": -19.9,
+       "changeDb": 0.1,
+       "underMusicDb": 2
+      },
+      {
+       "from": 60,
+       "todayDbfs": -34.4,
+       "branchDbfs": -22.8,
+       "changeDb": 11.6,
+       "underMusicDb": 11.6
+      },
+      {
+       "from": 62,
+       "todayDbfs": -49.5,
+       "branchDbfs": -36.8,
+       "changeDb": 12.7,
+       "underMusicDb": 12.5
+      },
+      {
+       "from": 64,
+       "todayDbfs": -98.6,
+       "branchDbfs": -86,
+       "changeDb": 12.6,
+       "underMusicDb": 11.5
+      },
+      {
+       "from": 66,
+       "todayDbfs": -153.7,
+       "branchDbfs": -141.1,
+       "changeDb": 12.6,
+       "underMusicDb": 11.4
+      }
+     ]
+    },
+    "tracks": {
+     "strings": {
+      "whole": {
+       "todayDbfs": -18.5,
+       "branchDbfs": -18,
+       "changeDb": 0.4
+      },
+      "largestWindowChangeDb": 13.8,
+      "worstWindowUnderMusicDb": 14.8,
+      "medianWindowUnderMusicDb": 0.1
+     },
+     "bell": {
+      "whole": {
+       "todayDbfs": -28.7,
+       "branchDbfs": -28.7,
+       "changeDb": 0
+      },
+      "largestWindowChangeDb": -0.1,
+      "worstWindowUnderMusicDb": 2.8,
+      "medianWindowUnderMusicDb": 0.2
+     },
+     "piano": {
+      "whole": {
+       "todayDbfs": -42.8,
+       "branchDbfs": -42.7,
+       "changeDb": 0.1
+      },
+      "largestWindowChangeDb": 2,
+      "worstWindowUnderMusicDb": 6.2,
+      "medianWindowUnderMusicDb": 4.8
+     }
+    }
+   },
+   "webkit": {
+    "mix": {
+     "whole": {
+      "todayDbfs": -18.3,
+      "branchDbfs": -17.8,
+      "changeDb": 0.5
+     },
+     "largestWindowChangeDb": 13,
+     "worstWindowUnderMusicDb": 14.1,
+     "medianWindowUnderMusicDb": 5.4,
+     "windows": [
+      {
+       "from": 0,
+       "todayDbfs": -19.7,
+       "branchDbfs": -19.7,
+       "changeDb": 0,
+       "underMusicDb": 5.5
+      },
+      {
+       "from": 2,
+       "todayDbfs": -18,
+       "branchDbfs": -18.1,
+       "changeDb": -0.1,
+       "underMusicDb": 5.4
+      },
+      {
+       "from": 4,
+       "todayDbfs": -17.9,
+       "branchDbfs": -18,
+       "changeDb": -0.1,
+       "underMusicDb": 5.4
+      },
+      {
+       "from": 6,
+       "todayDbfs": -18,
+       "branchDbfs": -18.1,
+       "changeDb": -0.1,
+       "underMusicDb": 5.4
+      },
+      {
+       "from": 8,
+       "todayDbfs": -17.3,
+       "branchDbfs": -16.9,
+       "changeDb": 0.4,
+       "underMusicDb": 5.7
+      },
+      {
+       "from": 10,
+       "todayDbfs": -18.6,
+       "branchDbfs": -17.7,
+       "changeDb": 0.9,
+       "underMusicDb": 5.3
+      },
+      {
+       "from": 12,
+       "todayDbfs": -16.2,
+       "branchDbfs": -15.9,
+       "changeDb": 0.4,
+       "underMusicDb": 4.3
+      },
+      {
+       "from": 14,
+       "todayDbfs": -16.4,
+       "branchDbfs": -16.4,
+       "changeDb": 0,
+       "underMusicDb": 4
+      },
+      {
+       "from": 16,
+       "todayDbfs": -16.4,
+       "branchDbfs": -16.7,
+       "changeDb": -0.3,
+       "underMusicDb": 3.4
+      },
+      {
+       "from": 18,
+       "todayDbfs": -16.9,
+       "branchDbfs": -16.8,
+       "changeDb": 0.1,
+       "underMusicDb": 3.9
+      },
+      {
+       "from": 20,
+       "todayDbfs": -18,
+       "branchDbfs": -16.6,
+       "changeDb": 1.4,
+       "underMusicDb": 5.7
+      },
+      {
+       "from": 22,
+       "todayDbfs": -17.7,
+       "branchDbfs": -17.7,
+       "changeDb": -0.1,
+       "underMusicDb": 5.4
+      },
+      {
+       "from": 24,
+       "todayDbfs": -16.9,
+       "branchDbfs": -15.9,
+       "changeDb": 1,
+       "underMusicDb": 6
+      },
+      {
+       "from": 26,
+       "todayDbfs": -16.1,
+       "branchDbfs": -15.8,
+       "changeDb": 0.3,
+       "underMusicDb": 5.6
+      },
+      {
+       "from": 28,
+       "todayDbfs": -15.5,
+       "branchDbfs": -15.5,
+       "changeDb": 0,
+       "underMusicDb": 5.6
+      },
+      {
+       "from": 30,
+       "todayDbfs": -16.3,
+       "branchDbfs": -16.1,
+       "changeDb": 0.2,
+       "underMusicDb": 5.6
+      },
+      {
+       "from": 32,
+       "todayDbfs": -16.5,
+       "branchDbfs": -15.2,
+       "changeDb": 1.3,
+       "underMusicDb": 5.5
+      },
+      {
+       "from": 34,
+       "todayDbfs": -15.7,
+       "branchDbfs": -15.1,
+       "changeDb": 0.6,
+       "underMusicDb": 4.9
+      },
+      {
+       "from": 36,
+       "todayDbfs": -16.1,
+       "branchDbfs": -15.7,
+       "changeDb": 0.4,
+       "underMusicDb": 4.6
+      },
+      {
+       "from": 38,
+       "todayDbfs": -16.1,
+       "branchDbfs": -15.8,
+       "changeDb": 0.3,
+       "underMusicDb": 5
+      },
+      {
+       "from": 40,
+       "todayDbfs": -19.2,
+       "branchDbfs": -16,
+       "changeDb": 3.2,
+       "underMusicDb": 6.7
+      },
+      {
+       "from": 42,
+       "todayDbfs": -18.7,
+       "branchDbfs": -18.1,
+       "changeDb": 0.6,
+       "underMusicDb": 5.8
+      },
+      {
+       "from": 44,
+       "todayDbfs": -18.9,
+       "branchDbfs": -18.7,
+       "changeDb": 0.2,
+       "underMusicDb": 5.6
+      },
+      {
+       "from": 46,
+       "todayDbfs": -18.2,
+       "branchDbfs": -18.3,
+       "changeDb": -0.1,
+       "underMusicDb": 5.5
+      },
+      {
+       "from": 48,
+       "todayDbfs": -21.2,
+       "branchDbfs": -18.9,
+       "changeDb": 2.2,
+       "underMusicDb": 6.1
+      },
+      {
+       "from": 50,
+       "todayDbfs": -20.7,
+       "branchDbfs": -20.2,
+       "changeDb": 0.6,
+       "underMusicDb": 4.7
+      },
+      {
+       "from": 52,
+       "todayDbfs": -20,
+       "branchDbfs": -20,
+       "changeDb": 0,
+       "underMusicDb": 5
+      },
+      {
+       "from": 54,
+       "todayDbfs": -19.7,
+       "branchDbfs": -19.8,
+       "changeDb": -0.1,
+       "underMusicDb": 4.9
+      },
+      {
+       "from": 56,
+       "todayDbfs": -19.8,
+       "branchDbfs": -20,
+       "changeDb": -0.2,
+       "underMusicDb": 4.9
+      },
+      {
+       "from": 58,
+       "todayDbfs": -19.8,
+       "branchDbfs": -19.9,
+       "changeDb": -0.1,
+       "underMusicDb": 4.9
+      },
+      {
+       "from": 60,
+       "todayDbfs": -34.4,
+       "branchDbfs": -22.6,
+       "changeDb": 11.7,
+       "underMusicDb": 13
+      },
+      {
+       "from": 62,
+       "todayDbfs": -49.6,
+       "branchDbfs": -36.6,
+       "changeDb": 13,
+       "underMusicDb": 14.1
+      },
+      {
+       "from": 64,
+       "todayDbfs": -89.1,
+       "branchDbfs": -76.9,
+       "changeDb": 12.2,
+       "underMusicDb": 13.6
+      },
+      {
+       "from": 66,
+       "todayDbfs": -153.7,
+       "branchDbfs": -141.1,
+       "changeDb": 12.6,
+       "underMusicDb": 13.9
+      }
+     ]
+    },
+    "mixWithoutReverb": {
+     "whole": {
+      "todayDbfs": -18.3,
+      "branchDbfs": -17.8,
+      "changeDb": 0.5
+     },
+     "largestWindowChangeDb": 12.7,
+     "worstWindowUnderMusicDb": 13.9,
+     "medianWindowUnderMusicDb": 5.5,
+     "windows": [
+      {
+       "from": 0,
+       "todayDbfs": -19.7,
+       "branchDbfs": -19.7,
+       "changeDb": 0,
+       "underMusicDb": 5.6
+      },
+      {
+       "from": 2,
+       "todayDbfs": -18.1,
+       "branchDbfs": -18.1,
+       "changeDb": 0,
+       "underMusicDb": 5.5
+      },
+      {
+       "from": 4,
+       "todayDbfs": -18,
+       "branchDbfs": -18,
+       "changeDb": 0,
+       "underMusicDb": 5.5
+      },
+      {
+       "from": 6,
+       "todayDbfs": -18.2,
+       "branchDbfs": -18.2,
+       "changeDb": 0,
+       "underMusicDb": 5.5
+      },
+      {
+       "from": 8,
+       "todayDbfs": -17.4,
+       "branchDbfs": -17,
+       "changeDb": 0.4,
+       "underMusicDb": 5.8
+      },
+      {
+       "from": 10,
+       "todayDbfs": -18.8,
+       "branchDbfs": -17.7,
+       "changeDb": 1.1,
+       "underMusicDb": 5.4
+      },
+      {
+       "from": 12,
+       "todayDbfs": -16.1,
+       "branchDbfs": -15.7,
+       "changeDb": 0.4,
+       "underMusicDb": 4.2
+      },
+      {
+       "from": 14,
+       "todayDbfs": -16.3,
+       "branchDbfs": -16.2,
+       "changeDb": 0.1,
+       "underMusicDb": 4
+      },
+      {
+       "from": 16,
+       "todayDbfs": -16.3,
+       "branchDbfs": -16.3,
+       "changeDb": 0,
+       "underMusicDb": 3.4
+      },
+      {
+       "from": 18,
+       "todayDbfs": -16.9,
+       "branchDbfs": -16.6,
+       "changeDb": 0.3,
+       "underMusicDb": 3.9
+      },
+      {
+       "from": 20,
+       "todayDbfs": -18,
+       "branchDbfs": -16.6,
+       "changeDb": 1.4,
+       "underMusicDb": 5.7
+      },
+      {
+       "from": 22,
+       "todayDbfs": -17.8,
+       "branchDbfs": -17.8,
+       "changeDb": 0,
+       "underMusicDb": 5.5
+      },
+      {
+       "from": 24,
+       "todayDbfs": -17,
+       "branchDbfs": -16,
+       "changeDb": 1,
+       "underMusicDb": 5.8
+      },
+      {
+       "from": 26,
+       "todayDbfs": -16.2,
+       "branchDbfs": -16,
+       "changeDb": 0.3,
+       "underMusicDb": 5.5
+      },
+      {
+       "from": 28,
+       "todayDbfs": -15.6,
+       "branchDbfs": -15.7,
+       "changeDb": 0,
+       "underMusicDb": 5.5
+      },
+      {
+       "from": 30,
+       "todayDbfs": -16.5,
+       "branchDbfs": -16.3,
+       "changeDb": 0.2,
+       "underMusicDb": 5.5
+      },
+      {
+       "from": 32,
+       "todayDbfs": -16.5,
+       "branchDbfs": -15.4,
+       "changeDb": 1.1,
+       "underMusicDb": 5.3
+      },
+      {
+       "from": 34,
+       "todayDbfs": -15.4,
+       "branchDbfs": -15.2,
+       "changeDb": 0.2,
+       "underMusicDb": 4.9
+      },
+      {
+       "from": 36,
+       "todayDbfs": -15.9,
+       "branchDbfs": -15.9,
+       "changeDb": 0,
+       "underMusicDb": 4.6
+      },
+      {
+       "from": 38,
+       "todayDbfs": -15.8,
+       "branchDbfs": -15.8,
+       "changeDb": 0,
+       "underMusicDb": 5
+      },
+      {
+       "from": 40,
+       "todayDbfs": -19.2,
+       "branchDbfs": -16.2,
+       "changeDb": 3,
+       "underMusicDb": 6.7
+      },
+      {
+       "from": 42,
+       "todayDbfs": -18.9,
+       "branchDbfs": -18.2,
+       "changeDb": 0.7,
+       "underMusicDb": 5.9
+      },
+      {
+       "from": 44,
+       "todayDbfs": -19,
+       "branchDbfs": -18.7,
+       "changeDb": 0.2,
+       "underMusicDb": 5.7
+      },
+      {
+       "from": 46,
+       "todayDbfs": -18.3,
+       "branchDbfs": -18.3,
+       "changeDb": -0.1,
+       "underMusicDb": 5.6
+      },
+      {
+       "from": 48,
+       "todayDbfs": -21.1,
+       "branchDbfs": -19.1,
+       "changeDb": 2,
+       "underMusicDb": 5.9
+      },
+      {
+       "from": 50,
+       "todayDbfs": -20.8,
+       "branchDbfs": -20.2,
+       "changeDb": 0.6,
+       "underMusicDb": 4.5
+      },
+      {
+       "from": 52,
+       "todayDbfs": -20.1,
+       "branchDbfs": -20.1,
+       "changeDb": 0,
+       "underMusicDb": 4.9
+      },
+      {
+       "from": 54,
+       "todayDbfs": -19.9,
+       "branchDbfs": -19.9,
+       "changeDb": 0,
+       "underMusicDb": 4.9
+      },
+      {
+       "from": 56,
+       "todayDbfs": -19.9,
+       "branchDbfs": -19.9,
+       "changeDb": 0,
+       "underMusicDb": 4.9
+      },
+      {
+       "from": 58,
+       "todayDbfs": -20,
+       "branchDbfs": -19.9,
+       "changeDb": 0.1,
+       "underMusicDb": 4.9
+      },
+      {
+       "from": 60,
+       "todayDbfs": -34.4,
+       "branchDbfs": -22.8,
+       "changeDb": 11.6,
+       "underMusicDb": 13
+      },
+      {
+       "from": 62,
+       "todayDbfs": -49.5,
+       "branchDbfs": -36.8,
+       "changeDb": 12.7,
+       "underMusicDb": 13.9
+      },
+      {
+       "from": 64,
+       "todayDbfs": -98.5,
+       "branchDbfs": -86,
+       "changeDb": 12.5,
+       "underMusicDb": 13.8
+      },
+      {
+       "from": 66,
+       "todayDbfs": -153.7,
+       "branchDbfs": -141.1,
+       "changeDb": 12.6,
+       "underMusicDb": 13.9
+      }
+     ]
+    },
+    "tracks": {
+     "strings": {
+      "whole": {
+       "todayDbfs": -18.6,
+       "branchDbfs": -18,
+       "changeDb": 0.6
+      },
+      "largestWindowChangeDb": 13,
+      "worstWindowUnderMusicDb": 14.1,
+      "medianWindowUnderMusicDb": 5.5
+     },
+     "bell": {
+      "whole": {
+       "todayDbfs": -28.7,
+       "branchDbfs": -28.7,
+       "changeDb": 0
+      },
+      "largestWindowChangeDb": -0.1,
+      "worstWindowUnderMusicDb": 6,
+      "medianWindowUnderMusicDb": 5
+     },
+     "piano": {
+      "whole": {
+       "todayDbfs": -42.8,
+       "branchDbfs": -42.7,
+       "changeDb": 0.1
+      },
+      "largestWindowChangeDb": 1.9,
+      "worstWindowUnderMusicDb": 5.7,
+      "medianWindowUnderMusicDb": 1.9
+     }
+    }
+   }
+  }
+ }
+}

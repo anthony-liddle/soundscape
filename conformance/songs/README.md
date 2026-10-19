@@ -88,3 +88,20 @@ node conformance/songs/bar.mjs
 ```
 
 It writes `bar-check.json`: each browser judged against the other, which the bar must admit, and each game with one track 0.5% louder, the bass and the bell, which it must refuse. It does, by both rules, at both rates.
+
+## What Each Game Hears Change
+
+`hears.mjs` plays each game on today's engine, 0.4.1 from npm, and on the engine built from this checkout, in Chromium and WebKit, in lockstep, and writes `hears.json`: per 2 s window, each engine's level, the change, and how far under today's music the difference sits. That covers the whole mix; the mix again with the reverb left out on both, to tell the reverb's new draw from the rest; and each track alone.
+
+```sh
+node conformance/songs/hears.mjs
+```
+
+The differences sit near the music's own level, since every note's oscillator now starts at another phase, and in WebKit six samples earlier. That moves samples, not what is heard. The levels say what a listener will notice:
+
+- **The Forgetting Machine,** 0.4 to 0.5 dB louder overall, from its strings, whose held notes now hold until their release:
+  - 1 to 3.5 dB louder in the windows where strings notes release, at 10, 20, 24, 32, 40 and 48 s;
+  - 11.6 to 12.7 dB louder from 60 s, where the last chord holds until its release instead of fading through its hold;
+  - the piano up to 2 dB louder in a window, and the bell as it was;
+  - the reverb's new draw moves some windows by up to 1.1 dB in Chromium, either way.
+- **Rock Paper Scissors,** 0.3 to 0.4 dB louder overall, from 12 to 24 s, as the pad comes in: the pad up to 1.9 dB louder in a window, the bass 1.1 dB and the lead 0.6 dB. The keys, the percussion and both glitch tracks move by 0.2 dB at most. It sends nothing to the reverb, so the new draw changes nothing.

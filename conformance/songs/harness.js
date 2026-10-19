@@ -224,6 +224,10 @@ function fmGame(lib, data, o, random, presets = lib.builtInPresets) {
     const entry = state.mixer.tracks[o.mistake.track];
     state.mixer = { ...state.mixer, tracks: { ...state.mixer.tracks, [o.mistake.track]: { ...entry, volume: entry.volume * o.mistake.factor } } };
   }
+  if (o.solo) {
+    const entry = state.mixer.tracks[o.solo];
+    state.mixer = { ...state.mixer, tracks: { ...state.mixer.tracks, [o.solo]: { ...entry, solo: true } } };
+  }
   return {
     engine,
     async initialize() {
@@ -319,7 +323,8 @@ function toBase64(f32) {
  *                     seeds its own reverb draws nothing from it.
  * @param o.glitchSeed the seed for Rock Paper Scissors' generated track, 2 unless given
  * @param o.leaveOut   { reverb, compressor }: either replaced by a plain gain
- * @param o.solo       a Rock Paper Scissors layer soloed in every mixer
+ * @param o.solo       a Rock Paper Scissors layer, or a track id of The
+ *                     Forgetting Machine, soloed in every mixer
  * @param o.mistake    { track, factor }: that track's volume times factor
  * @param o.overrides  { trackId: { param: value } } added to the song before
  *                     the game hands it over; 'NaN' is read as NaN
