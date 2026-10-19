@@ -5,10 +5,12 @@
 ### Added
 
 - **Checks for a song's values, exported:** `stateValueProblems`,
-  `instrumentValueProblems`, `mixerValueProblems` and
-  `trackMixerValueProblems`, each listing every value that cannot play with
-  its path, and `SoundscapeValueError`, which the runtime API throws with
-  them.
+  `instrumentValueProblems`, `mixerValueProblems`, `trackMixerValueProblems`,
+  `tempoValueProblems` and `loopLengthValueProblems`, each listing every value
+  that cannot play with its path; `SoundscapeValueError`, which `updateState`
+  throws with them and a call made while the music plays reports; and
+  `reportSkipped`, which reports as the engine does, for a host to do the
+  same.
 - **The reverb's generator, exported to check against:** `reverbSeedOf`,
   `mulberry32`, `reverbImpulse` and `REVERB_SECONDS`, as the README's The
   Reverb specifies them, to the bit.
@@ -47,16 +49,21 @@
 
 ### Fixed
 
-- **A value that cannot play is refused where it arrives.** `updateState`,
-  `updateMixer`, `previewNote`, `startMIDINote`, `setTempo` and
-  `setLoopLength` throw a `SoundscapeValueError` naming each value that cannot
-  play, with its path and track, before anything changes: a number that is not
-  finite or is outside the range the types document, 0 to 1, or -24 to 24
-  semitones for the pitch offset, or a choice that is not one of its own. A
-  NaN `attack` on The Forgetting Machine's strings threw at every scheduler
-  tick while a strings note was due, 182 times over the song, and silenced the
+- **A value that cannot play is refused where it arrives,** before anything
+  changes, with a `SoundscapeValueError` naming each value with its path and
+  track: a number that is not finite or is outside the range the types
+  document, 0 to 1, or -24 to 24 semitones for the pitch offset, or a choice
+  that is not one of its own. `updateState` throws it, as `loadCues` throws
+  for a cue document. A call made while the music plays, `updateMixer`,
+  `previewNote`, `startMIDINote`, `setTempo` or `setLoopLength`, never throws
+  into its caller: it is skipped whole, so a note plays nothing and a mixer,
+  tempo or loop length stays as it was, and the error is reported once,
+  through `reportError`, or `console.error` where there is none. A NaN
+  `attack` on The Forgetting Machine's strings threw at every scheduler tick
+  while a strings note was due, 182 times over the song, and silenced the
   strings. Rock Paper Scissors passes `decay` and `release` above 1 to
-  `previewNote` for its sound effects, which is now refused.
+  `previewNote` in its two endings' sound effects: each of those notes now
+  plays nothing and is reported, and the call returns to the game.
 - **One track's error no longer silences the tracks after it.** A value that
   reaches a note past those checks, in a state its host changes after handing
   it over, now costs that note alone: it is skipped, reported once through
