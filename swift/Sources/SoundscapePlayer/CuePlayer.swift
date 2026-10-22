@@ -153,10 +153,9 @@ public final class CuePlayer {
     ///
     /// - Parameter time: seconds on the player's clock, ``currentTime``. As
     ///   in the engine, a time to come is kept to the frame, and a time gone,
-    ///   or none, is now. A voice's start reaches a device's audio at its next
-    ///   render cycle, so a cue whose frame comes sooner starts then, whole,
-    ///   as Web Audio starts a source whose time has passed: on a Mac, within
-    ///   512 frames, about 11 ms.
+    ///   or none, is now. A cue for now starts at its voice's next render
+    ///   cycle, whole, as Web Audio starts a source whose time has passed: on
+    ///   a Mac, within 512 frames, about 11 ms.
     /// - Throws: ``CuePlayerError/notLoaded`` before a document is loaded, and
     ///   `CueRenderError.noCue` for a name the document lacks, as the engine
     ///   throws. It also throws the engine's error if the engine cannot start,
@@ -177,11 +176,24 @@ public final class CuePlayer {
 
         let now = currentFrame(graph)
         let asked = time.map { AVAudioFramePosition(($0 * graph.rate).rounded()) }
-        let starts = max(asked ?? now, now)
-        // A voice whose cue has finished, or, when every voice has a cue still
-        // to finish, the one that finishes soonest, cut now to make room
-        let voice = graph.voices.first { $0.busyUntil <= now } ?? graph.voices.min { $0.busyUntil < $1.busyUntil }!
-        try voice.play(buffer, at: starts, on: graph)
+        // The voice whose cue ended longest ago, or, when every voice has a
+        // cue still to finish, the one that finishes soonest, cut now to make
+        // room. Not the first free one: a voice's end is reckoned from the
+        // clock, which on a device can read behind the output, so a cue that
+        // started later than the clock knew may still be sounding when its
+        // reckoned end has passed.
+        let voice = graph.voices.min { $0.busyUntil < $1.busyUntil }!
+        if let asked, asked > now {
+            try voice.play(buffer, at: asked, on: graph)
+        } else {
+            // Not on the clock's frame for now. On a device that is the start
+            // of the cycle last rendered, which the audio thread can be past by
+            // the time the voice starts, and a voice put on a frame already
+            // rendered skips every frame before the one it starts in. 0.2.0 did
+            // that, and a tick, whose sound lies between its 9th and 17th ms,
+            // lost its head one 512-frame cycle behind and fell silent at two.
+            try voice.play(buffer, from: now, on: graph)
+        }
     }
 
     /// Seconds a cue sounds for, from its start through its last note's
@@ -204,8 +216,20 @@ public final class CuePlayer {
         guard graph.rendered, let rendered = graph.clock.lastRenderTime,
               let time = graph.clock.playerTime(forNodeTime: rendered)
         else { return 0 }
-        return time.sampleTime
+        return time.sampleTime - clockReadsBehind
     }
+
+    /// Frames the clock reads behind the output, for tests to stand in for a
+    /// device.
+    ///
+    /// A device's clock reads the start of the render cycle it last heard of,
+    /// and the audio thread can be past it by the time a voice starts: by one
+    /// cycle at a cycle's edge, and by several while the thread runs late.
+    /// Peach of a Word's tick probe saw both on an iPhone Simulator: one cycle
+    /// in up to 10 taps of 1,020, and two or three in a few. Manual rendering
+    /// reads the next frame it will render, so it is never behind, and a test
+    /// sets this to be.
+    var clockReadsBehind: AVAudioFramePosition = 0
 
     // MARK: Volume
 
@@ -333,19 +357,33 @@ final class Voice {
     let node = AVAudioPlayerNode()
     var busyUntil: AVAudioFramePosition = 0
 
-    /// Plays a cue from frame `starts` of the clock, cutting whatever the
-    /// voice was playing. A player node takes in a buffer scheduled while it
-    /// plays on a thread of its own, and drops it if its time has passed by
-    /// then: in manual mode under load, a few cues in 200 never sounded. A
-    /// buffer scheduled before the node plays goes in with the play. So the
-    /// voice stops, the cue goes on it at the start of its timeline, and the
-    /// voice starts on the cue's own frame of the engine's: both explicit
-    /// sample times.
+    /// Plays a cue from frame `starts` of the clock, a frame to come, cutting
+    /// whatever the voice was playing. A player node takes in a buffer
+    /// scheduled while it plays on a thread of its own, and drops it if its
+    /// time has passed by then: in manual mode under load, a few cues in 200
+    /// never sounded. A buffer scheduled before the node plays goes in with
+    /// the play. So the voice stops, the cue goes on it at the start of its
+    /// timeline, and the voice starts on the cue's own frame of the engine's:
+    /// both explicit sample times.
     func play(_ buffer: AVAudioPCMBuffer, at starts: AVAudioFramePosition, on graph: Graph) throws {
-        node.stop()
-        node.scheduleBuffer(buffer, at: AVAudioTime(sampleTime: 0, atRate: graph.rate))
+        load(buffer, on: graph)
         try playNode(node, at: graph.nodeTime(starts))
         busyUntil = starts + AVAudioFramePosition(buffer.frameLength)
+    }
+
+    /// Plays a cue now: from the start of the voice's next render cycle,
+    /// whole, whatever frame that is. Its end is reckoned from `now`, the
+    /// clock's reading, so on a device it can come later than reckoned, by as
+    /// far as the clock reads behind.
+    func play(_ buffer: AVAudioPCMBuffer, from now: AVAudioFramePosition, on graph: Graph) throws {
+        load(buffer, on: graph)
+        try playNode(node)
+        busyUntil = now + AVAudioFramePosition(buffer.frameLength)
+    }
+
+    private func load(_ buffer: AVAudioPCMBuffer, on graph: Graph) {
+        node.stop()
+        node.scheduleBuffer(buffer, at: AVAudioTime(sampleTime: 0, atRate: graph.rate))
     }
 }
 

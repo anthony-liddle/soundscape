@@ -4,6 +4,11 @@ The Swift package's changelog, for its bare semver tags. The npm engine's is in 
 
 ## Unreleased
 
+### Fixed
+
+- **A cue asked for now plays whole.** It was put on the frame `currentTime` read, which on a device is the start of the render cycle last rendered, and the audio thread can be past that frame by the time the voice starts. A voice put on a frame already rendered skips every frame before the one it starts in, so the cue lost its head: a cycle's worth, or several when the audio thread ran late. Peach of a Word's `tick`, whose sound lies between its 9th and 17th ms, lost its first 512 frames in 3 to 10 of every 1,020 taps on an iPhone Simulator, and fell silent when it lost 1,024 or more: one cycle at a 21 ms buffer, or several cycles' lag. A cue for now starts at its voice's next render instead, and the same taps played 3,060 ticks of 3,060 whole. A time to come is still kept to the frame.
+- **A cue that started late keeps its voice.** A voice's end is reckoned from `currentTime`, so a cue that started later than the clock knew could still be sounding when the next cue took the first free voice, and was cut. A cue now takes the voice whose cue ended longest ago.
+
 ## 0.2.0 - 2026-10-14
 
 0.2.0 renders every feature a cue document can hold. The check on an iPhone in `swift/CueCheck.swiftpm/README.md`, which now plays every feature, passed on Antoine's iPhone on 2026-10-14. In a Release build, on a stereo output at 48 kHz, loading the 55 feature cues took 0.26 s, which covers reading the document and copying the renders into the player's buffers as well as rendering them. Their renders held 157.4 MiB, and the app used 178.9 MiB. With Peach of a Word's cues loaded again, they held 4.3 MiB, and the app 22.7 MiB.
