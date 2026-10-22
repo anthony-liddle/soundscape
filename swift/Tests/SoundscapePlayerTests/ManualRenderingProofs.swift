@@ -99,6 +99,49 @@ import Testing
         #expect(firstDifference(try player.renderOffline(24000)[0], expected) == nil)
     }
 
+    /// A cue asked for now plays whole, however far behind the output the
+    /// clock reads. 0.2.0 put it on the clock's frame, and a voice put on a
+    /// frame already rendered skips every frame before the one it starts in:
+    /// a tick, whose sound lies between its 9th and 17th ms, lost its head at
+    /// one 512-frame cycle behind and fell silent at two.
+    @Test(arguments: [480, 512, 1024, 2400, 9600])
+    func aCueAskedForNowPlaysWholeWhenTheClockReadsBehind(behind: Int) async throws {
+        for asked in [nil, 0.5] as [Double?] {
+            let (player, _) = try await manualPlayer()
+            let tick = Peach.renders(at: 48000)["tick"]!
+            _ = try player.renderOffline(48000)
+            player.clockReadsBehind = AVAudioFramePosition(behind)
+            try player.play("tick", at: asked)
+            var expected = [Float](repeating: 0, count: 4800)
+            lay(tick, into: &expected, at: 0)
+            let difference = firstDifference(try player.renderOffline(4800)[0], expected)
+            #expect(difference == nil, "asked for \(asked.map { "\($0) s" } ?? "now"): \(difference ?? "")")
+        }
+    }
+
+    /// A cue started later than the clock knows keeps its voice to its end.
+    /// The end a voice holds is reckoned from the clock, so when the clock
+    /// read behind as a cue started and has caught up by the next, the first
+    /// cue's reckoned end can pass while it still sounds; the next cue takes
+    /// a voice whose cue ended longest ago, not that one.
+    @Test func aCueStartedLateKeepsItsVoice() async throws {
+        let (player, _) = try await manualPlayer()
+        let renders = Peach.renders(at: 48000)
+        _ = try player.renderOffline(48000)
+        // The tick sounds from frame 48000, but the clock, reading behind, puts
+        // its end at 48000 by the time the next cue is asked for, mid-tick.
+        player.clockReadsBehind = 2400
+        try player.play("tick")
+        let head = try player.renderOffline(600)[0]
+        player.clockReadsBehind = 0
+        try player.play("invalid")
+        var expected = [Float](repeating: 0, count: 24000)
+        lay(renders["tick"]!, into: &expected, at: 0)
+        lay(renders["invalid"]!, into: &expected, at: 600)
+        let out = head + (try player.renderOffline(expected.count - 600)[0])
+        #expect(firstDifference(out, expected, tolerance: 1e-6) == nil)
+    }
+
     /// Loading a document while cues ring leaves them ringing, to the end of
     /// their render, as the engine plays a replaced cue out, its effects'
     /// tail included (#123). A rendered buffer carries its whole tail.

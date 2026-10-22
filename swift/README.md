@@ -73,10 +73,10 @@ A `@MainActor` class, mirroring the engine's cue methods:
 
 **Playing.**
 - `play(_:at:)` throws `CuePlayerError.notLoaded` before a load, and `CueRenderError.noCue` for a name the document lacks, with the engine's message.
-- As in the engine, a time to come, on `currentTime`'s clock, is kept to the frame. A time gone, or none, is now.
+- As in the engine, a time to come, on `currentTime`'s clock, is kept to the frame. A time gone, or none, is now: the cue starts whole at its voice's next render cycle, however far behind the output `currentTime` reads.
 - A cue asked for while the cues render again for a new rate is skipped.
 
-**Overlap.** Cues play on a pool of `AVAudioPlayerNode`s, 8 unless `init(output:voices:)` says otherwise, and overlapping cues sum exactly. When every voice is busy, the cue that ends soonest is cut. A voice is held from the moment its cue is asked for, so a cue scheduled far ahead holds one until it ends.
+**Overlap.** Cues play on a pool of `AVAudioPlayerNode`s, 8 unless `init(output:voices:)` says otherwise, and overlapping cues sum exactly. A cue takes the voice whose cue ended longest ago; when every voice is busy, the cue that ends soonest is cut. A voice is held from the moment its cue is asked for, so a cue scheduled far ahead holds one until it ends.
 
 **The rest:**
 - `duration(of:)` gives a cue's length in seconds.
