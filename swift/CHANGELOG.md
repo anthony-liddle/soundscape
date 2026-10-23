@@ -4,10 +4,20 @@ The Swift package's changelog, for its bare semver tags. The npm engine's is in 
 
 ## Unreleased
 
+## 0.2.1 - 2026-10-23
+
+0.2.1 starts a cue for now whole. Seven steps of the check on an iPhone in `swift/CueCheck.swiftpm/README.md` passed on Antoine's iPhone against `main` with this fix, as he reported on 2026-10-23.
+
 ### Fixed
 
-- **A cue asked for now plays whole.** It was put on the frame `currentTime` read, which on a device is the start of the render cycle last rendered, and the audio thread can be past that frame by the time the voice starts. A voice put on a frame already rendered skips every frame before the one it starts in, so the cue lost its head: a cycle's worth, or several when the audio thread ran late. Peach of a Word's `tick`, whose sound lies between its 9th and 17th ms, lost its first 512 frames in 3 to 10 of every 1,020 taps on an iPhone Simulator, and fell silent when it lost 1,024 or more: one cycle at a 21 ms buffer, or several cycles' lag. A cue for now starts at its voice's next render instead, and the same taps played 3,060 ticks of 3,060 whole. A time to come is still kept to the frame.
+- **A cue asked for now plays whole.** It was put on the frame `currentTime` read, which on a device is the start of the render cycle last rendered, and the audio thread can be past that frame by the time the voice starts. A voice put on a frame already rendered skips every frame before the one it starts in, so the cue lost its head: a cycle's worth, or several when the audio thread ran late. Peach of a Word's `tick`, whose sound lies between its 9th and 17th ms, lost its first 512 frames in 3 to 10 of every 1,020 taps on an iPhone Simulator, and fell silent when it lost 1,024 or more: one cycle at a 21 ms buffer, or several cycles' lag. A cue for now starts at its voice's next render instead. A time to come is still kept to the frame.
+  - **0.2.0:** 42 of 6,120 ticks lost their head, in six runs of those taps.
+  - **This release's player:** 6,120 ticks, in six runs, every one started whole. So did 6,120 more from a test build's copy of the same rule.
 - **A cue that started late keeps its voice.** A voice's end is reckoned from `currentTime`, so a cue that started later than the clock knew could still be sounding when the next cue took the first free voice, and was cut. A cue now takes the voice whose cue ended longest ago.
+
+### Known Issue
+
+- **A rarer gap inside a cue.** In 2 of those 18 runs, one under 0.2.0 and one under this release, a tick started whole, the recording went silent partway through it, and the tick then carried on from its own frames. Its cause is not known, and this release does not change it.
 
 ## 0.2.0 - 2026-10-14
 
