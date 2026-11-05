@@ -12,7 +12,7 @@ import Testing
         #expect(player.cueNames == [])
         try await player.load(parsing: Peach.text)
         #expect(player.cueNames == Peach.document.cueNames)
-        #expect(player.cueNames.count == 34)
+        #expect(player.cueNames.count == 35)
         #expect(player.sampleRate == 48000)
     }
 

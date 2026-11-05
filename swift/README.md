@@ -1,6 +1,6 @@
 # Soundscape For Swift
 
-Reads, validates, renders and plays Soundscape cue files on Apple platforms, as the TypeScript engine in `packages/engine` does in a browser. A cue is a short sound effect, defined in a JSON cue document; Peach of a Word's 34 sounds are the first set it plays.
+Reads, validates, renders and plays Soundscape cue files on Apple platforms, as the TypeScript engine in `packages/engine` does in a browser. A cue is a short sound effect, defined in a JSON cue document; Peach of a Word's 35 sounds are the first set it plays.
 
 It is held to the engine at every step. Reading and validating follow a corpus that both languages run (`conformance/cues`). Every render is held to Chromium's and WebKit's within a bar written before any Swift render was compared, measured by Peach of a Word's own `measure()`. The player is proved sample for sample against the renders in AVAudioEngine's manual rendering mode.
 

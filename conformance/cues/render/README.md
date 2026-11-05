@@ -6,7 +6,9 @@ What a Swift render of a cue is held to. The browsers' renders are recorded as m
 
 `references.mjs` renders every cue offline in Playwright's browsers and writes what `measure()` reads from each render. Each set names its engine in `conditions.mjs`: the engine built from this checkout, or a published one fetched from npm with its tarball's sha512 checked against the registry's. CI does not run it. Rerun it on purpose, then read the diff; `--set <name>` rerenders only that set.
 
-- **`references/peach-<rate>.json`:** Peach of a Word's 34 cues, from `../cases/peach-of-a-word.json`, in Chromium, Firefox and WebKit.
+- **`references/peach-<rate>.json`:** Peach of a Word's cues as its old engine played them, 33 of its 35, from `../cases/peach-of-a-word.json`, in Chromium, Firefox and WebKit.
+- **`references/peach-departures-<rate>.json`:** the other two, which Peach chose by ear on 5 November 2026 and calls its departures: `tick`, two clicks where it was an 880 Hz square, and `shuffle`, four clicks, new. Each click is a few sine partials at the fastest attack, gone in 2 to 8 ms. From the same document, in Chromium and WebKit, with Firefox rendered and recorded beside them, never held to: at 44.1 kHz Firefox starts each note on the next frame, which a click a few milliseconds long feels, so it reads them apart from the other two. At 48 kHz all three agree.
+- **`references/controls-48000.json`:** the positive controls' references, frozen: `peach-48000.json` as it was before the departures, rendered from Peach's first document, which is kept beside it as `controls.cues.json`, byte for byte. Never rendered again, so the controls stay on the sound the discovery's bar was set on, the old tick's square included.
 - **`references/features-<rate>.json`:** `features.cues.json`, one cue per oscillator and envelope feature Peach does not use, in Chromium and WebKit:
   - **`sawtooth`;**
   - **`linear-envelope`:** a linear envelope, three notes released in the attack, in the decay, and after holding the sustain;
@@ -39,8 +41,10 @@ Each file records the engine's version and commit, Playwright's version and each
 | Condition | References | Seconds | dB | Hz | Partial Hz | Partial dB |
 |---|---|---|---|---|---|---|
 | Peach, 48 kHz, from 0 and from 8.0027 s | Chromium, Firefox, WebKit, the fixture | 0.00001 | 0.09 | 0.01 | 0.02 | 0.02 |
-| Peach, 44.1 kHz, from 0 | Chromium, Firefox, WebKit | 0.00001 | 0.11 | 0.02 | 0.21 | 0.04 |
-| Peach, 44.1 kHz, from 8.0027 s | Chromium, Firefox, WebKit | 0.00128 | 0.28 | 0.02 | 0.16 | 0.05 |
+| Peach, 44.1 kHz, from 0 | Chromium, Firefox, WebKit | 0.00001 | 0.11 | 0.01 | 0.21 | 0.04 |
+| Peach, 44.1 kHz, from 8.0027 s | Chromium, Firefox, WebKit | 0.00128 | 0.17 | 0.01 | 0.16 | 0.05 |
+| Peach's departures, both rates, from 0; 48 kHz from 8.0027 s | Chromium, WebKit | 0.00001 | 0.01 | 0.01 | 0.01 | 0.01 |
+| Peach's departures, 44.1 kHz, from 8.0027 s | Chromium, WebKit | 0.00001 | 0.01 | 0.01 | 25.54 | 0.01 |
 | Features, both rates, both starts | Chromium, WebKit | 0.00001 | 0.01 | 0.01 | 0.01 | 0.01 |
 | Filters, 48 kHz, both starts | Chromium, WebKit | 0.00001 | 0.01 | 0.01 | 0.02 | 0.02, 0.01 from 8.0027 s |
 | Filters, 44.1 kHz, both starts | Chromium, WebKit | 0.01452 | 0.01 | 0.01 | 0.02 | 0.01 |
@@ -59,6 +63,8 @@ Notes on each row:
   - **From 0:** Firefox reads 0.03 dB louder on the sine cues and 0.10 dB on the triangle cues. At 48 kHz its sine cues were within 0.01 dB.
   - **From 8.0027 s, between frames:** Firefox rounds each note's start up to the next frame, starting it 0.4 of a frame (9 µs) late, where Chromium and WebKit keep the start's fraction, as the spec says to. Its samples are Chromium's shifted by 0.39 to 0.40 of a frame. Its `end` for `found-8-mythic-cute` moves 1.27 ms: that is the last sample within 40 dB of the peak, on a fading glint, where a small change in level moves the crossing.
   - The conditions are kept apart, so neither of these loosens a bar on the frame grid.
+  - **Narrower since 5 November 2026,** when the old tick left the set for the departures': it gave the widest dB from 8.0027 s, 0.27 in Firefox, now 0.16 from the rest, and the widest Hz, 0.01, now 0.
+- **Peach's departures are a set of their own,** so Peach's bars stay the discovery's. Left in Peach's set, Firefox would have widened its 44.1 kHz bar for every cue, partial Hz from 0.21 to 26.12. Chromium and WebKit agree on both cues to within a step, but for one window: `shuffle` at 44.1 kHz from 8.0027 s, at 110 ms, where the window's strongest partial is at -79.6 dBFS and its edge catches the last click's tail, a partial reads 25.53 Hz apart. That is the 25.54. This bar was worked out from the references alone, by the same rule, but after Swift's renders of the two had been judged once against Peach's bar, while finding why that bar widened.
 - **Filters at 44.1 kHz** are wide in time, 14.52 ms, from two cues alone, `bandpass-low-q0` and `notch-low-q0`: the last frame each sounds on, `stop`, is 640 frames later in WebKit than in Chromium. At the least resonance a bandpass or notch has a repeated pole, and Chromium's tail time takes a different branch there, by the last bit of its `sin` and `cos`. At 48 kHz the two browsers end every ring on the same frame. So wide a bar cannot see a ring ended at a level on 8 of the 17 filter cues: see `--knockouts` below.
 - **Modulation at 44.1 kHz from 8.0027 s,** a start between frames, is wide on the pitch LFOs: up to 0.20 dB at an envelope point and 0.04 Hz on a partial. With an LFO on its detune, Chromium's oscillator drops the start's fraction of a frame; WebKit keeps it.
 - **Delay is wide in time, up to 0.33 ms, from `stop` alone,** on the cues with feedback at 200 and 400 ms: the last non-zero sample is up to 14 frames later in WebKit. Chromium and WebKit agree on every onset, end and duration. On arm64 Chromium works out where to read the delay line in float: 0.4 s, a float, times 48,000 is 19,200.000286, which rounds to 19,200 exactly. WebKit works it out in double, so it reads 0.000286 of a frame late, and every pass round the loop smears the echo that much further, a tail falling by about 10^-4 a frame, under 10^-12. So wide a bar would not see an echo a few frames out of place, but no knockout is that small, and `ChainEndTests` in the Swift package holds every delay cue's last frame to Chromium's.
@@ -74,7 +80,7 @@ Notes on each row:
 
 `judge.mjs <dir>` measures a set of renders, `<dir>/<set>-<rate>-<start>/<cue>.f32`, and holds each to its condition's bar. It prints one row per cue and one column per rate and start. Each cell is the worst gap to any reference and which reference it was. It exits 1 if any render misses.
 
-`judge.mjs <dir> --controls` checks the positive controls in `<dir>/controls/`: each mistake must miss the bar, and 0.05 dB louder must pass.
+`judge.mjs <dir> --controls` checks the positive controls in `<dir>/controls/`: each mistake must miss the bar, and 0.05 dB louder must pass. The controls are rendered from `controls.cues.json` and held to `references/controls-48000.json` and the fixture, at Peach's bar at 48 kHz from 0, the discovery's.
 
 `judge.mjs <dir> --knockouts` checks that the bar can see each feature the filters, LFOs, unison, the delay and distortion bring. The Swift renderer knocks each out in turn and renders every cue of its sets whose instrument has it, at both rates and both starts, into `<dir>/knockouts/<knockout>/`. Each render must miss:
 

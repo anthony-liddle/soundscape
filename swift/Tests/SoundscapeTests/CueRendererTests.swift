@@ -9,9 +9,10 @@ import Testing
 
     @Test func rendersEachCueFromItsStartThroughItsLastNote() throws {
         let renderer = try CueRenderer(parsing: Self.peach, sampleRate: 48000)
-        // tick: 30 ms, a 10 ms release, and the oscillator stops 10 ms after
+        // tick: two clicks, the second from 9 ms ringing 8 ms, then a 10 ms
+        // release, and the oscillators stop 10 ms after: 37 ms
         let tick = try renderer.render("tick")
-        #expect(tick.count == 2400)
+        #expect(tick.count == 1776)
         #expect(tick[0] == 0)  // the phase starts at 0
         #expect(tick[1] != 0)
         #expect(try renderer.render("edition").count == 77760)
@@ -19,13 +20,15 @@ import Testing
 
     @Test func keepsAStartsFractionOfAFrame() throws {
         let late = Double(3001 * 128) / 48000
-        let at48 = try CueRenderer(parsing: Self.peach, sampleRate: 48000).render("tick", at: late)
+        // A cue whose notes all start at its start, so every note starts on
+        // the frame grid when the cue does
+        let at48 = try CueRenderer(parsing: Self.peach, sampleRate: 48000).render("found-5-set", at: late)
         // On the frame grid at 48 kHz, so the same samples as a render from 0
-        #expect(at48 == (try CueRenderer(parsing: Self.peach, sampleRate: 48000).render("tick")))
+        #expect(at48 == (try CueRenderer(parsing: Self.peach, sampleRate: 48000).render("found-5-set")))
         // At 44.1 kHz the start is frame 352,917.6: the render begins on 352,917,
         // silent there, and the note's first frame, 352,918, is already 0.4 of
         // a frame into its waveform, so not 0
-        let at44 = try CueRenderer(parsing: Self.peach, sampleRate: 44100).render("tick", at: late)
+        let at44 = try CueRenderer(parsing: Self.peach, sampleRate: 44100).render("found-5-set", at: late)
         #expect(CueRenderer.firstFrame(of: late, sampleRate: 44100) == 352_917)
         #expect(at44[0] == 0)
         #expect(at44[1] != 0)

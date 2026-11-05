@@ -4,6 +4,12 @@ The Swift package's changelog, for its bare semver tags. The npm engine's is in 
 
 ## Unreleased
 
+### Changed
+
+- **Peach of a Word's cue file is its new one,** from its pull request #185: the tick is two clicks where it was an 880 Hz square, and a `shuffle` cue is new, both chosen by ear on 5 November 2026. The conformance copy, Cue Check's copy and the Peach references are that file's. No source changed: the clicks are sines at the fastest attack, which the renderer already played. Every Swift render of them sits within the bar, at both rates and both starts.
+- **The two are held as a set of their own,** `peach-departures`, to Chromium and WebKit, with Firefox recorded beside them, so Peach's own bars stay the discovery's. At 44.1 kHz Firefox starts each note on the next frame, which a click a few milliseconds long feels.
+- **The positive controls keep the old tick.** They are rendered from Peach's first document, kept as `conformance/cues/render/controls.cues.json`, and held to its references as they were.
+
 ## 0.2.1 - 2026-10-23
 
 0.2.1 starts a cue for now whole. Seven steps of the check on an iPhone in `swift/CueCheck.swiftpm/README.md` passed on Antoine's iPhone against `main` with this fix, as he reported on 2026-10-23.
