@@ -1,6 +1,6 @@
 # Cue Check
 
-The smallest app for hearing Soundscape's Swift cue player on an iPhone. It plays Peach of a Word's 34 cues through `CuePlayer`, and every feature cue the renderer is held to: filters, LFOs, unison, delay and distortion. It is for testing only: it is never submitted and never shipped.
+The smallest app for hearing Soundscape's Swift cue player on an iPhone. It plays Peach of a Word's 35 cues through `CuePlayer`, and every feature cue the renderer is held to: filters, LFOs, unison, delay and distortion. It is for testing only: it is never submitted and never shipped.
 
 It is an app playground, a Swift package Xcode opens as an app. That needs nothing installed but Xcode: no project to generate, and no project file to keep. It depends on this repository's Soundscape package by its path, so it always plays the library as it is in your clone.
 
@@ -45,7 +45,7 @@ An app signed with a free team stops opening after seven days. Run it from Xcode
 
 The phone check before any Swift release. Do these in order, on the phone, with silent mode off unless a step says otherwise. Each says what you should see or hear. Anything else is a finding: note what the log said.
 
-1. **The cues sound like the web game's.** On the phone or the Mac, open [peachofaword.com/sounds](https://peachofaword.com/sounds), the game's page of every sound it makes. Play the same cues in both, at least `tick`, `invalid`, `found-3-set`, `found-8-mythic-cute`, `source` and `edition`.
+1. **The cues sound like the web game's.** On the phone or the Mac, open [peachofaword.com/sounds](https://peachofaword.com/sounds), the game's page of every sound it makes. Play the same cues in both, at least `tick`, `shuffle`, `invalid`, `found-3-set`, `found-8-mythic-cute`, `source` and `edition`. Until peach-of-a-word#185 merges, the page with the new `tick` and `shuffle` is that pull request's preview.
    - *Hear:* the same notes, the same lengths and the same loudness in both. The web page plays through WebKit, which the Swift renders are held to.
 2. **A tap feels immediate.** Tap `tick` a few times, at your own pace.
    - *Hear:* each tick as your finger lifts, with no lag you notice.

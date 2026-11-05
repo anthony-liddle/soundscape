@@ -23,7 +23,8 @@ import Testing
         let merged = try JSONValue(parsing: Corpus.text(Corpus.root + "/examples/cues/every-feature.cues.json"))
         _ = try CueDocument(parsing: Corpus.text(Corpus.root + "/examples/cues/every-feature.cues.json"))
         var counts = (instruments: 0, cues: 0)
-        for (set, path) in ReferenceRenders.sets where set != "peach" {
+        // Not Peach's two sets, which are Peach's own document, carried whole
+        for (set, path) in ReferenceRenders.sets where set != "peach" && set != "peach-departures" {
             let document = try JSONValue(parsing: Corpus.text(path))
             for kind in ["instruments", "cues"] {
                 for (name, value) in try #require(document[kind]?.members) {

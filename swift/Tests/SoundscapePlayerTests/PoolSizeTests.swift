@@ -8,8 +8,9 @@ import Testing
 /// Peach's rules, from `src/ui/useGame.ts`: every letter typed or tile tapped
 /// plays `tick`; Enter plays exactly one cue, `invalid` for anything that is
 /// not a new word (an empty stick included), else `edition` for the word that
-/// completes the set, `source` for the source word, or `found-<length>-<rung>`.
-/// A held key repeats, and Peach does not filter repeats.
+/// completes the set, `source` for the source word, or `found-<length>-<rung>`;
+/// every press of Shuffle plays `shuffle`. A held key repeats, and Peach does
+/// not filter repeats.
 ///
 /// A voice is busy from the press through the end of its cue's render.
 @MainActor
@@ -65,6 +66,13 @@ import Testing
         peak((0..<100).map { (Double($0) / rate, held("tick")) })
     }
 
+    /// Shuffle pressed ten times, then the letters of a word, all at `rate`.
+    static func shufflesThenAWord(rate: Double) -> Int {
+        let shuffles = (0..<10).map { (Double($0) / rate, held("shuffle")) }
+        let letters = (10..<18).map { (Double($0) / rate, held("tick")) }
+        return peak(shuffles + letters)
+    }
+
     /// Fast typists sustain about 12 presses a second (150 words a minute)
     /// and reach 15 to 20 in bursts. Key repeat on a Mac, at its fastest
     /// setting, is every 30 ms: 33 a second.
@@ -72,14 +80,15 @@ import Testing
     static let keyRepeat = 1000.0 / 30
 
     @Test func coversTheFastestTyping() {
-        var report = ["cue lengths: " + ["tick", "invalid", "found-3-set", "source", "edition"]
+        var report = ["cue lengths: " + ["tick", "shuffle", "invalid", "found-3-set", "source", "edition"]
             .map { "\($0) \(Int((Self.lengths[$0]! * 1000).rounded())) ms" }.joined(separator: ", ")]
         var needed = 0
         for rate in Self.typing {
             let byLength = (3...8).map { Self.words(letters: $0, rate: rate) }
             let spam = Self.enters(rate: rate)
-            needed = max(needed, byLength.max()!, spam)
-            report.append("\(Int(rate)) presses/s: words of 3...8 letters \(byLength), Enter alone \(spam)")
+            let shuffling = Self.shufflesThenAWord(rate: rate)
+            needed = max(needed, byLength.max()!, spam, shuffling)
+            report.append("\(Int(rate)) presses/s: words of 3...8 letters \(byLength), Enter alone \(spam), ten Shuffles then a word \(shuffling)")
         }
         let repeatEnter = Self.enters(rate: Self.keyRepeat)
         let repeatLetter = Self.heldLetter(rate: Self.keyRepeat)

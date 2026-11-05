@@ -15,6 +15,7 @@ import Testing
     /// The same sets, rates and starts as conformance/cues/render/conditions.mjs.
     static let sets = [
         ("peach", Corpus.directory + "/cases/peach-of-a-word.json"),
+        ("peach-departures", Corpus.directory + "/cases/peach-of-a-word.json"),
         ("features", Corpus.directory + "/render/features.cues.json"),
         ("filters", Corpus.directory + "/render/filters.cues.json"),
         ("modulation", Corpus.directory + "/render/modulation.cues.json"),
@@ -23,6 +24,19 @@ import Testing
         ("distortion", Corpus.directory + "/render/distortion.cues.json"),
     ]
     static let rates: [Double] = [48000, 44100]
+
+    /// Peach's departures, as conditions.mjs's PEACH_DEPARTURES lists them: a
+    /// set of their own, peach-departures, and every other Peach cue is peach.
+    static let peachDepartures = ["tick", "shuffle"]
+
+    /// A set's cues, in its document's order, as conditions.mjs's cueNames gives them.
+    static func cueNames(_ set: String, _ document: CueDocument) -> [String] {
+        switch set {
+        case "peach": document.cueNames.filter { !peachDepartures.contains($0) }
+        case "peach-departures": document.cueNames.filter { peachDepartures.contains($0) }
+        default: document.cueNames
+        }
+    }
     static let starts: [(String, Double)] = [("0", 0), ("8.0027", Double(3001 * 128) / 48000)]
 
     @Test(.enabled(if: out != nil, "set CUE_RENDER_OUT to a directory for judge.mjs"))
@@ -34,7 +48,7 @@ import Testing
                 for (label, start) in Self.starts {
                     let dir = "\(Self.out!)/\(set)-\(Int(rate))-\(label)"
                     Files.makeDirectory(dir)
-                    for name in renderer.document.cueNames {
+                    for name in Self.cueNames(set, renderer.document) {
                         Files.write(try renderer.render(name, at: start), to: "\(dir)/\(name).f32")
                         written += 1
                     }
@@ -89,9 +103,13 @@ import Testing
     /// The positive controls, for judge.mjs --controls: the discovery's three
     /// cues, at 48 kHz from 0, each made wrong on purpose. Each must miss the
     /// bar, but 0.05 dB louder must pass, which places the bar's resolution.
+    ///
+    /// From the frozen document, render/controls.cues.json: Peach's as it was
+    /// before its tick changed, so the controls stay on the sound the bar was
+    /// set on, the old tick's square included (conditions.mjs, CONTROLS).
     @Test(.enabled(if: out != nil, "set CUE_RENDER_OUT to a directory for judge.mjs"))
     func writesThePositiveControls() throws {
-        let peach = Corpus.caseText("peach-of-a-word")
+        let peach = Corpus.text(Corpus.directory + "/render/controls.cues.json")
         // Every waveform swapped for another, so each cue's changes
         let rotated = peach.replacing(#""waveform": "sine""#, with: #""waveform": "SWAP-triangle""#)
             .replacing(#""waveform": "square""#, with: #""waveform": "sine""#)

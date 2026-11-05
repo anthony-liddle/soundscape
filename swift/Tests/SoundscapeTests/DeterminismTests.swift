@@ -19,7 +19,7 @@ import Testing
             for rate in ReferenceRenders.rates {
                 let renderer = try CueRenderer(parsing: Corpus.text(path), sampleRate: rate)
                 for (label, start) in ReferenceRenders.starts {
-                    for name in renderer.document.cueNames {
+                    for name in ReferenceRenders.cueNames(set, renderer.document) {
                         let first = try renderer.render(name, at: start)
                         let again = try renderer.render(name, at: start)
                         #expect(first == again, "\(name) at \(Int(rate)) Hz from \(label) s rendered differently twice")

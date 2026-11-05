@@ -1,0 +1,1149 @@
+{
+  "format": "soundscape-cues",
+  "version": 1,
+  "instruments": {
+    "sine": {
+      "waveform": "sine",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decayUntilRelease": true,
+      "sustain": 0,
+      "release": 0,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "none",
+      "filterCutoff": 1,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "square": {
+      "waveform": "square",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decayUntilRelease": true,
+      "sustain": 0,
+      "release": 0,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "none",
+      "filterCutoff": 1,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    },
+    "triangle": {
+      "waveform": "triangle",
+      "pitchOffset": 0,
+      "attack": 0.07418053232275866,
+      "decayUntilRelease": true,
+      "sustain": 0,
+      "release": 0,
+      "envelopeCurve": "exponential",
+      "envelopeFloor": 0.000018,
+      "filterType": "none",
+      "filterCutoff": 1,
+      "filterResonance": 0,
+      "delayTime": 0,
+      "delayFeedback": 0,
+      "delayMix": 0,
+      "distortion": 0,
+      "reverbMix": 0,
+      "lfoRate": 0,
+      "lfoDepth": 0,
+      "lfoTarget": "pitch",
+      "unisonDetune": 0,
+      "velocityResponse": 0
+    }
+  },
+  "cues": {
+    "edition": {
+      "notes": [
+        {
+          "id": "edition-1",
+          "instrument": "triangle",
+          "start": 0,
+          "duration": 0.5,
+          "pitch": 71.99996259277259,
+          "level": 0.153
+        },
+        {
+          "id": "edition-2",
+          "instrument": "triangle",
+          "start": 0.1,
+          "duration": 0.5,
+          "pitch": 75.9998657080788,
+          "level": 0.153
+        },
+        {
+          "id": "edition-3",
+          "instrument": "triangle",
+          "start": 0.2,
+          "duration": 0.5,
+          "pitch": 78.99998074500876,
+          "level": 0.153
+        },
+        {
+          "id": "edition-4",
+          "instrument": "triangle",
+          "start": 0.30000000000000004,
+          "duration": 0.5,
+          "pitch": 83.99996259277259,
+          "level": 0.153
+        },
+        {
+          "id": "edition-5",
+          "instrument": "triangle",
+          "start": 0.4,
+          "duration": 0.5,
+          "pitch": 87.99999701088382,
+          "level": 0.153
+        },
+        {
+          "id": "edition-6",
+          "instrument": "triangle",
+          "start": 0.5,
+          "duration": 1.1,
+          "pitch": 71.99996259277259,
+          "level": 0.126
+        },
+        {
+          "id": "edition-7",
+          "instrument": "triangle",
+          "start": 0.5,
+          "duration": 1.1,
+          "pitch": 75.9998657080788,
+          "level": 0.126
+        },
+        {
+          "id": "edition-8",
+          "instrument": "triangle",
+          "start": 0.5,
+          "duration": 1.1,
+          "pitch": 78.99998074500876,
+          "level": 0.126
+        }
+      ]
+    },
+    "found-3-mythic-cute": {
+      "notes": [
+        {
+          "id": "found-3-mythic-cute-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 67.00020156708658,
+          "level": 0.162
+        },
+        {
+          "id": "found-3-mythic-cute-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 79.00020156708658,
+          "level": 0.0324
+        },
+        {
+          "id": "found-3-mythic-cute-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 86.01975157574046,
+          "level": 0.018
+        },
+        {
+          "id": "found-3-mythic-cute-4",
+          "instrument": "sine",
+          "start": 0.09,
+          "duration": 0.1,
+          "pitch": 91.00020156708658,
+          "level": 0.009
+        },
+        {
+          "id": "found-3-mythic-cute-5",
+          "instrument": "sine",
+          "start": 0.13,
+          "duration": 0.1,
+          "pitch": 94.86333870573493,
+          "level": 0.009
+        }
+      ]
+    },
+    "found-3-mythic-letterpress": {
+      "notes": [
+        {
+          "id": "found-3-mythic-letterpress-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 67.00020156708658,
+          "level": 0.162
+        },
+        {
+          "id": "found-3-mythic-letterpress-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 79.00020156708658,
+          "level": 0.0324
+        },
+        {
+          "id": "found-3-mythic-letterpress-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 86.01975157574046,
+          "level": 0.018
+        },
+        {
+          "id": "found-3-mythic-letterpress-4",
+          "instrument": "sine",
+          "start": 0.09,
+          "duration": 0.1,
+          "pitch": 91.00020156708658,
+          "level": 0.009
+        }
+      ]
+    },
+    "found-3-rare": {
+      "notes": [
+        {
+          "id": "found-3-rare-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 67.00020156708658,
+          "level": 0.162
+        },
+        {
+          "id": "found-3-rare-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 79.00020156708658,
+          "level": 0.0324
+        },
+        {
+          "id": "found-3-rare-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 86.01975157574046,
+          "level": 0.0144
+        }
+      ]
+    },
+    "found-3-set": {
+      "notes": [
+        {
+          "id": "found-3-set-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 67.00020156708658,
+          "level": 0.162
+        },
+        {
+          "id": "found-3-set-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 79.00020156708658,
+          "level": 0.0324
+        }
+      ]
+    },
+    "found-3-uncommon": {
+      "notes": [
+        {
+          "id": "found-3-uncommon-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 67.00020156708658,
+          "level": 0.162
+        },
+        {
+          "id": "found-3-uncommon-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 79.00020156708658,
+          "level": 0.0324
+        },
+        {
+          "id": "found-3-uncommon-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 86.01975157574046,
+          "level": 0.010799999999999999
+        }
+      ]
+    },
+    "found-4-mythic-cute": {
+      "notes": [
+        {
+          "id": "found-4-mythic-cute-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 69,
+          "level": 0.162
+        },
+        {
+          "id": "found-4-mythic-cute-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 81,
+          "level": 0.0324
+        },
+        {
+          "id": "found-4-mythic-cute-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 88.01955000865388,
+          "level": 0.018
+        },
+        {
+          "id": "found-4-mythic-cute-4",
+          "instrument": "sine",
+          "start": 0.09,
+          "duration": 0.1,
+          "pitch": 93,
+          "level": 0.009
+        },
+        {
+          "id": "found-4-mythic-cute-5",
+          "instrument": "sine",
+          "start": 0.13,
+          "duration": 0.1,
+          "pitch": 96.86313713864834,
+          "level": 0.009
+        }
+      ]
+    },
+    "found-4-mythic-letterpress": {
+      "notes": [
+        {
+          "id": "found-4-mythic-letterpress-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 69,
+          "level": 0.162
+        },
+        {
+          "id": "found-4-mythic-letterpress-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 81,
+          "level": 0.0324
+        },
+        {
+          "id": "found-4-mythic-letterpress-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 88.01955000865388,
+          "level": 0.018
+        },
+        {
+          "id": "found-4-mythic-letterpress-4",
+          "instrument": "sine",
+          "start": 0.09,
+          "duration": 0.1,
+          "pitch": 93,
+          "level": 0.009
+        }
+      ]
+    },
+    "found-4-rare": {
+      "notes": [
+        {
+          "id": "found-4-rare-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 69,
+          "level": 0.162
+        },
+        {
+          "id": "found-4-rare-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 81,
+          "level": 0.0324
+        },
+        {
+          "id": "found-4-rare-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 88.01955000865388,
+          "level": 0.0144
+        }
+      ]
+    },
+    "found-4-set": {
+      "notes": [
+        {
+          "id": "found-4-set-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 69,
+          "level": 0.162
+        },
+        {
+          "id": "found-4-set-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 81,
+          "level": 0.0324
+        }
+      ]
+    },
+    "found-4-uncommon": {
+      "notes": [
+        {
+          "id": "found-4-uncommon-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 69,
+          "level": 0.162
+        },
+        {
+          "id": "found-4-uncommon-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 81,
+          "level": 0.0324
+        },
+        {
+          "id": "found-4-uncommon-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 88.01955000865388,
+          "level": 0.010799999999999999
+        }
+      ]
+    },
+    "found-5-mythic-cute": {
+      "notes": [
+        {
+          "id": "found-5-mythic-cute-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 71.99996259277259,
+          "level": 0.162
+        },
+        {
+          "id": "found-5-mythic-cute-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 83.99996259277259,
+          "level": 0.0324
+        },
+        {
+          "id": "found-5-mythic-cute-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 91.01951260142647,
+          "level": 0.018
+        },
+        {
+          "id": "found-5-mythic-cute-4",
+          "instrument": "sine",
+          "start": 0.09,
+          "duration": 0.1,
+          "pitch": 95.99996259277259,
+          "level": 0.009
+        },
+        {
+          "id": "found-5-mythic-cute-5",
+          "instrument": "sine",
+          "start": 0.13,
+          "duration": 0.1,
+          "pitch": 99.86309973142095,
+          "level": 0.009
+        }
+      ]
+    },
+    "found-5-mythic-letterpress": {
+      "notes": [
+        {
+          "id": "found-5-mythic-letterpress-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 71.99996259277259,
+          "level": 0.162
+        },
+        {
+          "id": "found-5-mythic-letterpress-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 83.99996259277259,
+          "level": 0.0324
+        },
+        {
+          "id": "found-5-mythic-letterpress-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 91.01951260142647,
+          "level": 0.018
+        },
+        {
+          "id": "found-5-mythic-letterpress-4",
+          "instrument": "sine",
+          "start": 0.09,
+          "duration": 0.1,
+          "pitch": 95.99996259277259,
+          "level": 0.009
+        }
+      ]
+    },
+    "found-5-rare": {
+      "notes": [
+        {
+          "id": "found-5-rare-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 71.99996259277259,
+          "level": 0.162
+        },
+        {
+          "id": "found-5-rare-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 83.99996259277259,
+          "level": 0.0324
+        },
+        {
+          "id": "found-5-rare-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 91.01951260142647,
+          "level": 0.0144
+        }
+      ]
+    },
+    "found-5-set": {
+      "notes": [
+        {
+          "id": "found-5-set-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 71.99996259277259,
+          "level": 0.162
+        },
+        {
+          "id": "found-5-set-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 83.99996259277259,
+          "level": 0.0324
+        }
+      ]
+    },
+    "found-5-uncommon": {
+      "notes": [
+        {
+          "id": "found-5-uncommon-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 71.99996259277259,
+          "level": 0.162
+        },
+        {
+          "id": "found-5-uncommon-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 83.99996259277259,
+          "level": 0.0324
+        },
+        {
+          "id": "found-5-uncommon-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 91.01951260142647,
+          "level": 0.010799999999999999
+        }
+      ]
+    },
+    "found-6-mythic-cute": {
+      "notes": [
+        {
+          "id": "found-6-mythic-cute-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 74.00001368189757,
+          "level": 0.162
+        },
+        {
+          "id": "found-6-mythic-cute-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 86.00001368189757,
+          "level": 0.0324
+        },
+        {
+          "id": "found-6-mythic-cute-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 93.01956369055145,
+          "level": 0.018
+        },
+        {
+          "id": "found-6-mythic-cute-4",
+          "instrument": "sine",
+          "start": 0.09,
+          "duration": 0.1,
+          "pitch": 98.00001368189757,
+          "level": 0.009
+        },
+        {
+          "id": "found-6-mythic-cute-5",
+          "instrument": "sine",
+          "start": 0.13,
+          "duration": 0.1,
+          "pitch": 101.86315082054593,
+          "level": 0.009
+        }
+      ]
+    },
+    "found-6-mythic-letterpress": {
+      "notes": [
+        {
+          "id": "found-6-mythic-letterpress-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 74.00001368189757,
+          "level": 0.162
+        },
+        {
+          "id": "found-6-mythic-letterpress-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 86.00001368189757,
+          "level": 0.0324
+        },
+        {
+          "id": "found-6-mythic-letterpress-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 93.01956369055145,
+          "level": 0.018
+        },
+        {
+          "id": "found-6-mythic-letterpress-4",
+          "instrument": "sine",
+          "start": 0.09,
+          "duration": 0.1,
+          "pitch": 98.00001368189757,
+          "level": 0.009
+        }
+      ]
+    },
+    "found-6-rare": {
+      "notes": [
+        {
+          "id": "found-6-rare-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 74.00001368189757,
+          "level": 0.162
+        },
+        {
+          "id": "found-6-rare-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 86.00001368189757,
+          "level": 0.0324
+        },
+        {
+          "id": "found-6-rare-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 93.01956369055145,
+          "level": 0.0144
+        }
+      ]
+    },
+    "found-6-set": {
+      "notes": [
+        {
+          "id": "found-6-set-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 74.00001368189757,
+          "level": 0.162
+        },
+        {
+          "id": "found-6-set-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 86.00001368189757,
+          "level": 0.0324
+        }
+      ]
+    },
+    "found-6-uncommon": {
+      "notes": [
+        {
+          "id": "found-6-uncommon-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 74.00001368189757,
+          "level": 0.162
+        },
+        {
+          "id": "found-6-uncommon-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 86.00001368189757,
+          "level": 0.0324
+        },
+        {
+          "id": "found-6-uncommon-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 93.01956369055145,
+          "level": 0.010799999999999999
+        }
+      ]
+    },
+    "found-7-mythic-cute": {
+      "notes": [
+        {
+          "id": "found-7-mythic-cute-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 75.9998657080788,
+          "level": 0.162
+        },
+        {
+          "id": "found-7-mythic-cute-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 87.9998657080788,
+          "level": 0.0324
+        },
+        {
+          "id": "found-7-mythic-cute-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 95.01941571673268,
+          "level": 0.018
+        },
+        {
+          "id": "found-7-mythic-cute-4",
+          "instrument": "sine",
+          "start": 0.09,
+          "duration": 0.1,
+          "pitch": 99.9998657080788,
+          "level": 0.009
+        },
+        {
+          "id": "found-7-mythic-cute-5",
+          "instrument": "sine",
+          "start": 0.13,
+          "duration": 0.1,
+          "pitch": 103.86300284672716,
+          "level": 0.009
+        }
+      ]
+    },
+    "found-7-mythic-letterpress": {
+      "notes": [
+        {
+          "id": "found-7-mythic-letterpress-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 75.9998657080788,
+          "level": 0.162
+        },
+        {
+          "id": "found-7-mythic-letterpress-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 87.9998657080788,
+          "level": 0.0324
+        },
+        {
+          "id": "found-7-mythic-letterpress-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 95.01941571673268,
+          "level": 0.018
+        },
+        {
+          "id": "found-7-mythic-letterpress-4",
+          "instrument": "sine",
+          "start": 0.09,
+          "duration": 0.1,
+          "pitch": 99.9998657080788,
+          "level": 0.009
+        }
+      ]
+    },
+    "found-7-rare": {
+      "notes": [
+        {
+          "id": "found-7-rare-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 75.9998657080788,
+          "level": 0.162
+        },
+        {
+          "id": "found-7-rare-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 87.9998657080788,
+          "level": 0.0324
+        },
+        {
+          "id": "found-7-rare-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 95.01941571673268,
+          "level": 0.0144
+        }
+      ]
+    },
+    "found-7-set": {
+      "notes": [
+        {
+          "id": "found-7-set-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 75.9998657080788,
+          "level": 0.162
+        },
+        {
+          "id": "found-7-set-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 87.9998657080788,
+          "level": 0.0324
+        }
+      ]
+    },
+    "found-7-uncommon": {
+      "notes": [
+        {
+          "id": "found-7-uncommon-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 75.9998657080788,
+          "level": 0.162
+        },
+        {
+          "id": "found-7-uncommon-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 87.9998657080788,
+          "level": 0.0324
+        },
+        {
+          "id": "found-7-uncommon-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 95.01941571673268,
+          "level": 0.010799999999999999
+        }
+      ]
+    },
+    "found-8-mythic-cute": {
+      "notes": [
+        {
+          "id": "found-8-mythic-cute-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 78.99998074500876,
+          "level": 0.162
+        },
+        {
+          "id": "found-8-mythic-cute-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 90.99998074500876,
+          "level": 0.0324
+        },
+        {
+          "id": "found-8-mythic-cute-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 98.01953075366262,
+          "level": 0.018
+        },
+        {
+          "id": "found-8-mythic-cute-4",
+          "instrument": "sine",
+          "start": 0.09,
+          "duration": 0.1,
+          "pitch": 102.99998074500876,
+          "level": 0.009
+        },
+        {
+          "id": "found-8-mythic-cute-5",
+          "instrument": "sine",
+          "start": 0.13,
+          "duration": 0.1,
+          "pitch": 106.8631178836571,
+          "level": 0.009
+        }
+      ]
+    },
+    "found-8-mythic-letterpress": {
+      "notes": [
+        {
+          "id": "found-8-mythic-letterpress-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 78.99998074500876,
+          "level": 0.162
+        },
+        {
+          "id": "found-8-mythic-letterpress-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 90.99998074500876,
+          "level": 0.0324
+        },
+        {
+          "id": "found-8-mythic-letterpress-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 98.01953075366262,
+          "level": 0.018
+        },
+        {
+          "id": "found-8-mythic-letterpress-4",
+          "instrument": "sine",
+          "start": 0.09,
+          "duration": 0.1,
+          "pitch": 102.99998074500876,
+          "level": 0.009
+        }
+      ]
+    },
+    "found-8-rare": {
+      "notes": [
+        {
+          "id": "found-8-rare-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 78.99998074500876,
+          "level": 0.162
+        },
+        {
+          "id": "found-8-rare-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 90.99998074500876,
+          "level": 0.0324
+        },
+        {
+          "id": "found-8-rare-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 98.01953075366262,
+          "level": 0.0144
+        }
+      ]
+    },
+    "found-8-set": {
+      "notes": [
+        {
+          "id": "found-8-set-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 78.99998074500876,
+          "level": 0.162
+        },
+        {
+          "id": "found-8-set-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 90.99998074500876,
+          "level": 0.0324
+        }
+      ]
+    },
+    "found-8-uncommon": {
+      "notes": [
+        {
+          "id": "found-8-uncommon-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.28,
+          "pitch": 78.99998074500876,
+          "level": 0.162
+        },
+        {
+          "id": "found-8-uncommon-2",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.18,
+          "pitch": 90.99998074500876,
+          "level": 0.0324
+        },
+        {
+          "id": "found-8-uncommon-3",
+          "instrument": "sine",
+          "start": 0.04,
+          "duration": 0.12,
+          "pitch": 98.01953075366262,
+          "level": 0.010799999999999999
+        }
+      ]
+    },
+    "invalid": {
+      "notes": [
+        {
+          "id": "invalid-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.16,
+          "pitch": 55.000201567086584,
+          "level": 0.09
+        },
+        {
+          "id": "invalid-2",
+          "instrument": "sine",
+          "start": 0.08,
+          "duration": 0.16,
+          "pitch": 52.99959193719883,
+          "level": 0.09
+        }
+      ]
+    },
+    "source": {
+      "notes": [
+        {
+          "id": "source-1",
+          "instrument": "triangle",
+          "start": 0,
+          "duration": 0.5,
+          "pitch": 71.99996259277259,
+          "level": 0.144
+        },
+        {
+          "id": "source-2",
+          "instrument": "triangle",
+          "start": 0.1,
+          "duration": 0.5,
+          "pitch": 75.9998657080788,
+          "level": 0.144
+        },
+        {
+          "id": "source-3",
+          "instrument": "triangle",
+          "start": 0.2,
+          "duration": 0.5,
+          "pitch": 78.99998074500876,
+          "level": 0.144
+        },
+        {
+          "id": "source-4",
+          "instrument": "triangle",
+          "start": 0.30000000000000004,
+          "duration": 0.5,
+          "pitch": 83.99996259277259,
+          "level": 0.144
+        }
+      ]
+    },
+    "tick": {
+      "notes": [
+        {
+          "id": "tick-1",
+          "instrument": "square",
+          "start": 0,
+          "duration": 0.03,
+          "pitch": 81,
+          "level": 0.021599999999999998
+        }
+      ]
+    }
+  }
+}

@@ -5,14 +5,30 @@ import { PAIR_SPLIT_S } from '../measure/soundMeasure.ts';
 const here = new URL('./', import.meta.url);
 
 /**
- * The sets of cues. Peach's 34 are held to Chromium, Firefox, WebKit and the
- * frozen Chrome 154 fixture. The others are held to Chromium and WebKit, where
+ * The sets of cues. Peach's, all but its departures, are held to Chromium,
+ * Firefox, WebKit and the frozen Chrome 154 fixture. The others are held to Chromium and WebKit, where
  * Firefox stops being a reference for the full feature set (decisions.md):
  * one cue per oscillator and envelope feature Peach does not use, then the
  * filters, LFOs and unison, then delay and distortion.
  */
 export const SETS = {
-  peach: { document: new URL('../cases/peach-of-a-word.json', here), browsers: ['chromium', 'firefox', 'webkit'] },
+  peach: {
+    document: new URL('../cases/peach-of-a-word.json', here),
+    browsers: ['chromium', 'firefox', 'webkit'],
+    except: 'departures',
+  },
+  // Peach's departures, the cues it chose by ear after Soundscape: clicks a few
+  // milliseconds long, which Firefox starts on the next frame at 44.1 kHz and
+  // so measures apart from Chromium and WebKit. Held to those two, as every
+  // set past Peach's first is, with Firefox rendered and recorded beside them.
+  // Kept apart so Peach's own bar stays the discovery's. From the same
+  // document, so the copy Peach pins is the one tested.
+  'peach-departures': {
+    document: new URL('../cases/peach-of-a-word.json', here),
+    browsers: ['chromium', 'webkit'],
+    recorded: ['chromium', 'webkit', 'firefox'],
+    only: 'departures',
+  },
   features: { document: new URL('features.cues.json', here), browsers: ['chromium', 'webkit'] },
   // Filters, LFOs and unison: held to Chromium and WebKit, with Firefox rendered
   // and recorded beside them, never held to. Made with the published engine.
@@ -58,6 +74,31 @@ export const SETS = {
 /** The browsers a set is rendered in: those it is held to, and any recorded beside them. */
 export const recordedBrowsers = (set) => SETS[set].recorded ?? SETS[set].browsers;
 
+/**
+ * Peach's cues that left its old engine on purpose, chosen by ear on 5 November
+ * 2026, as Peach's own src/audio/departures.ts lists them: the tick, now two
+ * clicks where it was an 880 Hz square, and Shuffle, which made no sound
+ * before. The fixture is the old engine's sound, so it holds neither. They
+ * are the peach-departures set, and the peach set is every other Peach cue.
+ * ReferenceRenders.swift lists them too.
+ */
+export const PEACH_DEPARTURES = ['tick', 'shuffle'];
+
+/**
+ * The positive controls' own cues and references, frozen: Peach's document as
+ * it was before its departures, byte for byte (SHA-256 b66a60d7...445f615f),
+ * and the Peach references rendered from it, kept as they were. The controls
+ * make the discovery's three cues wrong on purpose and must miss the
+ * discovery's bar, so they stay on the sound that bar was set on, the old tick
+ * and its square included. Never rendered again.
+ */
+export const FROZEN_CONTROLS = {
+  document: new URL('controls.cues.json', here),
+  set: 'controls',
+  rate: 48000,
+  cues: ['tick', 'found-8-mythic-cute', 'edition'],
+};
+
 /** Both rates, because the player pass decides which one cues render at. */
 export const RATES = [48000, 44100];
 
@@ -75,7 +116,13 @@ export const SECONDS = 2;
 export const optionsFor = (cue) => (cue === 'invalid' ? { pairSplitS: PAIR_SPLIT_S } : {});
 
 export const documentText = (set) => readFileSync(SETS[set].document, 'utf8');
-export const cueNames = (set) => Object.keys(JSON.parse(documentText(set)).cues);
+/** A set's cues, in its document's order: all of them, or only or all but Peach's departures. */
+export const cueNames = (set) => {
+  const all = Object.keys(JSON.parse(documentText(set)).cues);
+  if (SETS[set].only === 'departures') return all.filter((cue) => PEACH_DEPARTURES.includes(cue));
+  if (SETS[set].except === 'departures') return all.filter((cue) => !PEACH_DEPARTURES.includes(cue));
+  return all;
+};
 
 export const referencePath = (set, rate) => new URL(`references/${set}-${rate}.json`, here);
 export const readReferences = (set, rate) => JSON.parse(readFileSync(referencePath(set, rate), 'utf8'));

@@ -29,7 +29,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { measure } from '../measure/soundMeasure.ts';
 import { spreadBetween } from '../measure/renderSpread.ts';
-import { SECONDS, STARTS, cueNames, documentText, optionsFor, readFixture, readReferences } from './conditions.mjs';
+import { FROZEN_CONTROLS, SECONDS, STARTS, cueNames, documentText, optionsFor, readFixture, readReferences } from './conditions.mjs';
 import { breaks, worstGap } from './rule.mjs';
 
 const { values, positionals } = parseArgs({
@@ -76,8 +76,10 @@ function judge(path, condition, cue) {
 }
 
 if (values.controls) {
-  // Each control is rendered at 48 kHz from 0, for the discovery's three cues
-  const condition = bar.conditions['peach-48000-0'];
+  // Each control is rendered at 48 kHz from 0, for the discovery's three cues,
+  // from the frozen document, held to its frozen references and the fixture
+  // at the discovery's bar, which is Peach's at 48 kHz from 0
+  const condition = { ...bar.conditions['peach-48000-0'], set: FROZEN_CONTROLS.set };
   const CONTROLS = {
     'semitone-sharp': 'miss',
     'cent-sharp': 'miss',
@@ -88,7 +90,7 @@ if (values.controls) {
   };
   let wrong = 0;
   for (const [control, want] of Object.entries(CONTROLS)) {
-    for (const cue of ['tick', 'found-8-mythic-cute', 'edition']) {
+    for (const cue of FROZEN_CONTROLS.cues) {
       const path = `${dir}/controls/${control}/${cue}.f32`;
       if (!existsSync(path)) throw new Error(`missing ${path}`);
       const { failures, worst } = judge(path, condition, cue);
