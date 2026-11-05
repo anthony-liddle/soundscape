@@ -4,6 +4,10 @@ The Swift package's changelog, for its bare semver tags. The npm engine's is in 
 
 ## Unreleased
 
+## 0.2.2 - 2026-11-05
+
+0.2.2 holds Peach of a Word's new tick and Shuffle to the browsers. No source changed. Cue Check, built from the branch that became this release, was heard on Antoine's iPhone 13 on 2026-11-05, and he reported that it sounds great.
+
 ### Changed
 
 - **Peach of a Word's cue file is its new one,** from its pull request #185: the tick is two clicks where it was an 880 Hz square, and a `shuffle` cue is new, both chosen by ear on 5 November 2026. The conformance copy, Cue Check's copy and the Peach references are that file's. No source changed: the clicks are sines at the fastest attack, which the renderer already played. Every Swift render of them sits within the bar, at both rates and both starts.
