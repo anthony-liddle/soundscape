@@ -45,7 +45,7 @@ An app signed with a free team stops opening after seven days. Run it from Xcode
 
 The phone check before any Swift release. Do these in order, on the phone, with silent mode off unless a step says otherwise. Each says what you should see or hear. Anything else is a finding: note what the log said.
 
-1. **The cues sound like the web game's.** On the phone or the Mac, open [peachofaword.com/sounds](https://peachofaword.com/sounds), the game's page of every sound it makes. Play the same cues in both, at least `tick`, `shuffle`, `invalid`, `found-3-set`, `found-8-mythic-cute`, `source` and `edition`. On the page each button plays the game's old sound, then its cue: compare with the second. Until peach-of-a-word#188 merges, the page with the cues in Peach's new mix is that pull request's preview.
+1. **The cues sound like the web game's.** On the phone or the Mac, open [peachofaword.com/sounds](https://peachofaword.com/sounds), the game's page of every sound it makes. Play the same cues in both, at least `tick`, `shuffle`, `invalid`, `found-3-set`, `found-8-mythic-cute`, `source` and `edition`. On the page each button plays the game's old sound, then its cue: compare with the second, which plays in Peach's mix of 9 November.
    - *Hear:* the same notes, the same lengths and the same loudness in both. The web page plays through WebKit, which the Swift renders are held to.
 2. **A tap feels immediate.** Tap `tick` a few times, at your own pace.
    - *Hear:* each tick as your finger lifts, with no lag you notice.
