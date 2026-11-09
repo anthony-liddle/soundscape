@@ -19,14 +19,13 @@
       "references": [
         "chromium",
         "firefox",
-        "webkit",
-        "fixture"
+        "webkit"
       ],
       "spread": {
         "seconds": 0,
-        "db": 0.0800000000000125,
+        "db": 0.0800000000000054,
         "hz": 0,
-        "windowDbfs": 0.0800000000000125,
+        "windowDbfs": 0.0800000000000054,
         "partialHz": 0.010000000000218279,
         "partialDb": 0.010000000000005116,
         "membershipChanges": 0,
@@ -47,14 +46,13 @@
       "references": [
         "chromium",
         "firefox",
-        "webkit",
-        "fixture"
+        "webkit"
       ],
       "spread": {
         "seconds": 0,
-        "db": 0.0800000000000125,
+        "db": 0.0800000000000054,
         "hz": 0,
-        "windowDbfs": 0.0800000000000125,
+        "windowDbfs": 0.0800000000000054,
         "partialHz": 0.010000000000218279,
         "partialDb": 0.010000000000005116,
         "membershipChanges": 0,
@@ -79,9 +77,9 @@
       ],
       "spread": {
         "seconds": 0,
-        "db": 0.10000000000000853,
+        "db": 0.10000000000000142,
         "hz": 0,
-        "windowDbfs": 0.08999999999999986,
+        "windowDbfs": 0.09000000000000341,
         "partialHz": 0.20000000000004547,
         "partialDb": 0.030000000000001137,
         "membershipChanges": 0,

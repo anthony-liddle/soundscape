@@ -6,7 +6,9 @@ const here = new URL('./', import.meta.url);
 
 /**
  * The sets of cues. Peach's, all but its departures, are held to Chromium,
- * Firefox, WebKit and the frozen Chrome 154 fixture. The others are held to Chromium and WebKit, where
+ * Firefox and WebKit. The frozen Chrome 154 fixture, its old engine's sound at
+ * its own level, holds the positive controls alone since Peach's mix of 9
+ * November 2026 (bar.mjs). The others are held to Chromium and WebKit, where
  * Firefox stops being a reference for the full feature set (decisions.md):
  * one cue per oscillator and envelope feature Peach does not use, then the
  * filters, LFOs and unison, then delay and distortion.
@@ -97,6 +99,9 @@ export const FROZEN_CONTROLS = {
   set: 'controls',
   rate: 48000,
   cues: ['tick', 'found-8-mythic-cute', 'edition'],
+  // The frozen references' browsers and Peach's frozen Chrome 154 fixture, the
+  // old engine's sound, which the first document plays at its own level
+  references: ['chromium', 'firefox', 'webkit', 'fixture'],
 };
 
 /** Both rates, because the player pass decides which one cues render at. */

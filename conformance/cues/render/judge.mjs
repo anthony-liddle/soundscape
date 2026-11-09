@@ -79,7 +79,11 @@ if (values.controls) {
   // Each control is rendered at 48 kHz from 0, for the discovery's three cues,
   // from the frozen document, held to its frozen references and the fixture
   // at the discovery's bar, which is Peach's at 48 kHz from 0
-  const condition = { ...bar.conditions['peach-48000-0'], set: FROZEN_CONTROLS.set };
+  const condition = {
+    ...bar.conditions['peach-48000-0'],
+    set: FROZEN_CONTROLS.set,
+    references: FROZEN_CONTROLS.references,
+  };
   const CONTROLS = {
     'semitone-sharp': 'miss',
     'cent-sharp': 'miss',
