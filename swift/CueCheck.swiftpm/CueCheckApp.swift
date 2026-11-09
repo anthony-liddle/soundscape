@@ -46,6 +46,10 @@ struct ContentView: View {
                         Slider(value: Binding(get: { model.volume }, set: { model.setVolume($0) }), in: 0...1)
                     }
                     Toggle("Mute", isOn: Binding(get: { model.muted }, set: { model.setMuted($0) }))
+                    Toggle("Play in silent mode", isOn: Binding(
+                        get: { model.playsInSilentMode },
+                        set: { model.setPlaysInSilentMode($0) }
+                    ))
                 }
 
                 Section("Log, newest first") {

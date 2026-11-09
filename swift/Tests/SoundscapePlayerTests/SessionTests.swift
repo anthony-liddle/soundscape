@@ -96,9 +96,75 @@ import UIKit
     @Test func aDeviceOutputIsAmbientAtTheOutputsRate() async throws {
         let (player, engine) = try await Self.devicePlayer()
         #expect(Self.session.category == .ambient)
+        // No options, so a player that finds the session as it left it sets nothing
+        #expect(Self.session.categoryOptions == [])
         #expect(player.sampleRate == Self.session.sampleRate)
         #expect(player.outputChannelCount == Self.session.outputNumberOfChannels)
         #expect(engine.outputNode.outputFormat(forBus: 0).sampleRate == player.sampleRate)
+        player.stop()
+    }
+
+    /// A game whose own setting silences it: its cues play in silent mode,
+    /// and over other apps' audio, which plays on, neither paused nor lowered.
+    @Test func aPlayerThatPlaysInSilentModeIsPlaybackMixingWithOthers() async throws {
+        let player = CuePlayer(output: .device, session: .playbackMixingWithOthers)
+        try await player.load(Peach.document)
+        try player.play("tick")
+        #expect(player.session == .playbackMixingWithOthers)
+        #expect(Self.session.category == .playback)
+        #expect(Self.session.categoryOptions == [.mixWithOthers])
+        player.stop()
+    }
+
+    /// The default stays as it was: silent mode silences the cues.
+    @Test func aPlayerIsAmbientUnlessToldOtherwise() async throws {
+        try Self.session.setCategory(.playback, options: [.mixWithOthers])
+        let (player, _) = try await Self.devicePlayer()
+        #expect(player.session == .ambient)
+        #expect(Self.session.category == .ambient)
+        player.stop()
+    }
+
+    /// A reset puts the category back to the system's default, so the
+    /// chosen one is set again with the new engine.
+    @Test func aMediaServicesResetSetsTheChosenSessionAgain() async throws {
+        let player = CuePlayer(output: .device, session: .playbackMixingWithOthers)
+        try await player.load(Peach.document)
+        try player.play("tick")
+        try Self.session.setCategory(.soloAmbient)
+        NotificationCenter.default.post(name: AVAudioSession.mediaServicesWereResetNotification, object: Self.session)
+        await player.settled()
+        #expect(Self.session.category == .playback)
+        #expect(Self.session.categoryOptions == [.mixWithOthers])
+        player.stop()
+    }
+
+    /// When an interruption ends and the system suggests resuming, the
+    /// chosen session is made active again, not `.ambient`.
+    @Test func resumingSetsTheChosenSession() async throws {
+        let player = CuePlayer(output: .device, session: .playbackMixingWithOthers)
+        try await player.load(Peach.document)
+        try player.play("tick")
+        Self.interrupt()
+        try Self.session.setCategory(.soloAmbient)
+        player.resumed()
+        #expect(Self.session.category == .playback)
+        #expect(Self.session.categoryOptions == [.mixWithOthers])
+        try player.play("tick")
+        player.stop()
+    }
+
+    /// The session can change while the engine runs, as a setting can, and
+    /// it takes at once.
+    @Test func theSessionChangesAtOnceWhileTheEngineRuns() async throws {
+        let (player, _) = try await Self.devicePlayer()
+        player.session = .playbackMixingWithOthers
+        #expect(Self.session.category == .playback)
+        #expect(Self.session.categoryOptions == [.mixWithOthers])
+        player.session = .ambient
+        #expect(Self.session.category == .ambient)
+        try player.play("tick")
+        #expect(player.graph?.engine.isRunning == true)
         player.stop()
     }
 

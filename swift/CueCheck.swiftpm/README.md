@@ -45,11 +45,11 @@ An app signed with a free team stops opening after seven days. Run it from Xcode
 
 The phone check before any Swift release. Do these in order, on the phone, with silent mode off unless a step says otherwise. Each says what you should see or hear. Anything else is a finding: note what the log said.
 
-1. **The cues sound like the web game's.** On the phone or the Mac, open [peachofaword.com/sounds](https://peachofaword.com/sounds), the game's page of every sound it makes. Play the same cues in both, at least `tick`, `shuffle`, `invalid`, `found-3-set`, `found-8-mythic-cute`, `source` and `edition`. On the page each button plays the game's old sound, then its cue: compare with the second. Until peach-of-a-word#188 merges, the page with the cues in Peach's new mix is that pull request's preview.
+1. **The cues sound like the web game's.** On the phone or the Mac, open [peachofaword.com/sounds](https://peachofaword.com/sounds), the game's page of every sound it makes. Play the same cues in both, at least `tick`, `shuffle`, `invalid`, `found-3-set`, `found-8-mythic-cute`, `source` and `edition`. On the page each button plays the game's old sound, then its cue: compare with the second, which plays in Peach's mix of 9 November.
    - *Hear:* the same notes, the same lengths and the same loudness in both. The web page plays through WebKit, which the Swift renders are held to.
 2. **A tap feels immediate.** Tap `tick` a few times, at your own pace.
    - *Hear:* each tick as your finger lifts, with no lag you notice.
-3. **Silent mode silences it.** Turn silent mode on, with the Ring/Silent switch or the Action button, and tap a few cues.
+3. **Silent mode silences it.** With *Play in silent mode* off, as the app opens, turn silent mode on, with the Ring/Silent switch or the Action button, and tap a few cues.
    - *Hear:* nothing.
    - *See:* *Cues asked for* still counts them.
    - Turn silent mode off, and the next tap sounds.
@@ -85,3 +85,16 @@ From `0.2.0`, the cue file can hold filters, LFOs, unison, delay and distortion,
     - Tap a few other cues while it rings: they play over it.
 12. **What it costs on your phone.** Note down, with *Every feature* loaded: *Rendered in*, *Rendered cues hold*, *App memory*, and *Player*'s rate and channels. Then choose *Peach's cues* again, and note the same three.
     - *See:* *Rendered cues hold* falls to Peach's few MiB. On a Mac, *App memory* falls to about 143 MiB and stays there, the same after every switch: the memory the feature renders used is kept, and the next load reuses it.
+
+From `0.3.0`, a player can play in silent mode, as a game whose own setting silences it does. These steps check it, with *Peach's cues* loaded.
+
+13. **Silent mode leaves it playing.** Turn *Play in silent mode* on, then turn silent mode on, and tap a few cues.
+    - *See:* the log includes `session: playbackMixingWithOthers`.
+    - *Hear:* every cue.
+14. **Other apps' music still plays on.** With silent mode still on, start music in Music or another app, come back to Cue Check, and tap cues.
+    - *Hear:* the music carries on at its own level, neither paused nor quieter, and the cues play over it.
+15. **After a call, the next tap plays.** Have someone call you, and end the call. Come back and tap a cue.
+    - *See:* the log includes `player: interrupted, engine stopped`.
+    - *Hear:* the next tap plays, with silent mode still on.
+16. **Off again, silent mode silences it.** Turn *Play in silent mode* off, and tap a cue.
+    - *Hear:* nothing, with silent mode still on. Turn silent mode off, and the next tap sounds.

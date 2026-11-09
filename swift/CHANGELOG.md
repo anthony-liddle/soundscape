@@ -4,6 +4,10 @@ The Swift package's changelog, for its bare semver tags. The npm engine's is in 
 
 ## Unreleased
 
+### Added
+
+- **A player can play in silent mode.** `CuePlayer(session: .playbackMixingWithOthers)`, or `player.session` set while it plays: on iOS the session's category is `.playback` with `.mixWithOthers`, so silent mode does not silence the cues, and other apps' audio plays on under them, neither paused nor lowered. It is for a game whose own setting is what silences it. The player sets it again on every start, when an interruption ends and after a media services reset, as it always has `.ambient`, which stays the default. A change while the engine runs takes at once. Cue Check has a *Play in silent mode* switch, and its check four steps for it.
+
 ### Changed
 
 - **Peach of a Word's cue file is its mixed one,** from its pull request #188: every cue is the sound it was times a gain for its instrument, chosen by ear on 9 November 2026. The click, the tile tap and Shuffle, is 23.1 dB louder; the sine, every find and the miss, 2.6 dB louder; the triangle, the peach of a word and the full basket, 1.9 dB lower. The conformance copy, Cue Check's copy, the Peach references and the hashes are that file's. No source changed. Every Swift render of it sits within the bar of Chromium, Firefox and WebKit, at both rates and both starts.
