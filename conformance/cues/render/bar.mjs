@@ -40,11 +40,14 @@ function conditionsFor(set) {
             spread = widest(spread, spreadBetween(byStart[start][browsers[i]], byStart[start][browsers[j]]));
       }
       const computed = toleranceFrom(spread);
-      // The fixture is a 48 kHz render from 0, which a 48 kHz render from 8.0027 s,
-      // 3001 render quanta later, also is
-      const withFixture = set === 'peach' && rate === 48000;
+      // Peach's cues at 48 kHz keep the discovery's bar, from 0 and from 8.0027 s,
+      // 3001 render quanta later. They are no longer held to the fixture: since
+      // 9 November 2026 each is the old engine's sound times its instrument's
+      // gain in Peach's mix, and the fixture is the old engine's sound at its own
+      // level. The fixture holds the positive controls instead (judge.mjs).
+      const discovery = set === 'peach' && rate === 48000;
       let bar = computed;
-      if (withFixture) {
+      if (discovery) {
         if (JSON.stringify(computed) !== JSON.stringify(DISCOVERY_BAR))
           throw new Error(`peach at 48 kHz from ${start}: computed ${JSON.stringify(computed)}, the discovery's bar is ${JSON.stringify(DISCOVERY_BAR)}`);
         bar = DISCOVERY_BAR;
@@ -53,7 +56,7 @@ function conditionsFor(set) {
         set,
         rate,
         start: STARTS[start],
-        references: withFixture ? [...browsers, 'fixture'] : browsers,
+        references: browsers,
         ...(SETS[set].recorded ? { recordedBeside: recordedBrowsers(set).filter((b) => !browsers.includes(b)) } : {}),
         spread,
         bar,

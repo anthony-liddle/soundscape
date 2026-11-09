@@ -18,7 +18,7 @@ The shared corpus for the cue format. The TypeScript engine (`packages/engine`) 
 - **`test-`** (44): the documents `validate.test.ts` builds, the same changes to the same valid document. Its NaN level has no text form (see `exceptions.json`), and its infinite start is written by hand.
 - **`hand-`:** numbers JSON can only write as an overflow, `1e400`.
 - **`foundation-`:** each place Foundation's JSON readers part from `JSON.parse`, from the Soundscape In Swift discovery: a repeated key, a trailing comma, integer-like names, `1` for `true`, a lone surrogate.
-- **`peach-of-a-word`:** Peach of a Word's `src/audio/peach.cues.json` as of its pull request #185, SHA-256 `834d0633...3b961d3830`: 35 cues, the tick and Shuffle chosen by ear on 5 November 2026. Accepted. Its first form, at commit `442ceb4`, SHA-256 `b66a60d7...445f615f`, is kept as `render/controls.cues.json`, the positive controls' own.
+- **`peach-of-a-word`:** Peach of a Word's `src/audio/peach.cues.json` as of its pull request #188, SHA-256 `1b713f29...610d242c8`: 35 cues in the mix Peach chose by ear on 9 November 2026, each the cue it was before times a gain for its instrument, the tick and Shuffle chosen by ear on 5 November among them. Accepted. Its form before the mix, from #185, had SHA-256 `834d0633...3b961d3830`. Its first form, at commit `442ceb4`, SHA-256 `b66a60d7...445f615f`, is kept as `render/controls.cues.json`, the positive controls' own.
 - **`generated-seed-S-case-K`:** a case the generator found the two languages disagreeing on, copied in once fixed. Remake it with `generate.mjs --seed S --only K`.
 - **The rest:** other things a reader can get wrong, each named for what it holds.
 

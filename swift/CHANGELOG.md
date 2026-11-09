@@ -4,6 +4,11 @@ The Swift package's changelog, for its bare semver tags. The npm engine's is in 
 
 ## Unreleased
 
+### Changed
+
+- **Peach of a Word's cue file is its mixed one,** from its pull request #188: every cue is the sound it was times a gain for its instrument, chosen by ear on 9 November 2026. The click, the tile tap and Shuffle, is 23.1 dB louder; the sine, every find and the miss, 2.6 dB louder; the triangle, the peach of a word and the full basket, 1.9 dB lower. The conformance copy, Cue Check's copy, the Peach references and the hashes are that file's. No source changed. Every Swift render of it sits within the bar of Chromium, Firefox and WebKit, at both rates and both starts.
+- **Peach's cues are held to the browsers alone.** The Chrome 154 fixture records Peach's old engine at its own level, so against it every Swift render missed by exactly its gain, 2.60 dB or 1.90, and by nothing else. Peach's bar at 48 kHz is still the discovery's, recomputed from the browsers and required to agree. The fixture holds the positive controls, which stay on Peach's first document.
+
 ## 0.2.2 - 2026-11-05
 
 0.2.2 holds Peach of a Word's new tick and Shuffle to the browsers. No source changed. Cue Check, built from the branch that became this release, was heard on Antoine's iPhone 13 on 2026-11-05, and he reported that it sounds great.
