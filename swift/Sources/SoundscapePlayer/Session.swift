@@ -4,15 +4,52 @@ import AVFoundation
 import UIKit
 #endif
 
-/// On iOS, the session's category is `.ambient`, and activating it is the
-/// first thing a device output does, before it reads the rate, which the
-/// session decides. Set every time, not once, because a media services reset
-/// puts the category back to its default. Elsewhere there is no session.
+extension CuePlayer {
+    /// How a device output's sound sits with the phone's: what silent mode
+    /// does to the cues, and what they do to other apps' audio. On iOS it is
+    /// the audio session's category and options. Elsewhere there is no
+    /// session, and the two are the same.
+    public enum Session: Sendable, Equatable {
+        /// `.ambient`: silent mode silences the cues, and other apps' audio
+        /// plays on under them. The default, and the only session before 0.3.0.
+        case ambient
+        /// `.playback` with `.mixWithOthers`: the cues play in silent mode,
+        /// for a game whose own setting is what silences it, and other apps'
+        /// audio plays on under them, neither paused nor lowered.
+        case playbackMixingWithOthers
+    }
+}
+
+#if os(iOS)
+extension CuePlayer.Session {
+    var category: AVAudioSession.Category {
+        switch self {
+        case .ambient: .ambient
+        case .playbackMixingWithOthers: .playback
+        }
+    }
+
+    var options: AVAudioSession.CategoryOptions {
+        switch self {
+        case .ambient: []
+        case .playbackMixingWithOthers: [.mixWithOthers]
+        }
+    }
+}
+#endif
+
+/// On iOS, the session's category and options are the player's ``CuePlayer/Session``,
+/// and activating it is the first thing a device output does, before it reads
+/// the rate, which the session decides. Set every time, not once, because a
+/// media services reset puts the category back to its default. Elsewhere there
+/// is no session.
 @MainActor
-func activateTheSession() throws {
+func activateTheSession(_ wanted: CuePlayer.Session) throws {
     #if os(iOS)
     let session = AVAudioSession.sharedInstance()
-    if session.category != .ambient { try session.setCategory(.ambient) }
+    if session.category != wanted.category || session.categoryOptions != wanted.options {
+        try session.setCategory(wanted.category, mode: .default, options: wanted.options)
+    }
     try session.setActive(true)
     #endif
 }
@@ -86,7 +123,7 @@ extension CuePlayer {
     /// session is made active now, so that the next cue starts promptly. The
     /// engine waits for that cue.
     func resumed() {
-        try? activateTheSession()
+        try? activateTheSession(session)
         onEvent?(.resumable)
     }
 

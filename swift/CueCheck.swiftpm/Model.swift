@@ -48,6 +48,9 @@ final class Model {
     private(set) var asked = 0
     private(set) var volume: Float = 1
     private(set) var muted = false
+    /// Whether the player's session is `.playbackMixingWithOthers`, which plays
+    /// in silent mode, or `.ambient`, which silent mode silences.
+    private(set) var playsInSilentMode = false
     /// What the session says the output is now.
     private(set) var output = ""
     /// What the player read from the output, and renders at.
@@ -155,6 +158,12 @@ final class Model {
     func setMuted(_ muted: Bool) {
         player.cuesMuted = muted
         self.muted = muted
+    }
+
+    func setPlaysInSilentMode(_ on: Bool) {
+        player.session = on ? .playbackMixingWithOthers : .ambient
+        playsInSilentMode = on
+        note("session: \(player.session)")
     }
 
     func note(_ text: String) {

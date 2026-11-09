@@ -83,7 +83,7 @@ A `@MainActor` class, mirroring the engine's cue methods:
 - `sampleRate` and `outputChannelCount` say what the player read from the output.
 - `onEvent` is called with each `CuePlayer.Event`: the engine starting, an interruption, the output changing, a rebuild, a media services reset, the app going inactive.
 
-**The audio session.** On iOS, a device output sets the session's category to `.ambient` and makes it active, each time it starts. So the Ring/Silent switch silences cues, and they mix over other apps' audio.
+**The audio session.** On iOS, a device output sets the session's category and makes it active, each time it starts, when an interruption ends and after a media services reset. By default it is `.ambient`: silent mode silences cues, and they mix over other apps' audio. A game whose own setting silences it can choose `CuePlayer(session: .playbackMixingWithOthers)`, or set `player.session` while it plays: the category is `.playback` with `.mixWithOthers`, so the cues play in silent mode, and other apps' audio plays on under them, neither paused nor lowered.
 - An interruption, or the app going inactive, stops the engine, and the next cue starts it again.
 - A media services reset rebuilds everything, the category included.
 - Route changes need nothing of their own: one that changes the output's rate or channels arrives as `AVAudioEngineConfigurationChange`, and the player answers it.

@@ -70,6 +70,18 @@ public final class CuePlayer {
     /// its output or its session.
     public var onEvent: ((Event) -> Void)?
 
+    /// What silent mode does to the cues, and what they do to other apps'
+    /// audio. A change takes at once while the engine runs, and otherwise
+    /// when it next starts; if the session refuses it at once, the next start
+    /// sets it again, and a cue that cannot start throws, as ever. A manual
+    /// output has no session, and ignores it.
+    public var session: Session {
+        didSet {
+            guard session != oldValue, case .device = output, graph?.engine.isRunning == true else { return }
+            try? activateTheSession(session)
+        }
+    }
+
     let output: Output
     private(set) var graph: Graph?
     private var buffers: [String: AVAudioPCMBuffer] = [:]
@@ -78,13 +90,17 @@ public final class CuePlayer {
     private(set) var rebuilding: Task<Void, Never>?
     let observers = Observers()
 
-    /// - Parameter voices: how many cues can sound at once, ``defaultVoices``
-    ///   unless given. When every voice is busy, the cue that ends soonest is
-    ///   cut to make room.
-    public init(output: Output = .device, voices: Int = CuePlayer.defaultVoices) {
+    /// - Parameters:
+    ///   - voices: how many cues can sound at once, ``defaultVoices`` unless
+    ///     given. When every voice is busy, the cue that ends soonest is cut to
+    ///     make room.
+    ///   - session: what silent mode does to the cues, ``Session/ambient``
+    ///     unless given.
+    public init(output: Output = .device, voices: Int = CuePlayer.defaultVoices, session: Session = .ambient) {
         precondition(voices > 0, "a player needs a voice")
         self.output = output
         voiceCount = voices
+        self.session = session
         // A manual output has no session: a call does not stop a render to a file
         if case .device = output { observeTheSession() }
     }
@@ -249,7 +265,7 @@ public final class CuePlayer {
 
     /// Builds the engine at the output's rate, without starting it.
     func build() throws {
-        install(try Graph(output: output, voices: voiceCount))
+        install(try Graph(output: output, voices: voiceCount, session: session))
     }
 
     private func install(_ graph: Graph) {
@@ -267,7 +283,7 @@ public final class CuePlayer {
     /// waits for its next cue.
     func start(_ graph: Graph) throws {
         guard !graph.engine.isRunning else { return }
-        if case .device = output { try activateTheSession() }
+        if case .device = output { try activateTheSession(session) }
         try graph.engine.start()
         graph.clock.stop()
         try playNode(graph.clock)
@@ -297,7 +313,7 @@ public final class CuePlayer {
             defer { if mine == self.generation { self.rebuilding = nil } }
             old?.engine.stop()
             do {
-                let next = try Graph(output: self.output, voices: self.voiceCount)
+                let next = try Graph(output: self.output, voices: self.voiceCount, session: self.session)
                 var rendered: [String: AVAudioPCMBuffer] = [:]
                 if let document = self.document {
                     let samples = try await Self.render(document, at: next.rate)
@@ -401,11 +417,11 @@ final class Graph {
     let outputChannels: AVAudioChannelCount
     let format: AVAudioFormat
 
-    init(output: CuePlayer.Output, voices count: Int) throws {
+    init(output: CuePlayer.Output, voices count: Int, session: CuePlayer.Session) throws {
         let channels: AVAudioChannelCount
         switch output {
         case .device:
-            try activateTheSession()
+            try activateTheSession(session)
             let hardware = engine.outputNode.outputFormat(forBus: 0)
             rate = hardware.sampleRate
             channels = hardware.channelCount
