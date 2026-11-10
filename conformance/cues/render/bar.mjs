@@ -41,10 +41,10 @@ function conditionsFor(set) {
       }
       const computed = toleranceFrom(spread);
       // Peach's cues at 48 kHz keep the discovery's bar, from 0 and from 8.0027 s,
-      // 3001 render quanta later. They are no longer held to the fixture: since
-      // 9 November 2026 each is the old engine's sound times its instrument's
-      // gain in Peach's mix, and the fixture is the old engine's sound at its own
-      // level. The fixture holds the positive controls instead (judge.mjs).
+      // 3001 render quanta later, and are held to the fixture there: a 48 kHz
+      // render from 0, which a render 3001 quanta later also is. Since 9 November
+      // 2026 each is the old engine's sound times its instrument's gain in
+      // Peach's mix, so judge.mjs applies that gain to the fixture (PEACH_MIX).
       const discovery = set === 'peach' && rate === 48000;
       let bar = computed;
       if (discovery) {
@@ -56,7 +56,7 @@ function conditionsFor(set) {
         set,
         rate,
         start: STARTS[start],
-        references: browsers,
+        references: discovery ? [...browsers, 'fixture'] : browsers,
         ...(SETS[set].recorded ? { recordedBeside: recordedBrowsers(set).filter((b) => !browsers.includes(b)) } : {}),
         spread,
         bar,
