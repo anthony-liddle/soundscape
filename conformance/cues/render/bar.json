@@ -19,7 +19,8 @@
       "references": [
         "chromium",
         "firefox",
-        "webkit"
+        "webkit",
+        "fixture"
       ],
       "spread": {
         "seconds": 0,
@@ -46,7 +47,8 @@
       "references": [
         "chromium",
         "firefox",
-        "webkit"
+        "webkit",
+        "fixture"
       ],
       "spread": {
         "seconds": 0,

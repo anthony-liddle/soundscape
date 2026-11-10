@@ -6,9 +6,9 @@ const here = new URL('./', import.meta.url);
 
 /**
  * The sets of cues. Peach's, all but its departures, are held to Chromium,
- * Firefox and WebKit. The frozen Chrome 154 fixture, its old engine's sound at
- * its own level, holds the positive controls alone since Peach's mix of 9
- * November 2026 (bar.mjs). The others are held to Chromium and WebKit, where
+ * Firefox and WebKit, and at 48 kHz to the frozen Chrome 154 fixture, its old
+ * engine's sound, with each cue's gain in Peach's mix of 9 November 2026
+ * applied to it (PEACH_MIX). The others are held to Chromium and WebKit, where
  * Firefox stops being a reference for the full feature set (decisions.md):
  * one cue per oscillator and envelope feature Peach does not use, then the
  * filters, LFOs and unison, then delay and distortion.
@@ -103,6 +103,52 @@ export const FROZEN_CONTROLS = {
   // old engine's sound, which the first document plays at its own level
   references: ['chromium', 'firefox', 'webkit', 'fixture'],
 };
+
+/**
+ * Peach of a Word's mix, chosen by ear on 9 November 2026 in its pull request
+ * #188, where src/audio/mix.ts records it: a gain in dB for each instrument.
+ * Peach multiplied every note's level and the instrument's envelope floor by
+ * it, so each of its cues is the old engine's sound times its instrument's
+ * gain, and nothing else. Declared here, not read from the cue file, so a cue
+ * whose levels move by anything but its gain misses the fixture, even where
+ * the browsers render the same file. The click's cues, the tick and Shuffle,
+ * are departures, which the fixture does not hold.
+ */
+export const PEACH_MIX = { chosen: '2026-11-09', gainsDb: { click: 23.1, sine: 2.6, triangle: -1.9 } };
+
+/** A Peach cue's gain in the mix, in dB: its instrument's, since each cue plays one. */
+function gainDbOf(cue) {
+  const instruments = new Set(JSON.parse(documentText('peach')).cues[cue].notes.map((note) => note.instrument));
+  const [instrument] = instruments;
+  if (instruments.size !== 1 || !(instrument in PEACH_MIX.gainsDb))
+    throw new Error(`${cue} plays ${[...instruments].join(', ')}, not one instrument of Peach's mix`);
+  return PEACH_MIX.gainsDb[instrument];
+}
+
+/**
+ * What the fixture holds a render of `cue` in `set` to. The positive controls,
+ * from Peach's first document, play the old engine at its own level: the
+ * fixture as recorded. A Peach cue plays it times its gain in the mix, so the
+ * gain is added to every level the fixture holds in dBFS: the peak, the RMS,
+ * each envelope point and each window's strongest partial. Onset, end and
+ * duration are read against the sound's own peak, stop where it falls silent,
+ * and each partial's level against its window's strongest, so a gain leaves
+ * them as they were.
+ */
+export function fixtureFor(fixture, set, cue) {
+  const measured = fixture.cues[cue];
+  if (set === FROZEN_CONTROLS.set) return measured;
+  if (set !== 'peach') throw new Error(`the fixture holds no cue of ${set}`);
+  const gain = gainDbOf(cue);
+  const plus = (db) => (db === null ? null : db + gain);
+  return {
+    ...measured,
+    peakDbfs: plus(measured.peakDbfs),
+    rmsDbfs: plus(measured.rmsDbfs),
+    envelopeDbfs: measured.envelopeDbfs.map(plus),
+    spectrum: measured.spectrum.map((window) => ({ ...window, dbfs: plus(window.dbfs) })),
+  };
+}
 
 /** Both rates, because the player pass decides which one cues render at. */
 export const RATES = [48000, 44100];

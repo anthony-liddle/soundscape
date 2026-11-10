@@ -28,7 +28,7 @@ What a Swift render of a cue is held to. The browsers' renders are recorded as m
   These three sets, from `soundscape-engine` 0.4.1 too and held and recorded the same way, render until the engine would disconnect each cue's effects chain, by its own 2^-24 rule. Each browser's engine works out that deadline, `ringsUntil`, the render is silent from the frame it rounds up to, and each file records that frame, `cutFrames`, for every browser. They agree on every cue. A render runs at least two seconds, and as long as its deadline needs: 63.7 s for the longest of `delay`, 158.5 s for `longest`.
 - **`references/waveshaper-chromium.json`:** what Chromium's own WaveShaperNode makes of one input, a band-limited 1 kHz square whose shaping makes harmonics far past Nyquist, with the engine's curve at 0.1 and 1, oversampled 2x. `waveshaper.mjs` writes it; `DistortionTests` holds the Swift waveshaper to it sample by sample.
 - **`references/delay-wake-chromium.json`:** a window of what Chromium renders for two cues through a delay with no feedback at a delay between frames, played late at 44.1 kHz, one voice with no filter and one through a resonant lowpass. There, how many quanta the delay processed before the cue decides each read's fraction, which measure() cannot see. `delay-wake.mjs` writes it; `DelayTests` holds the Swift delay to it sample by sample.
-- **`references/fixture-chrome-154.json`:** Peach's frozen baseline, Chrome 154 at 48 kHz, its old engine's sound at its own level, its measurements only. Since Peach's mix it holds the positive controls alone. `--fixture <path to Peach's sounds.json>` rewrites it.
+- **`references/fixture-chrome-154.json`:** Peach's frozen baseline, Chrome 154 at 48 kHz, its old engine's sound at its own level, its measurements only. Peach's cues are held to it with each cue's gain in Peach's mix applied, the positive controls as it was recorded. `--fixture <path to Peach's sounds.json>` rewrites it.
 - **Both rates,** 48 and 44.1 kHz, because the player pass decides which one cues render at.
 - **Both starts:** 0, and 8.0027 s, the discovery's late start. That is 3001 render quanta at 48 kHz; at 44.1 kHz it falls between frames, so the start's fraction is tested too.
 
@@ -40,7 +40,7 @@ Each file records the engine's version and commit, Playwright's version and each
 
 | Condition | References | Seconds | dB | Hz | Partial Hz | Partial dB |
 |---|---|---|---|---|---|---|
-| Peach, 48 kHz, from 0 and from 8.0027 s | Chromium, Firefox, WebKit | 0.00001 | 0.09 | 0.01 | 0.02 | 0.02 |
+| Peach, 48 kHz, from 0 and from 8.0027 s | Chromium, Firefox, WebKit, the fixture times each cue's gain | 0.00001 | 0.09 | 0.01 | 0.02 | 0.02 |
 | Peach, 44.1 kHz, from 0 | Chromium, Firefox, WebKit | 0.00001 | 0.11 | 0.01 | 0.21 | 0.04 |
 | Peach, 44.1 kHz, from 8.0027 s | Chromium, Firefox, WebKit | 0.00128 | 0.17 | 0.01 | 0.16 | 0.05 |
 | Peach's departures, both rates, from 0; 48 kHz from 8.0027 s | Chromium, WebKit | 0.00001 | 0.01 | 0.01 | 0.01 | 0.01 |
@@ -59,7 +59,9 @@ Each file records the engine's version and commit, Playwright's version and each
 Notes on each row:
 
 - **Peach at 48 kHz** is the discovery's bar (`BAR.md` in the Soundscape In Swift report). `bar.mjs` recomputes it from these references and refuses to write if they disagree. They do not, in Peach's mix as before it: a gain moves every browser's render alike.
-- **Peach is held to the browsers alone since its mix of 9 November 2026.** Until then the fixture was a reference at 48 kHz too. It records the old engine at its own level, and the mix is a gain on that sound, so against it every Swift render of a Peach cue missed by exactly its gain, 2.60 dB on the sine cues and 1.90 on the triangle cues, and by nothing else: within the bar of Chromium, Firefox and WebKit on every cue, at both rates and both starts. The fixture still holds the positive controls, which are rendered from Peach's first document, at the old engine's level.
+- **Peach is held to the fixture times its gain, since its mix of 9 November 2026.** The fixture records the old engine at its own level, and the mix is a gain on that sound, one for each instrument. `PEACH_MIX` in `conditions.mjs` declares the gains as Peach chose them, 2.6 dB on the sine cues, the finds and the miss, and -1.9 dB on the triangle cues, `source` and `edition`. `judge.mjs` adds a cue's gain to every level the fixture holds in dBFS: the peak, the RMS, each envelope point and each window's strongest partial. Everything else it measures is read against the sound's own peak or strongest partial, which a gain does not move. So the fixture proves that nothing but the gain changed:
+  - **Every Swift render of a Peach cue at 48 kHz** sits on the fixture times its gain, from 0 and from 8.0027 s: the same levels to the hundredth of a dB the fixture records, the same times, and every partial within one step. Without the gain, each missed by exactly it, 2.60 or 1.90 dB.
+  - **The gains are not read from the cue file,** so a cue whose levels move by anything else misses, even where the browsers render the same file and pass it. `found-5-rare` nudged 0.5 dB louder in the file, with the references rendered again from it, passed Chromium, Firefox and WebKit and missed the fixture from both starts: 0.53 dB, 1.85 ms, and a partial 0.21 dB off.
 - **Peach at 44.1 kHz is wider, all of it from Firefox.** Chromium and WebKit agree on every number there to within one step.
   - **From 0:** Firefox reads 0.03 dB louder on the sine cues and 0.10 dB on the triangle cues. At 48 kHz its sine cues were within 0.01 dB.
   - **From 8.0027 s, between frames:** Firefox rounds each note's start up to the next frame, starting it 0.4 of a frame (9 µs) late, where Chromium and WebKit keep the start's fraction, as the spec says to. Its samples are Chromium's shifted by 0.39 to 0.40 of a frame. Its `end` for `found-8-mythic-cute` moves 1.27 ms: that is the last sample within 40 dB of the peak, on a fading glint, where a small change in level moves the crossing.
@@ -81,7 +83,7 @@ Notes on each row:
 
 `judge.mjs <dir>` measures a set of renders, `<dir>/<set>-<rate>-<start>/<cue>.f32`, and holds each to its condition's bar. It prints one row per cue and one column per rate and start. Each cell is the worst gap to any reference and which reference it was. It exits 1 if any render misses.
 
-`judge.mjs <dir> --controls` checks the positive controls in `<dir>/controls/`: each mistake must miss the bar, and 0.05 dB louder must pass. The controls are rendered from `controls.cues.json` and held to `references/controls-48000.json` and the fixture, at Peach's bar at 48 kHz from 0, the discovery's.
+`judge.mjs <dir> --controls` checks the positive controls in `<dir>/controls/`: each mistake must miss the bar, and 0.05 dB louder must pass. The controls are rendered from `controls.cues.json` and held to `references/controls-48000.json` and the fixture as it was recorded, at Peach's bar at 48 kHz from 0, the discovery's.
 
 `judge.mjs <dir> --knockouts` checks that the bar can see each feature the filters, LFOs, unison, the delay and distortion bring. The Swift renderer knocks each out in turn and renders every cue of its sets whose instrument has it, at both rates and both starts, into `<dir>/knockouts/<knockout>/`. Each render must miss:
 

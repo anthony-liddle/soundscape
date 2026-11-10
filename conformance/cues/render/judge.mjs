@@ -29,7 +29,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { measure } from '../measure/soundMeasure.ts';
 import { spreadBetween } from '../measure/renderSpread.ts';
-import { FROZEN_CONTROLS, SECONDS, STARTS, cueNames, documentText, optionsFor, readFixture, readReferences } from './conditions.mjs';
+import { FROZEN_CONTROLS, SECONDS, STARTS, cueNames, documentText, fixtureFor, optionsFor, readFixture, readReferences } from './conditions.mjs';
 import { breaks, worstGap } from './rule.mjs';
 
 const { values, positionals } = parseArgs({
@@ -59,7 +59,7 @@ function judge(path, condition, cue) {
   const failures = [];
   let worst = { ratio: -1, text: '', against: '' };
   for (const name of names) {
-    const reference = name === 'fixture' ? fixture.cues[cue] : referencesFor(set, rate).cues[cue][start][name];
+    const reference = name === 'fixture' ? fixtureFor(fixture, set, cue) : referencesFor(set, rate).cues[cue][start][name];
     const spread = spreadBetween(reference, m);
     const broken = breaks(spread, tolerance);
     if (broken.length) failures.push(`${name}: ${broken.join(', ')}`);
