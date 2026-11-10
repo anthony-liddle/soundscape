@@ -4,6 +4,10 @@ The Swift package's changelog, for its bare semver tags. The npm engine's is in 
 
 ## Unreleased
 
+## 0.3.0 - 2026-11-09
+
+0.3.0 lets a player play in silent mode, over other apps' audio, and holds Peach of a Word's mix of 9 November to the browsers and to the Chrome 154 fixture times each cue's gain. The check on an iPhone in `swift/CueCheck.swiftpm/README.md`, steps 13 to 16 for the new switch among them, passed on Antoine's iPhone 13 on 2026-11-09, with Cue Check built from `51e239d`, as he reported. What merged after that commit, #158, changes no Swift source.
+
 ### Added
 
 - **A player can play in silent mode.** `CuePlayer(session: .playbackMixingWithOthers)`, or `player.session` set while it plays: on iOS the session's category is `.playback` with `.mixWithOthers`, so silent mode does not silence the cues, and other apps' audio plays on under them, neither paused nor lowered. It is for a game whose own setting is what silences it. The player sets it again on every start, when an interruption ends and after a media services reset, as it always has `.ambient`, which stays the default. A change while the engine runs takes at once. Cue Check has a *Play in silent mode* switch, and its check four steps for it.
