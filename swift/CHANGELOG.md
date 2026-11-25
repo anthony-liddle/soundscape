@@ -4,6 +4,10 @@ The Swift package's changelog, for its bare semver tags. The npm engine's is in 
 
 ## Unreleased
 
+## 0.3.1 - 2026-11-25
+
+0.3.1 holds Peach of a Word's two Peach rush cues to the browsers, with its tick and Shuffle. No source changed. Antoine kept both by ear on Peach's sounds page on 2026-11-25. Cue Check was not built for this release: the two are first heard on an iPhone in Peach of a Word's TestFlight build of 1.4.
+
 ### Changed
 
 - **Peach of a Word's cue file has Peach rush's two cues,** from its pull request #213, chosen by ear on 25 November 2026, which only its app plays: `rush-ten`, two soft A5 pings at 10 seconds left, and `rush-end`, G, E and C falling to rest on the C at time's up. The conformance copy and Cue Check's copy are that file's, 37 cues. No source changed: they are sine notes, which the renderer already played.
