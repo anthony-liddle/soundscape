@@ -1097,6 +1097,62 @@
         }
       ]
     },
+    "rush-end": {
+      "notes": [
+        {
+          "id": "rush-end-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.22,
+          "pitch": 79,
+          "level": 0.107
+        },
+        {
+          "id": "rush-end-2",
+          "instrument": "sine",
+          "start": 0.13,
+          "duration": 0.22,
+          "pitch": 76,
+          "level": 0.107
+        },
+        {
+          "id": "rush-end-3",
+          "instrument": "sine",
+          "start": 0.26,
+          "duration": 0.6,
+          "pitch": 72,
+          "level": 0.12
+        },
+        {
+          "id": "rush-end-4",
+          "instrument": "sine",
+          "start": 0.26,
+          "duration": 0.4,
+          "pitch": 84,
+          "level": 0.024
+        }
+      ]
+    },
+    "rush-ten": {
+      "notes": [
+        {
+          "id": "rush-ten-1",
+          "instrument": "sine",
+          "start": 0,
+          "duration": 0.16,
+          "pitch": 81,
+          "level": 0.12
+        },
+        {
+          "id": "rush-ten-2",
+          "instrument": "sine",
+          "start": 0.15,
+          "duration": 0.2,
+          "pitch": 81,
+          "level": 0.1
+        }
+      ]
+    },
     "shuffle": {
       "notes": [
         {

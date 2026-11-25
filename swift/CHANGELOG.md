@@ -4,6 +4,11 @@ The Swift package's changelog, for its bare semver tags. The npm engine's is in 
 
 ## Unreleased
 
+### Changed
+
+- **Peach of a Word's cue file has Peach rush's two cues,** from its pull request #213, chosen by ear on 25 November 2026, which only its app plays: `rush-ten`, two soft A5 pings at 10 seconds left, and `rush-end`, G, E and C falling to rest on the C at time's up. The conformance copy and Cue Check's copy are that file's, 37 cues. No source changed: they are sine notes, which the renderer already played.
+- **The two are Peach's departures,** as its own `src/audio/departures.ts` lists them, held with the tick and Shuffle to Chromium and WebKit, with Firefox recorded beside them. The departures' bar did not move with them in, and the tick's and Shuffle's references came out the same to the last digit. Every Swift render of the two sits within the bar, at both rates and both starts, and `hashes.json` has their 8 renders; the 360 already in it hash as recorded.
+
 ## 0.3.0 - 2026-11-09
 
 0.3.0 lets a player play in silent mode, over other apps' audio, and holds Peach of a Word's mix of 9 November to the browsers and to the Chrome 154 fixture times each cue's gain. The check on an iPhone in `swift/CueCheck.swiftpm/README.md`, steps 13 to 16 for the new switch among them, passed on Antoine's iPhone 13 on 2026-11-09, with Cue Check built from `51e239d`, as he reported. What merged after that commit, #158, changes no Swift source.

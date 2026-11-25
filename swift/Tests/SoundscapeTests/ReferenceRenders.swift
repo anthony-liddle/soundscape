@@ -27,7 +27,7 @@ import Testing
 
     /// Peach's departures, as conditions.mjs's PEACH_DEPARTURES lists them: a
     /// set of their own, peach-departures, and every other Peach cue is peach.
-    static let peachDepartures = ["tick", "shuffle"]
+    static let peachDepartures = ["tick", "shuffle", "rush-ten", "rush-end"]
 
     /// A set's cues, in its document's order, as conditions.mjs's cueNames gives them.
     static func cueNames(_ set: String, _ document: CueDocument) -> [String] {
