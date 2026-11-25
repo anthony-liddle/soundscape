@@ -1,6 +1,6 @@
 # Cue Check
 
-The smallest app for hearing Soundscape's Swift cue player on an iPhone. It plays Peach of a Word's 35 cues through `CuePlayer`, and every feature cue the renderer is held to: filters, LFOs, unison, delay and distortion. It is for testing only: it is never submitted and never shipped.
+The smallest app for hearing Soundscape's Swift cue player on an iPhone. It plays Peach of a Word's 37 cues through `CuePlayer`, and every feature cue the renderer is held to: filters, LFOs, unison, delay and distortion. It is for testing only: it is never submitted and never shipped.
 
 It is an app playground, a Swift package Xcode opens as an app. That needs nothing installed but Xcode: no project to generate, and no project file to keep. It depends on this repository's Soundscape package by its path, so it always plays the library as it is in your clone.
 

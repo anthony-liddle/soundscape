@@ -30,7 +30,7 @@ import Testing
             let difference = firstDifference(channel, expected)
             #expect(difference == nil, "\(difference ?? "")")
         }
-        #expect(player.cueNames.count == 35)
+        #expect(player.cueNames.count == 37)
     }
 
     /// The engine's cues overlap and sum: so do the player's.

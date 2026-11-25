@@ -77,14 +77,16 @@ export const SETS = {
 export const recordedBrowsers = (set) => SETS[set].recorded ?? SETS[set].browsers;
 
 /**
- * Peach's cues that left its old engine on purpose, chosen by ear on 5 November
- * 2026, as Peach's own src/audio/departures.ts lists them: the tick, now two
- * clicks where it was an 880 Hz square, and Shuffle, which made no sound
- * before. The fixture is the old engine's sound, so it holds neither. They
- * are the peach-departures set, and the peach set is every other Peach cue.
- * ReferenceRenders.swift lists them too.
+ * Peach's cues that left its old engine on purpose, chosen by ear, as Peach's
+ * own src/audio/departures.ts lists them: the tick, now two clicks where it
+ * was an 880 Hz square, and Shuffle, which made no sound before, both on 5
+ * November 2026; and Peach rush's two, at 10 seconds left and at time's up,
+ * new on 25 November 2026 (Peach's pull request #213), which only its app
+ * plays. The fixture is the old engine's sound, so it holds none of them.
+ * They are the peach-departures set, and the peach set is every other Peach
+ * cue. ReferenceRenders.swift lists them too.
  */
-export const PEACH_DEPARTURES = ['tick', 'shuffle'];
+export const PEACH_DEPARTURES = ['tick', 'shuffle', 'rush-ten', 'rush-end'];
 
 /**
  * The positive controls' own cues and references, frozen: Peach's document as
